@@ -148,6 +148,16 @@ export function ChatScreen({ active }: { active: boolean }) {
         ref={composerRef}
         className="absolute inset-x-0 z-20 bottom-[calc(var(--tabbar-h)+var(--sab))] [html[data-keyboard=open]_&]:bottom-0"
       >
+        {/* Backdrop: messages fade out behind the controls instead of showing through them */}
+        <div
+          className="pointer-events-none absolute inset-x-0 -top-10 bottom-0 -z-10 backdrop-blur-md"
+          style={{
+            background: "linear-gradient(to top, rgba(40,27,17,0.94) 0%, rgba(40,27,17,0.82) 70%, rgba(40,27,17,0) 100%)",
+            WebkitMaskImage: "linear-gradient(to top, #000 75%, transparent)",
+            maskImage: "linear-gradient(to top, #000 75%, transparent)",
+          }}
+          aria-hidden
+        />
         <AnimatePresence>
           {listening && (
             <motion.div
@@ -168,7 +178,7 @@ export function ChatScreen({ active }: { active: boolean }) {
           <VoiceComposer
             busy={thinking}
             onListening={onListening}
-            onSend={(text) => send({ text })}
+            onSend={(text, image) => send({ text, image })}
             onTextInstead={textInstead}
           />
         ) : (

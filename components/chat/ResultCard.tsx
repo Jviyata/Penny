@@ -47,7 +47,7 @@ export function ResultCard({
   const [primary, ...rest] = card.actions;
 
   return (
-    <div className="relative w-full max-w-[350px] pt-16">
+    <div className="relative w-full max-w-[350px] pt-12">
       <Mascot
         mood={VERDICT_MOOD[card.verdict]}
         size={card.image ? 96 : 116}
@@ -55,20 +55,20 @@ export function ResultCard({
       />
 
       {/* Headline */}
-      <div className="paper-glass rounded-[30px] px-5 pb-5 pt-5 text-center">
+      <div className="paper-glass rounded-[30px] px-4 pb-4 pt-4 text-center">
         {card.image && (
-          <div className="mb-4 aspect-[16/11] w-full overflow-hidden rounded-[22px] bg-fill">
+          <div className="mb-3 aspect-[2/1] w-full overflow-hidden rounded-[20px] bg-fill">
             <img src={card.image} alt={card.name} className="h-full w-full object-cover" draggable={false} />
           </div>
         )}
-        <p className={`text-[25px] font-bold leading-[30px] tracking-[-0.01em] text-label ${card.image ? "" : "pt-6"}`}>
+        <p className={`text-[23px] font-bold leading-[28px] tracking-[-0.01em] text-label ${card.image ? "" : "pt-6"}`}>
           {headline(card)}
         </p>
-        <p className="selectable mt-2 text-[16px] leading-[22px] text-label-2">{reply}</p>
+        <p className="selectable mt-1.5 text-[15px] leading-[20px] text-label-2">{reply}</p>
       </div>
 
       {/* The numbers */}
-      <dl className="mt-2.5 rounded-[26px] bg-card px-5 py-1.5 text-[16px]">
+      <dl className="mt-2 rounded-[24px] bg-card px-4 py-1 text-[16px]">
         <Row label={card.name} strong>
           {money(card.price)}
         </Row>
@@ -101,7 +101,7 @@ export function ResultCard({
 
 function Row({ label, children, strong, last }: { label: string; children: React.ReactNode; strong?: boolean; last?: boolean }) {
   return (
-    <div className={`flex min-h-12 items-center justify-between gap-3 ${last ? "" : "shadow-[0_1px_0_var(--sep)]"}`}>
+    <div className={`flex min-h-11 items-center justify-between gap-3 ${last ? "" : "shadow-[0_1px_0_var(--sep)]"}`}>
       <dt className={`min-w-0 truncate ${strong ? "font-semibold text-label" : "text-label-2"}`}>{label}</dt>
       <dd className={`tabular shrink-0 ${strong ? "font-semibold" : "font-medium"}`}>{children}</dd>
     </div>

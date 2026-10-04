@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { BASE_FREE_TOTAL, JOBS_TOTAL, MONTH, USER_NAME } from "@/lib/demoData";
 import { money } from "@/lib/format";
+import { useStore } from "@/lib/store";
 import { NavButton, Screen } from "../ui/Screen";
 import { ChevronIcon, GearIcon } from "../ui/Icons";
 import type { Tab } from "../TabBar";
@@ -18,6 +19,7 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
   const [detail, setDetail] = useState<JobId | "yours" | null>(null);
+  const free = useStore().open;
   const open = (id: JobId | "yours") => setDetail(id);
   useEffect(() => setDetail(null), [resetSignal]);
 
@@ -44,6 +46,16 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
             <p className="mt-1 text-[17px] text-on-photo-2">
               yours to work with · {MONTH.daysLeft} days left
             </p>
+            {/* After plans and purchases, this is what's actually free; it's the number Penny uses. */}
+            <button
+              type="button"
+              onClick={() => open("yours")}
+              className="pressable glass-strong mt-2 flex h-9 items-center gap-1.5 rounded-full pl-3.5 pr-2.5 text-[15px] font-semibold text-on-photo"
+            >
+              <span className="tabular">{money(Math.max(free, 0))}</span>
+              <span className="font-medium text-on-photo-2">free now, after plans</span>
+              <ChevronIcon size={14} className="text-on-photo-2" />
+            </button>
           </section>
 
           <div className="mt-3">

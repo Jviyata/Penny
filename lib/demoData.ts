@@ -27,7 +27,7 @@ export const STARTING_PLANS = [
 ];
 
 // Already bought out of free spending this month ($25 total → $115 open).
-// Kept small so the demo answers stay the same: lamp Tight, jacket Better later, sunglasses Comfortable.
+// Demo answers with $115 open: jacket $320 Not right now, lamp $145 Not right now, sunglasses $25 Comfortable.
 export const STARTING_BOUGHT = [
   { id: "coffee", name: "Corner café", what: "Coffee with Maya", date: "Oct 4", amount: 9.5, image: "/bought/coffee.jpg", note: "You grabbed coffee with Maya." },
   { id: "movie", name: "Cinema", what: "Movie night", date: "Oct 8", amount: 15.5, image: "/bought/movie.jpg", note: "You treated yourself to a movie night." },
@@ -38,5 +38,5 @@ export const STARTING_BOUGHT = [
 export const DEMO_FILES = [
   { id: "jacket", name: "Leather Jacket", price: 320, src: "/demo/jacket.jpg" },
   { id: "lamp", name: "Vintage Brass Lamp", price: 145, src: "/demo/lamp.jpg" },
-  { id: "sunglasses", name: "Tortoise Sunglasses", price: 60, src: "/demo/sunglasses.jpg" },
+  { id: "sunglasses", name: "Tortoise Sunglasses", price: 25, src: "/demo/sunglasses.jpg" },
 ];

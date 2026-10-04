@@ -19,12 +19,13 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
       aria-label="Tabs"
     >
       <TabButton id="home" label="Home" Icon={HomeIcon} active={active} onChange={onChange} />
-      <TabButton id="free" label="Free spending" Icon={ChartIcon} active={active} onChange={onChange} />
+      <TabButton id="free" label="Spending" Icon={ChartIcon} active={active} onChange={onChange} />
 
       {/* Penny */}
       <div className="relative">
+        {/* Penny introduces herself on Home only, so she never covers content elsewhere. */}
         <AnimatePresence>
-          {!onChat && (
+          {active === "home" && (
             <motion.span
               initial={{ opacity: 0, y: 6, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -90,18 +91,19 @@ function TabButton({
       onClick={() => onChange(id)}
       aria-label={label}
       aria-current={on ? "page" : undefined}
-      className={`relative flex h-[var(--tabbar-h)] items-center justify-center transition-colors active:opacity-60 ${
+      className={`relative flex h-[var(--tabbar-h)] flex-col items-center justify-center gap-1 transition-colors active:opacity-60 ${
         on ? "text-label" : "text-label-3"
       }`}
     >
       <span className="relative">
-        <Icon size={27} filled={on} />
+        <Icon size={24} filled={on} />
         {badge > 0 && (
           <span className="absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cta px-1 text-[11px] font-semibold text-on-cta">
             {badge}
           </span>
         )}
       </span>
+      <span className="text-[10px] font-medium leading-none">{label}</span>
     </button>
   );
 }

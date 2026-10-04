@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { prepareImage, type PreparedImage } from "@/lib/image";
 import { useSpeech } from "@/lib/useSpeech";
-import { MicIcon, PlusIcon, StopIcon } from "../ui/Icons";
+import { MicIcon, PhotoIcon, PlusIcon, StopIcon } from "../ui/Icons";
 
 const PROBLEMS: Record<string, string> = {
   "not-allowed": "Penny needs your microphone. Allow it for this site in Safari, then tap to talk again.",
@@ -24,7 +25,7 @@ export function VoiceComposer({
   onTextInstead,
   onListening,
 }: {
-  onSend: (text: string) => void;
+  onSend: (text: string, image?: PreparedImage) => void;
   busy: boolean;
   onTextInstead: () => void;
   onListening?: (on: boolean) => void;
@@ -32,6 +33,19 @@ export function VoiceComposer({
   const [heard, setHeard] = useState("");
   // If the mic can't start, stay in talk mode and say why; the user decides whether to type.
   const [problem, setProblem] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Photos and screenshots work in talk mode too: pick one and it sends straight away.
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file || busy) return;
+    try {
+      onSend("", await prepareImage(file));
+    } catch {
+      setProblem("Couldn’t open that photo. A screenshot usually works.");
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
   const speech = useSpeech(
     setHeard,
     (finalText) => {
@@ -68,26 +82,48 @@ export function VoiceComposer({
         </p>
       )}
 
+      <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center">
+      <div className="flex justify-end pr-6">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={busy || speech.listening}
+          aria-label="Add a photo or screenshot"
+          className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
+        >
+          <PhotoIcon size={22} />
+        </button>
+        {/* No `capture` attribute: iOS offers Take Photo, Photo Library or Choose File. */}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*,.heic,.heif"
+          className="hidden"
+          onChange={(e) => pickPhoto(e.target.files?.[0])}
+        />
+      </div>
       <button
         type="button"
         onClick={talk}
         disabled={busy}
         aria-label={speech.listening ? "Stop talking and send" : "Talk to Penny"}
         aria-pressed={speech.listening}
-        className={`flex h-[84px] w-[84px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_14px_30px_-10px_rgba(20,12,4,0.6)] transition-transform active:scale-95 disabled:opacity-50 ${
+        className={`flex h-[76px] w-[76px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_14px_30px_-10px_rgba(20,12,4,0.6)] transition-transform active:scale-95 disabled:opacity-50 ${
           speech.listening ? "mic-live" : ""
         }`}
       >
         {speech.listening ? <StopIcon size={26} /> : <MicIcon size={36} />}
       </button>
-      <p className="on-photo-shadow mt-2 text-[14px] font-medium text-on-photo">
+      <div />
+      </div>
+      <p className="on-photo-shadow mt-1.5 text-[14px] font-medium text-on-photo">
         {busy ? "Penny’s reading it…" : speech.listening ? "Tap when you’re done" : "Tap to talk"}
       </p>
 
       <button
         type="button"
         onClick={onTextInstead}
-        className="pressable mt-2 flex h-11 items-center gap-2 rounded-full px-3 text-[15px] font-medium text-on-photo"
+        className="pressable mt-0.5 flex h-11 items-center gap-2 rounded-full px-3 text-[15px] font-medium text-on-photo"
       >
         <span className="glass flex h-8 w-8 items-center justify-center rounded-full">
           <PlusIcon size={16} />

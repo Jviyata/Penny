@@ -67,7 +67,7 @@ export function FreeSpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 {adjusted && <span className="block text-[13px]">Adjusted from {money(BASE_FREE_TOTAL)}</span>}
               </p>
               <span className="glass tabular flex h-10 shrink-0 items-center rounded-full px-4 text-[17px] font-semibold text-on-photo">
-                {Math.round(usedShare * 100)}% planned
+                {Math.round(usedShare * 100)}% used
               </span>
             </div>
           </section>
@@ -80,7 +80,7 @@ export function FreeSpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
           </div>
           <p className="on-photo-shadow mt-2.5 text-[14px] leading-[19px] text-on-photo-2">
             {over
-              ? `Your plans add up to ${money(-open)} more than you have. Moving or trimming one would balance it.`
+              ? `Your plans and purchases add up to ${money(-open)} more than you have. Moving or trimming a plan would balance it.`
               : `The only part of ${MONTH.name} that’s yours to shape.`}
           </p>
 
