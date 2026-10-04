@@ -7,7 +7,7 @@ import { Mascot } from "./ui/Mascot";
 export type Tab = "home" | "free" | "chat" | "goals" | "shelf";
 
 /**
- * Cream tab bar with Penny in the exact center as the "Can I afford this?" button ("Hey! Let me help you spend smart." bubble).
+ * Cream tab bar with Penny in the exact center as the "Can I afford this?" button ("Hi, I’m Penny! Let’s spend smart." bubble).
  * Home · Free spending | Penny | Goals · Shelf: two tabs each side, so Penny sits dead center.
  */
 export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange: (t: Tab) => void; shelfCount: number }) {
@@ -33,7 +33,7 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
               aria-hidden
             >
               <span className="paper-glass block whitespace-nowrap rounded-[16px] px-3.5 py-1.5 text-center text-[14px] font-semibold text-label">
-                Hey! Let me help you spend smart.
+                Hi, I’m Penny! Let’s spend smart.
               </span>
               {/* tail pointing down at Penny */}
               <span className="absolute left-1/2 top-full -mt-[5px] h-2.5 w-2.5 -translate-x-1/2 rotate-45 bg-[var(--paper-glass)]" />
