@@ -1,0 +1,37 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Can I Afford This?",
+  description: "See what a purchase means for the rest of your month before you buy it.",
+  applicationName: "Can I Afford This?",
+  appleWebApp: {
+    capable: true,
+    title: "Afford This?",
+    // Content runs under the status bar; safe-area insets keep it clear of the Dynamic Island.
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: { telephone: false },
+  other: {
+    // Older iOS versions still look for the apple- prefixed tag.
+    "apple-mobile-web-app-capable": "yes",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#2b231c" },
+    { media: "(prefers-color-scheme: dark)", color: "#15110d" },
+  ],
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
