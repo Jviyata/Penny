@@ -47,7 +47,7 @@ export function Screen({
           <div className="flex min-w-0 items-center">
             {leading}
             {inlineTitle && (
-              <h1 className="on-photo-shadow truncate text-[28px] font-bold tracking-[-0.01em] text-on-photo">{title}</h1>
+              <h1 className="on-photo-shadow truncate text-[22px] font-semibold tracking-[-0.01em] text-on-photo">{title}</h1>
             )}
           </div>
           <div className="flex items-center gap-2">{trailing}</div>

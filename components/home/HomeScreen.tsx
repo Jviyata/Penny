@@ -15,7 +15,7 @@ import { MonthMenu } from "./MonthMenu";
 import { SettingsSheet } from "./SettingsSheet";
 
 /**
- * Home: available this month, then where the paycheck went.
+ * Home hierarchy: the available number (primary) → where the paycheck went (secondary) → categories (tertiary).
  */
 export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; resetSignal: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -41,35 +41,37 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
           </>
         }
       >
-        <div className="px-5">
-          {/* 1. Available this month */}
-          <section className="on-photo-shadow mt-3">
-            <p className="text-[15px] font-medium text-on-photo-2">
-              Available this month · {MONTH.daysLeft} days left
-            </p>
-            <p className="tabular mt-0.5 text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">
+        {/* Fills the screen below the header; the donut flexes to take the leftover height. */}
+        <div className="flex h-[calc(100%-48px)] flex-col px-5 pb-3">
+          {/* Primary: the one number that matters */}
+          <section className="on-photo-shadow mt-4 [@media(max-height:720px)]:mt-2">
+            <p className="text-[15px] font-semibold uppercase tracking-[0.06em] text-on-photo-2">Available this month</p>
+            <p className="tabular mt-1 text-[64px] font-bold leading-none tracking-[-0.03em] text-on-photo [@media(max-height:720px)]:text-[52px]">
               {money(BASE_FREE_TOTAL)}
             </p>
+            <p className="mt-2 text-[15px] text-on-photo-2">
+              of your {money(MONTH.income)} paycheck · {MONTH.daysLeft} days left
+            </p>
           </section>
 
-          {/* 2. Where the paycheck went */}
-          <div className="mt-3">
+          {/* Secondary: where the paycheck went (chart + its caption read as one unit) */}
+          <div className="mt-4 flex min-h-[150px] flex-1 items-center justify-center [container-type:size] [@media(max-height:720px)]:mt-3">
             <Donut onSelect={(id) => (id === "yours" ? goTo("free") : setDetail(id))} />
           </div>
-
-          <section className="glass mt-3 flex h-[52px] items-center justify-between rounded-[22px] px-4 text-[15px] text-on-photo">
+          <div className="mx-auto mt-2.5 flex h-9 items-center gap-4 rounded-full bg-black/25 px-4 text-[14px] text-on-photo-2 backdrop-blur-md">
             <span>
-              <span className="tabular text-[18px] font-bold">{money(JOBS_TOTAL)}</span>
-              <span className="text-on-photo-2"> already assigned</span>
+              <span className="tabular text-[17px] font-semibold text-on-photo">{money(JOBS_TOTAL)}</span> already assigned
             </span>
+            <span className="h-3 w-px bg-white/35" aria-hidden />
             <span>
-              <span className="tabular text-[18px] font-bold">{money(BASE_FREE_TOTAL)}</span>
-              <span className="text-on-photo-2"> left</span>
+              <span className="tabular text-[17px] font-semibold text-on-photo">{money(BASE_FREE_TOTAL)}</span> left
             </span>
-          </section>
+          </div>
 
           {/* 3. Jump into any part of the month */}
-          <nav className="mt-3 grid grid-cols-6 gap-1" aria-label="Where your money goes">
+          {/* Tertiary: categories */}
+          <p className="on-photo-shadow mt-5 [@media(max-height:720px)]:mt-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-on-photo-2">Categories</p>
+          <nav className="mt-2 grid grid-cols-6 gap-1" aria-label="Categories">
             {CATEGORY_ORDER.map((id) => {
               const Icon = CATEGORY_ICONS[id];
               const job = MONTH.jobs.find((j) => j.id === id)!;
@@ -80,10 +82,10 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
                   onClick={() => setDetail(id)}
                   className="pressable flex flex-col items-center gap-1 text-on-photo"
                 >
-                  <span className="glass flex h-11 w-11 items-center justify-center rounded-full">
-                    <Icon size={20} />
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/12 ring-1 ring-white/25 backdrop-blur-md">
+                    <Icon size={19} />
                   </span>
-                  <span className="on-photo-shadow text-[11px] font-medium">
+                  <span className="on-photo-shadow text-[11px] font-medium text-on-photo-2">
                     {job.name === "Student loans" ? "Loans" : job.name}
                   </span>
                 </button>

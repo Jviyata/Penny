@@ -76,9 +76,8 @@ export function Donut({ onSelect }: { onSelect: (id: JobId | "yours") => void })
   return (
     <figure
       className="@container relative mx-auto aspect-square max-w-full"
-      // Fills whatever height Home has left on this phone, so Home fits on one screen.
-      // The reserve is everything else on Home (header, $1,060, the $4,140 row, icon row, room for Penny's bubble).
-      style={{ width: "clamp(176px, calc(100cqh - var(--donut-reserve, 440px) - var(--sat) - var(--sab)), 340px)" }}
+      // Fills its container (Home gives it whatever height is left), so Home fits on any iPhone.
+      style={{ width: "min(100cqw, 100cqh, 340px)" }}
       aria-label={`${money(total)} came in. ${slices.map((s) => `${s.name} ${money(s.amount)}`).join(", ")}.`}
     >
       <div className="glass absolute inset-0 rounded-full" aria-hidden />
