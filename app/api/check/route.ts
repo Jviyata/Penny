@@ -4,6 +4,7 @@ import path from "node:path";
 import { APP_RULES, RESPONSE_SCHEMA, describeState, toCheckResult } from "@/lib/ai";
 import { rateLimit, visitorKey } from "@/lib/rateLimit";
 import { askPennyAgent } from "@/lib/pennyAgent";
+import { getClient } from "@/lib/anthropicClient";
 import type { CheckRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -22,7 +23,6 @@ function loadSystemPrompt(): string {
   return systemPrompt;
 }
 
-let client: Anthropic | null = null;
 
 /**
  * POST /api/check: one turn of "Can I afford this?".
@@ -45,13 +45,13 @@ export async function POST(req: Request) {
   const image = parseImage(body.message.image);
   if (body.message.image && !image) return json({ error: "bad_image" }, 400);
 
-  // Keys that aren't scoped to a workspace must name one (the workspace Penny's agent lives in).
-  const workspace = process.env.ANTHROPIC_WORKSPACE_ID;
-  client ??= new Anthropic({
-    timeout: 25_000,
-    maxRetries: 1,
-    defaultHeaders: workspace ? { "anthropic-workspace-id": workspace } : undefined,
-  });
+  let client: Anthropic;
+  try {
+    client = await getClient(); // finds the right workspace for this key on first use
+  } catch (err) {
+    console.error("[check] couldn't set up the API client", err instanceof Error ? err.message : err);
+    return json({ error: "upstream" }, 502);
+  }
 
   // 1. Penny's Managed Agent (her own training lives on the agent).
   if (process.env.PENNY_AGENT !== "off") {
