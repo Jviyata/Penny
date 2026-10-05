@@ -9,6 +9,9 @@ import { PENNY_AGENT_ID } from "./pennyAgent";
  * (the `anthropic-workspace-id` header). Instead of asking for that ID, we find it ourselves:
  * ANTHROPIC_WORKSPACE_ID if set, otherwise the workspace that Penny's agent lives in.
  */
+// Penny's workspace ("Default" in the Claude Console). Not a secret; ANTHROPIC_WORKSPACE_ID overrides it.
+const DEFAULT_WORKSPACE_ID = "wrkspc_01Vh5uxocRgeCrCDDqGU3KWT";
+
 let client: Promise<Anthropic> | null = null;
 
 const OPTIONS = { timeout: 25_000, maxRetries: 1 } as const;
@@ -22,7 +25,7 @@ export function getClient(): Promise<Anthropic> {
 }
 
 async function build(): Promise<Anthropic> {
-  const pinned = process.env.ANTHROPIC_WORKSPACE_ID;
+  const pinned = process.env.ANTHROPIC_WORKSPACE_ID || DEFAULT_WORKSPACE_ID;
   if (pinned) return withWorkspace(pinned);
 
   const plain = new Anthropic(OPTIONS);
