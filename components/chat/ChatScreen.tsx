@@ -7,16 +7,15 @@ import { MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { useSend } from "@/lib/useSend";
+import { prepareImage } from "@/lib/image";
 import type { CardAction, ChatMessage } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { MicIcon } from "../ui/Icons";
+import { ImagesIcon, MicIcon, PhotoIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
 import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
 import { speechAvailable } from "@/lib/useSpeech";
 import { ResultCard } from "./ResultCard";
-
-const STARTERS = ["Concert tickets for $60", "Can I afford a $95 pair of sneakers?", "Dinner out, about $45"];
 
 type Mode = "talk" | "text";
 
@@ -35,14 +34,42 @@ export function ChatScreen({ active }: { active: boolean }) {
   // Checked after mount: the server can't know whether this browser has speech recognition.
   const [canTalk, setCanTalk] = useState(false);
   useEffect(() => setCanTalk(speechAvailable()), []);
+  // A fresh chat opens on the four choices (Talk, Type, Photo, Screenshot); the input bar appears once one is picked.
+  const [started, setStarted] = useState(false);
   useEffect(() => {
-    if (active) setMode(speechAvailable() ? "talk" : "text");
+    if (active) {
+      setMode(speechAvailable() ? "talk" : "text");
+      setStarted(false);
+    }
   }, [active]);
   const textInstead = () => {
     // Render the text bar now and focus it within the same tap, so iOS brings the keyboard up.
-    flushSync(() => setMode("text"));
+    flushSync(() => {
+      setStarted(true);
+      setMode("text");
+    });
     composerRef.current?.querySelector("textarea")?.focus();
   };
+  const voice = useRef<{ talk: () => void } | null>(null);
+  const talkNow = () => {
+    flushSync(() => {
+      setStarted(true);
+      setMode("talk");
+    });
+    voice.current?.talk(); // same tap, so Safari allows the microphone
+  };
+  const photoRef = useRef<HTMLInputElement>(null);
+  const sendPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      setStarted(true);
+      send({ text: "", image: await prepareImage(file) });
+    } finally {
+      if (photoRef.current) photoRef.current.value = "";
+    }
+  };
+  const empty = messages.length === 0 && !thinking;
+  const showChoices = empty && !started && !listening;
 
   // Messages restored from the session appear instantly; only new ones animate in.
   const restored = useRef<number | null>(null);
@@ -105,11 +132,19 @@ export function ChatScreen({ active }: { active: boolean }) {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <Scene name="chat" />
+      {/* Photo and screenshot choices. No `capture`: iOS offers Take Photo, Photo Library or Choose File. */}
+      <input
+        ref={photoRef}
+        type="file"
+        accept="image/*,.heic,.heif"
+        className="hidden"
+        onChange={(e) => sendPhoto(e.target.files?.[0])}
+      />
 
       <header className="on-photo-shadow absolute inset-x-0 top-0 z-20 px-5 pt-[calc(var(--sat)+8px)]">
         <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.01em] text-on-photo">Can I afford this?</h1>
         <p className="tabular mt-0.5 text-[15px] text-on-photo-2">
-          {money(Math.max(open, 0))} open · {MONTH.daysLeft} days left
+          {money(Math.max(open, 0))} free to spend · {MONTH.daysLeft} days left
         </p>
       </header>
 
@@ -124,8 +159,17 @@ export function ChatScreen({ active }: { active: boolean }) {
           maskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
         }}
       >
-        {messages.length === 0 && !thinking ? (
-          <EmptyState onPick={(t) => send({ text: t })} showStarters={mode === "text"} />
+        {empty ? (
+          showChoices ? (
+            <AskChoices
+              canTalk={canTalk}
+              onTalk={talkNow}
+              onType={textInstead}
+              onPhoto={() => photoRef.current?.click()}
+            />
+          ) : (
+            <EmptyState />
+          )
         ) : (
           <div className="flex min-h-full flex-col justify-end gap-2.5">
             {messages.map((m, i) => (
@@ -146,7 +190,9 @@ export function ChatScreen({ active }: { active: boolean }) {
 
       <div
         ref={composerRef}
-        className="absolute inset-x-0 z-20 bottom-[calc(var(--tabbar-h)+var(--sab))] [html[data-keyboard=open]_&]:bottom-0"
+        className={`absolute inset-x-0 z-20 bottom-[calc(var(--tabbar-h)+var(--sab))] [html[data-keyboard=open]_&]:bottom-0 ${
+          showChoices ? "invisible" : ""
+        }`}
       >
         {/* Backdrop: messages fade out behind the controls instead of showing through them */}
         <div
@@ -176,6 +222,7 @@ export function ChatScreen({ active }: { active: boolean }) {
         </AnimatePresence>
         {mode === "talk" ? (
           <VoiceComposer
+            handle={voice}
             busy={thinking}
             onListening={onListening}
             onSend={(text, image) => send({ text, image })}
@@ -295,28 +342,65 @@ function Thinking() {
   );
 }
 
-function EmptyState({ onPick, showStarters }: { onPick: (t: string) => void; showStarters: boolean }) {
+/** The Ask Penny screen: one question, four ways to answer it. */
+function AskChoices({
+  canTalk,
+  onTalk,
+  onType,
+  onPhoto,
+}: {
+  canTalk: boolean;
+  onTalk: () => void;
+  onType: () => void;
+  onPhoto: () => void;
+}) {
+  const choices = [
+    ...(canTalk ? [{ label: "Talk", Icon: MicIcon, onClick: onTalk }] : []),
+    { label: "Type", Icon: KeyboardGlyph, onClick: onType },
+    { label: "Add a photo", Icon: PhotoIcon, onClick: onPhoto },
+    { label: "Add a screenshot", Icon: ImagesIcon, onClick: onPhoto },
+  ];
+  return (
+    <div className="flex min-h-full flex-col items-center justify-center px-2 pb-2 text-center">
+      <Mascot mood="calm_neutral" size={108} label />
+      <p className="on-photo-shadow mt-2 text-[24px] font-bold leading-[29px] text-on-photo">What are you thinking of buying?</p>
+      <p className="on-photo-shadow mt-1 text-[15px] leading-[20px] text-on-photo-2">
+        I’ll show you what it means for the rest of {MONTH.name}.
+      </p>
+      <div className="mt-5 grid w-full grid-cols-2 gap-2.5">
+        {choices.map(({ label, Icon, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={onClick}
+            className="pressable paper-glass flex h-[88px] flex-col items-center justify-center gap-1.5 rounded-[22px] text-[16px] font-semibold text-label"
+          >
+            <Icon size={26} />
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function KeyboardGlyph({ size = 26 }: { size?: number }) {
+  return (
+    <span className="flex items-center justify-center font-bold leading-none" style={{ width: size, height: size, fontSize: size * 0.72 }} aria-hidden>
+      Aa
+    </span>
+  );
+}
+
+/** After picking Talk or Type, before the first message. */
+function EmptyState() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-4 pb-4 text-center">
       <Mascot mood="calm_neutral" size={120} label />
       <p className="on-photo-shadow mt-3 text-[22px] font-bold leading-[28px] text-on-photo">What are you thinking of buying?</p>
       <p className="on-photo-shadow mt-1.5 text-[15px] leading-[21px] text-on-photo-2">
-        Type it, say it, or add a photo or screenshot. I’ll show you what it would mean for the rest of {MONTH.name}.
+        Say or type the item and its price, or add a photo.
       </p>
-      {showStarters && (
-      <div className="mt-5 flex w-full flex-col gap-2">
-        {STARTERS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onPick(s)}
-            className="pressable glass-strong min-h-12 rounded-full px-5 py-3 text-[15px] font-medium text-on-photo"
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-      )}
     </div>
   );
 }

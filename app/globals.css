@@ -31,10 +31,10 @@
   --v-comfortable: #4f6b2c;
   --v-tight-bg: #f4e6cc;
   --v-tight: #8a621b;
-  --v-later-bg: #dfe7f1;
-  --v-later: #3d5f86;
-  --v-not-bg: #e9e1f1;
-  --v-not: #634d8f;
+  --v-later-bg: #f4e6cc; /* same amber as tight: "You can, but…" */
+  --v-later: #8a621b;
+  --v-not-bg: #eadfd2; /* muted brown-amber: supportive, never alarming */
+  --v-not: #8a5a32;
 
   /* Safe areas. DeviceFrame overrides these on desktop. */
   --sat: env(safe-area-inset-top, 0px);
@@ -70,10 +70,10 @@
     --v-comfortable: #c3d99a;
     --v-tight-bg: rgba(226, 184, 110, 0.18);
     --v-tight: #ebcd93;
-    --v-later-bg: rgba(130, 170, 220, 0.18);
-    --v-later: #adc8ea;
-    --v-not-bg: rgba(170, 150, 220, 0.2);
-    --v-not: #cdbdf0;
+    --v-later-bg: rgba(226, 184, 110, 0.18);
+    --v-later: #ebcd93;
+    --v-not-bg: rgba(200, 150, 110, 0.2);
+    --v-not: #e2b48c;
   }
 }
 

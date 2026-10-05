@@ -4,24 +4,30 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { BASE_FREE_TOTAL, JOBS_TOTAL, MONTH, USER_NAME } from "@/lib/demoData";
 import { money } from "@/lib/format";
-import { useStore } from "@/lib/store";
-import { NavButton, Screen } from "../ui/Screen";
-import { ChevronIcon, GearIcon } from "../ui/Icons";
-import type { Tab } from "../TabBar";
 import type { JobId } from "@/lib/monthDetails";
-import { CATEGORY_ICONS, CATEGORY_ORDER } from "./categories";
-import { CategoryScreen, YoursScreen } from "./CategoryScreen";
-import { Donut } from "./Donut";
+import { useStore } from "@/lib/store";
+import { ChevronIcon, GearIcon } from "../ui/Icons";
+import { NavButton, Screen } from "../ui/Screen";
+import type { Tab } from "../TabBar";
+import { CategoryScreen } from "./CategoryScreen";
+import { Donut, SLICES, type SliceId } from "./Donut";
 import { MonthMenu } from "./MonthMenu";
 import { SettingsSheet } from "./SettingsSheet";
 
+/**
+ * Home tells one story, top to bottom:
+ * available this month → what's actually free after plans → where the paycheck went.
+ */
 export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; resetSignal: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [jobsOpen, setJobsOpen] = useState(false);
-  const [detail, setDetail] = useState<JobId | "yours" | null>(null);
+  const [detail, setDetail] = useState<JobId | null>(null);
   const free = useStore().open;
-  const open = (id: JobId | "yours") => setDetail(id);
+  const open = (id: SliceId) => (id === "free" ? goTo("free") : setDetail(id));
   useEffect(() => setDetail(null), [resetSignal]);
+  // Lets the tab bar hide Penny's intro bubble while a category page covers Home.
+  useEffect(() => {
+    document.documentElement.dataset.homeDetail = detail ? "open" : "closed";
+  }, [detail]);
 
   return (
     <>
@@ -38,84 +44,69 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
           </>
         }
       >
-        {/* Sized to fit one iPhone screen without scrolling; the donut takes whatever height is left. */}
         <div className="px-5">
-          {/* The number that matters most */}
-          <section className="on-photo-shadow mt-2">
-            <p className="tabular text-[54px] font-bold leading-none tracking-[-0.025em] text-on-photo">{money(BASE_FREE_TOTAL)}</p>
-            <p className="mt-1 text-[17px] text-on-photo-2">
-              yours to work with · {MONTH.daysLeft} days left
+          {/* 1. Available this month */}
+          <section className="on-photo-shadow mt-3">
+            <p className="text-[15px] font-medium text-on-photo-2">
+              Available this month · {MONTH.daysLeft} days left
             </p>
-            {/* After plans and purchases, this is what's actually free; it's the number Penny uses. */}
-            <button
-              type="button"
-              onClick={() => open("yours")}
-              className="pressable glass-strong mt-2 flex h-9 items-center gap-1.5 rounded-full pl-3.5 pr-2.5 text-[15px] font-semibold text-on-photo"
-            >
-              <span className="tabular">{money(Math.max(free, 0))}</span>
-              <span className="font-medium text-on-photo-2">free now, after plans</span>
-              <ChevronIcon size={14} className="text-on-photo-2" />
-            </button>
+            <p className="tabular mt-0.5 text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">
+              {money(BASE_FREE_TOTAL)}
+            </p>
           </section>
 
-          <div className="mt-3">
-            <Donut onSelect={open} />
-          </div>
+          {/* 2. What's actually free: the number Penny uses */}
+          <button
+            type="button"
+            onClick={() => goTo("free")}
+            className="pressable glass-strong mt-3 flex min-h-12 w-full items-center gap-2.5 rounded-[18px] px-4 py-2.5 text-left text-on-photo"
+          >
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ background: free > 0 ? "#a9c27e" : "var(--v-not)" }}
+              aria-hidden
+            />
+            <span className="flex-1 text-[16px] leading-[21px]">
+              <span className="tabular text-[19px] font-bold">{money(Math.max(free, 0))}</span> free to spend
+              <span className="block text-[13px] text-on-photo-2">after your plans and purchases</span>
+            </span>
+            <ChevronIcon className="text-on-photo-2" />
+          </button>
 
-          {/* What already has a job */}
-          <section className="glass mt-3 overflow-hidden rounded-[22px]">
-            <button
-              type="button"
-              onClick={() => setJobsOpen((o) => !o)}
-              aria-expanded={jobsOpen}
-              className="flex h-[52px] w-full items-center gap-2 px-4 text-left text-on-photo"
-            >
-              <span className="tabular text-[20px] font-bold">{money(JOBS_TOTAL)}</span>
-              <span className="flex-1 text-[15px] text-on-photo-2">already has a job</span>
-              <span className="text-[14px] text-on-photo-2">{jobsOpen ? "Hide" : "See all"}</span>
-              <ChevronIcon className={`text-on-photo-2 transition-transform ${jobsOpen ? "rotate-90" : ""}`} />
-            </button>
-            {jobsOpen && (
-              <ul className="px-4 pb-2">
-                {MONTH.jobs.map((job) => (
-                  <li key={job.id} className="shadow-[0_-1px_0_rgba(255,255,255,0.18)]">
+          {/* 3. Where the paycheck went */}
+          <section
+            className="mt-3 rounded-[24px] p-3.5 text-on-photo"
+            style={{ background: "rgba(28, 18, 10, 0.42)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}
+          >
+            <div className="flex items-center gap-3">
+              <Donut onSelect={open} size="min(132px, 34cqw)" />
+              <ul className="min-w-0 flex-1" aria-label="Where your paycheck goes">
+                {SLICES.map((s) => (
+                  <li key={s.id}>
                     <button
                       type="button"
-                      onClick={() => open(job.id as JobId)}
-                      className="flex min-h-11 w-full items-center gap-2 text-left text-on-photo active:opacity-60"
+                      onClick={() => open(s.id)}
+                      className="flex h-[26px] w-full items-center gap-2 text-left text-[14px] active:opacity-60"
                     >
-                      <span className="flex-1 text-[16px]">{job.name}</span>
-                      <span className="tabular text-[16px] text-on-photo-2">{money(job.amount)}</span>
-                      <ChevronIcon className="text-on-photo-2" />
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} aria-hidden />
+                      <span className={`min-w-0 flex-1 truncate ${s.id === "free" ? "font-semibold" : ""}`}>{s.name}</span>
+                      <span className="tabular text-on-photo-2">{money(s.amount)}</span>
                     </button>
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-white/15 pt-2.5 text-[14px]">
+              <span>
+                <span className="tabular font-semibold">{money(JOBS_TOTAL)}</span>
+                <span className="text-on-photo-2"> already assigned</span>
+              </span>
+              <span>
+                <span className="tabular font-semibold">{money(BASE_FREE_TOTAL)}</span>
+                <span className="text-on-photo-2"> left</span>
+              </span>
+            </div>
           </section>
-
-          {/* Jump into any part of the month */}
-          <nav className="mt-3 grid grid-cols-6 gap-1" aria-label="Where your money goes">
-            {CATEGORY_ORDER.map((id) => {
-              const Icon = CATEGORY_ICONS[id];
-              const job = MONTH.jobs.find((j) => j.id === id)!;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => open(id)}
-                  className="pressable flex flex-col items-center gap-1 text-on-photo"
-                >
-                  <span className="glass flex h-11 w-11 items-center justify-center rounded-full">
-                    <Icon size={20} />
-                  </span>
-                  <span className="on-photo-shadow text-[11px] font-medium">
-                    {job.name === "Student loans" ? "Loans" : job.name}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
         </div>
       </Screen>
       <AnimatePresence>
@@ -128,11 +119,7 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 34, stiffness: 340 }}
           >
-            {detail === "yours" ? (
-              <YoursScreen onBack={() => setDetail(null)} />
-            ) : (
-              <CategoryScreen id={detail} onBack={() => setDetail(null)} />
-            )}
+            <CategoryScreen id={detail} onBack={() => setDetail(null)} />
           </motion.div>
         )}
       </AnimatePresence>

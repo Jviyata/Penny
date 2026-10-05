@@ -91,11 +91,11 @@ export function itemResult(item: { name: string; price: number }, open: number):
   const reply = {
     comfortable:
       pct < 10
-        ? `Yep, this fits comfortably into what you have left. You’d still have ${money(after)} for the next ${days} days.`
-        : `You can afford it. It’ll use about ${pct}% of what you have left this month, so you’re still in a comfortable spot.`,
-    tight: `You can technically afford it, but it’s a pretty significant chunk of what you have left (about ${pct}%). Do you need it this month, or is it something you just want?`,
-    later: `You could technically buy it, but this would use about ${pct}% of your remaining spending money. Is there a reason you need it right now?`,
-    not_this_month: `That would put you about ${money(-after)} over your spending budget this month. I’d wait rather than pull from money you’ve already set aside. ${NEXT_MONTH} starts fresh.`,
+        ? `Easy one. You’ll still have plenty of breathing room for the next ${days} days.`
+        : `It’ll use about ${pct}% of what you have left, so you’re still in a comfortable spot.`,
+    tight: `It’s a pretty big chunk of what you have left (about ${pct}%). Do you need it this month, or do you just want it?`,
+    later: `This would use about ${pct}% of your free money. Is there a reason you need it right now?`,
+    not_this_month: `I’d move this to ${NEXT_MONTH} rather than pull from money you’ve already set aside.`,
   }[verdict];
   return { reply, card: { name: item.name, price: item.price, verdict, actions: defaultActions(verdict) } };
 }
@@ -211,7 +211,7 @@ export function parsePrice(text: string, bareNumberOk: boolean): number | null {
 }
 
 const FILLER =
-  /\b(can i afford|could i afford|should i (?:buy|get)|is it (?:ok|okay) to (?:buy|get)|i want(?: to (?:buy|get))?|i(?:'m| am) (?:thinking about|looking at|eyeing)|thinking (?:about|of)|how about|what about|buying|getting|buy|get|it's|its|it is|costs?|for|at|about|now|please)\b/g;
+  /(?<![\w-])(can i afford|could i afford|should i (?:buy|get)|is it (?:ok|okay) to (?:buy|get)|i want(?: to (?:buy|get))?|i(?:'m| am) (?:thinking about|looking at|eyeing)|thinking (?:about|of)|how about|what about|buying|getting|buy|get|it's|its|it is|costs?|for|at|about|now|please)(?![\w-])/g;
 
 export function extractName(text: string): string | null {
   let t = text

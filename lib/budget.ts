@@ -29,11 +29,19 @@ export function verdictFor(open: number, price: number): Verdict {
   return "later";
 }
 
+/** Penny's three learnable answers (tight and later both read as "You can, but…"). */
 export const VERDICT_LABEL: Record<Verdict, string> = {
-  comfortable: "Comfortable",
-  tight: "Tight",
-  later: "Better later",
+  comfortable: "Go for it",
+  tight: "You can, but…",
+  later: "You can, but…",
   not_this_month: "Not right now",
+};
+
+export const VERDICT_SYMBOL: Record<Verdict, string> = {
+  comfortable: "✓",
+  tight: "△",
+  later: "△",
+  not_this_month: "×",
 };
 
 export const SHELF_STATUS: Record<Verdict, string> = {
@@ -49,13 +57,12 @@ export const JUST_WANT_IT = "I just want it";
 export function defaultActions(verdict: Verdict): CardAction[] {
   const save: CardAction = { label: "Save for November", kind: "save_for_later" };
   const need: CardAction = { label: NEED_IT, kind: "other" };
-  const want: CardAction = { label: JUST_WANT_IT, kind: "other" };
   switch (verdict) {
     case "comfortable":
       return [{ label: "Buy it", kind: "buy_anyway" }, { label: "Save for later", kind: "save_for_later" }];
     case "tight":
     case "later":
-      return [need, want, save];
+      return [need, save];
     case "not_this_month":
       return [save, { label: "Buy anyway", kind: "buy_anyway" }];
   }

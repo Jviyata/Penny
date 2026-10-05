@@ -33,6 +33,18 @@ export const STARTING_BOUGHT = [
   { id: "movie", name: "Cinema", what: "Movie night", date: "Oct 8", amount: 15.5, image: "/bought/movie.jpg", note: "You treated yourself to a movie night." },
 ];
 
+// November, projected: same paycheck and bills, with these plans already set → $280 free to spend.
+// Powers the "If you wait until November" comparison on Penny's answers.
+export const NEXT_MONTH = {
+  name: "November",
+  plans: [
+    { id: "thanksgiving", name: "Thanksgiving flight", amount: 480 },
+    { id: "friendsgiving", name: "Friendsgiving", amount: 120 },
+    { id: "coat", name: "Winter coat", amount: 180 },
+  ],
+};
+export const NEXT_MONTH_FREE = BASE_FREE_TOTAL - NEXT_MONTH.plans.reduce((t, p) => t + p.amount, 0);
+
 // Sample screenshots for Demo mode. Placeholders live in /public/demo; swap in real ones with the same
 // file names (and update name/price here so the offline fallback matches).
 export const DEMO_FILES = [

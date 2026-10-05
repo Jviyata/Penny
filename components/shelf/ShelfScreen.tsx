@@ -24,7 +24,7 @@ export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
   };
 
   return (
-    <Screen scene="shelf" title="The Shelf" subtitle="Things you’re saving for later.">
+    <Screen scene="shelf" title="The Shelf" subtitle="Things you want, just not right now.">
       {state.shelf.length === 0 ? (
         <section className="mx-3 mt-2 flex flex-col items-center rounded-[30px] bg-card px-8 pb-8 pt-6 text-center">
           <Mascot mood="calm_neutral" size={132} />

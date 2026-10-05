@@ -24,11 +24,14 @@ export function VoiceComposer({
   busy,
   onTextInstead,
   onListening,
+  handle,
 }: {
   onSend: (text: string, image?: PreparedImage) => void;
   busy: boolean;
   onTextInstead: () => void;
   onListening?: (on: boolean) => void;
+  /** Lets the "Talk" option on the Ask Penny screen start listening within the same tap. */
+  handle?: React.RefObject<{ talk: () => void } | null>;
 }) {
   const [heard, setHeard] = useState("");
   // If the mic can't start, stay in talk mode and say why; the user decides whether to type.
@@ -66,6 +69,7 @@ export function VoiceComposer({
       speech.start("");
     }
   };
+  if (handle) handle.current = { talk };
 
   return (
     <div className="flex flex-col items-center px-4 pb-2 pt-1">

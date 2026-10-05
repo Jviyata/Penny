@@ -30,7 +30,7 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
               initial={{ opacity: 0, y: 6, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.9 }}
-              className="pointer-events-none absolute bottom-[calc(100%+42px)] left-1/2 -translate-x-1/2"
+              className="pointer-events-none absolute bottom-[calc(100%+42px)] left-1/2 -translate-x-1/2 [html[data-home-detail=open]_&]:hidden"
               aria-hidden
             >
               <span className="paper-glass block whitespace-nowrap rounded-[16px] px-3.5 py-1.5 text-center text-[14px] font-semibold text-label">
@@ -46,10 +46,10 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
         <motion.button
           type="button"
           onClick={() => onChange("chat")}
-          aria-label="Can I afford this? Ask Penny"
+          aria-label="Ask Penny: can I afford this?"
           aria-current={onChat ? "page" : undefined}
           initial={false}
-          animate={onChat ? { top: 7, width: 46, height: 46 } : { top: -38, width: 84, height: 84 }}
+          animate={onChat ? { top: 4, width: 40, height: 40 } : { top: -40, width: 80, height: 80 }}
           transition={{ type: "spring", damping: 26, stiffness: 320 }}
           className="absolute left-1/2 flex -translate-x-1/2 items-end justify-center active:scale-95"
         >
@@ -61,6 +61,15 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
           />
           <Mascot mood={onChat ? "listening" : "approved"} size={84} className="relative !h-full !w-full" />
         </motion.button>
+        {/* One entry point, always the same meaning */}
+        <span
+          className={`pointer-events-none absolute inset-x-0 bottom-[5px] text-center text-[10px] font-semibold leading-none ${
+            onChat ? "text-label" : "text-label-2"
+          }`}
+          aria-hidden
+        >
+          Ask Penny
+        </span>
       </div>
 
       <TabButton id="goals" label="Goals" Icon={TargetIcon} active={active} onChange={onChange} />

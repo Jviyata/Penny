@@ -1,36 +1,32 @@
 "use client";
 
-import { VERDICT_LABEL } from "@/lib/budget";
+import { useState } from "react";
+import { VERDICT_LABEL, VERDICT_SYMBOL } from "@/lib/budget";
+import { NEXT_MONTH, NEXT_MONTH_FREE } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { VERDICT_MOOD } from "@/lib/mood";
 import type { CardAction, ResultCard as Card, Verdict } from "@/lib/types";
-import { ArrowRightIcon, CheckIcon } from "../ui/Icons";
+import { ArrowRightIcon, CheckIcon, ChevronIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 
-const DOT: Record<Verdict, string> = {
-  comfortable: "var(--v-comfortable)",
-  tight: "var(--v-tight)",
-  later: "var(--v-later)",
-  not_this_month: "var(--v-not)",
+// Green only means safe. Amber is "you can, but"; muted brown is "not right now". Never red.
+const TONE: Record<Verdict, { bg: string; fg: string }> = {
+  comfortable: { bg: "var(--v-comfortable-bg)", fg: "var(--v-comfortable)" },
+  tight: { bg: "var(--v-tight-bg)", fg: "var(--v-tight)" },
+  later: { bg: "var(--v-later-bg)", fg: "var(--v-later)" },
+  not_this_month: { bg: "var(--v-not-bg)", fg: "var(--v-not)" },
 };
 
-/** One calm line that states what changes. Never "good" or "bad". */
-function headline(card: Card): string {
-  switch (card.verdict) {
-    case "comfortable":
-      return "This fits comfortably.";
-    case "tight":
-      return "A big chunk of what’s left.";
-    case "later":
-      return "Could this wait?";
-    case "not_this_month":
-      return "Not right now.";
-  }
-}
+const HEADLINE: Record<Verdict, string> = {
+  comfortable: "Yep, this fits comfortably.",
+  tight: "You can, but I’d think about it.",
+  later: "You can, but I’d wait.",
+  not_this_month: "Not right now.",
+};
 
 /**
- * What buying it would change: the mascot, a headline, the AI's reply,
- * the numbers (always computed by the app), and the choices. The user decides.
+ * Penny's answer as a mini decision card: the verdict, the reason in plain numbers,
+ * what happens if you buy now vs. wait, two next steps, and an optional "Why?".
  */
 export function ResultCard({
   card,
@@ -43,67 +39,105 @@ export function ResultCard({
   onAction: (a: CardAction) => void;
   disabled: boolean;
 }) {
-  const short = card.openAfter < 0;
-  const [primary, ...rest] = card.actions;
+  const [why, setWhy] = useState(false);
+  const tone = TONE[card.verdict];
+  const fits = card.openAfter >= 0;
+  const nextAfter = NEXT_MONTH_FREE - card.price;
+  const [primary, secondary] = card.actions;
+
+  const bestOption =
+    card.verdict === "comfortable"
+      ? "No goals or bills are affected."
+      : card.verdict === "not_this_month"
+        ? nextAfter >= 0
+          ? `Best option: save it for ${NEXT_MONTH.name}. It fits there without touching your savings.`
+          : `Best option: make it a goal and save up for it.`
+        : `Best option: wait, unless you need it this month.`;
 
   return (
-    <div className="relative w-full max-w-[350px] pt-12">
-      <Mascot
-        mood={VERDICT_MOOD[card.verdict]}
-        size={card.image ? 96 : 116}
-        className={`absolute z-10 ${card.image ? "-right-1 top-2" : "left-1/2 top-0 -translate-x-1/2 -translate-y-6"}`}
-      />
+    <div className="relative w-full max-w-[350px] pt-10">
+      <Mascot mood={VERDICT_MOOD[card.verdict]} size={card.image ? 84 : 100} className="absolute -right-1 top-0 z-10" />
 
-      {/* Headline */}
-      <div className="paper-glass rounded-[30px] px-4 pb-4 pt-4 text-center">
+      {/* The answer */}
+      <div className="paper-glass rounded-[28px] p-3.5">
         {card.image && (
-          <div className="mb-3 aspect-[2/1] w-full overflow-hidden rounded-[20px] bg-fill">
+          <div className="mb-3 aspect-[5/2] w-full overflow-hidden rounded-[18px] bg-fill">
             <img src={card.image} alt={card.name} className="h-full w-full object-cover" draggable={false} />
           </div>
         )}
-        <p className={`text-[23px] font-bold leading-[28px] tracking-[-0.01em] text-label ${card.image ? "" : "pt-6"}`}>
-          {headline(card)}
-        </p>
-        <p className="selectable mt-1.5 text-[15px] leading-[20px] text-label-2">{reply}</p>
+        <span
+          className="inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[14px] font-semibold"
+          style={{ background: tone.bg, color: tone.fg }}
+        >
+          <span aria-hidden>{VERDICT_SYMBOL[card.verdict]}</span>
+          {VERDICT_LABEL[card.verdict]}
+        </span>
+        <p className="mt-2 text-[21px] font-bold leading-[26px] tracking-[-0.01em] text-label">{HEADLINE[card.verdict]}</p>
+        <p className="selectable mt-1 text-[15px] leading-[20px] text-label-2">{reply}</p>
       </div>
 
-      {/* The numbers */}
-      <dl className="mt-2 rounded-[24px] bg-card px-4 py-1 text-[16px]">
-        <Row label={card.name} strong>
-          {money(card.price)}
-        </Row>
-        <Row label="Open now">{money(card.openBefore)}</Row>
-        <Row label={short ? "Short by" : "Left after"}>{money(Math.abs(card.openAfter))}</Row>
-        <Row label="This month" last>
-          <span className="inline-flex items-center gap-2 font-medium">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: DOT[card.verdict] }} />
-            {VERDICT_LABEL[card.verdict]}
-          </span>
-        </Row>
-      </dl>
+      {/* The reason, in numbers */}
+      <div className="mt-2 rounded-[24px] bg-card px-4 py-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="min-w-0 truncate text-[16px] font-semibold">{card.name}</p>
+          <p className="tabular shrink-0 text-[16px] font-semibold">{money(card.price)}</p>
+        </div>
+        <p className="mt-0.5 text-[14px] text-label-2">
+          You have <span className="tabular font-semibold text-label">{money(Math.max(card.openBefore, 0))}</span> free to spend this month.
+        </p>
 
-      {/* Choices */}
-      <div className="mt-2.5 flex flex-col gap-2">
-        {primary && (
-          <ActionButton action={primary} card={card} disabled={disabled} onAction={onAction} primary />
+        <div className="mt-2.5 space-y-1.5">
+          <Compare label="If you buy it now" from={card.openBefore} to={card.openAfter} good={card.verdict === "comfortable"} />
+          {card.verdict !== "comfortable" && (
+            <Compare label={`If you wait for ${NEXT_MONTH.name}`} from={NEXT_MONTH_FREE} to={nextAfter} good={nextAfter >= 0} />
+          )}
+        </div>
+
+        <p className="mt-2.5 text-[14px] leading-[19px] text-label">
+          {!fits && <span className="font-semibold">You’re {money(-card.openAfter)} short. </span>}
+          {bestOption}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setWhy((w) => !w)}
+          aria-expanded={why}
+          className="-mb-1 mt-1.5 flex h-9 items-center gap-1 text-[14px] font-medium text-label-2"
+        >
+          Why?
+          <ChevronIcon size={13} className={`transition-transform ${why ? "rotate-90" : ""}`} />
+        </button>
+        {why && (
+          <p className="pb-1 text-[14px] leading-[19px] text-label-2">
+            Your rent, bills and savings are already protected. Penny only compares purchases against the money that’s free to
+            spend after your plans, and she won’t pull from savings to make something fit.
+          </p>
         )}
-        {rest.length > 0 && (
-          <div className={`grid gap-2 ${rest.length > 1 && rest.every((a) => a.label.length <= 16) ? "grid-cols-2" : "grid-cols-1"}`}>
-            {rest.map((a) => (
-              <ActionButton key={a.label} action={a} card={card} disabled={disabled} onAction={onAction} />
-            ))}
-          </div>
-        )}
+      </div>
+
+      {/* Two next steps, never more */}
+      <div className="mt-2 flex flex-col gap-2">
+        {primary && <ActionButton action={primary} card={card} disabled={disabled} onAction={onAction} primary />}
+        {secondary && <ActionButton action={secondary} card={card} disabled={disabled} onAction={onAction} />}
       </div>
     </div>
   );
 }
 
-function Row({ label, children, strong, last }: { label: string; children: React.ReactNode; strong?: boolean; last?: boolean }) {
+/** "If you buy it now   $115 → $90 left" */
+function Compare({ label, from, to, good }: { label: string; from: number; to: number; good: boolean }) {
   return (
-    <div className={`flex min-h-11 items-center justify-between gap-3 ${last ? "" : "shadow-[0_1px_0_var(--sep)]"}`}>
-      <dt className={`min-w-0 truncate ${strong ? "font-semibold text-label" : "text-label-2"}`}>{label}</dt>
-      <dd className={`tabular shrink-0 ${strong ? "font-semibold" : "font-medium"}`}>{children}</dd>
+    <div className="flex items-center justify-between gap-2 rounded-[14px] bg-fill px-3 py-2 text-[14px]">
+      <span className="text-label-2">{label}</span>
+      <span className="tabular flex shrink-0 items-center gap-1.5 font-semibold">
+        <span className="text-label-2">{money(Math.max(from, 0))}</span>
+        <span className="text-label-3" aria-hidden>
+          →
+        </span>
+        <span style={{ color: to < 0 ? "var(--v-not)" : good ? "var(--v-comfortable)" : "var(--label)" }}>
+          {to < 0 ? `${money(-to)} short` : `${money(to)} left`}
+        </span>
+      </span>
     </div>
   );
 }
@@ -128,10 +162,8 @@ function ActionButton({
       type="button"
       disabled={disabled || !!card.chosen}
       onClick={() => onAction(action)}
-      className={`pressable flex items-center justify-center gap-2 rounded-full transition-opacity disabled:active:scale-100 ${
-        primary
-          ? "relative h-14 bg-cta px-6 text-[17px] font-semibold text-on-cta"
-          : "paper-glass h-12 px-3 text-[15px] font-semibold text-label"
+      className={`pressable relative flex items-center justify-center gap-2 rounded-full transition-opacity disabled:active:scale-100 ${
+        primary ? "h-[52px] bg-cta px-6 text-[17px] font-semibold text-on-cta" : "paper-glass h-12 px-3 text-[15px] font-semibold text-label"
       } ${muted ? "opacity-45" : ""}`}
     >
       {chosen && <CheckIcon />}

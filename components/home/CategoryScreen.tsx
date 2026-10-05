@@ -5,7 +5,7 @@ import { money } from "@/lib/format";
 import { CATEGORY_NOTE, SPENDING, type JobId, type Spend } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { NavButton, Screen } from "../ui/Screen";
-import { ArrowLeftIcon, BagIcon, TargetIcon } from "../ui/Icons";
+import { ArrowLeftIcon, TargetIcon } from "../ui/Icons";
 import { CATEGORY_ICONS } from "./categories";
 
 /**
@@ -135,79 +135,5 @@ function Savings({ total }: { total: number }) {
         </ul>
       </section>
     </>
-  );
-}
-
-/**
- * Opened from the sparkle ("Yours") slice: free spending for the month, money that's just for you.
- * Shows what's available and what you've bought for yourself. Plans live on the Free spending tab.
- */
-export function YoursScreen({ onBack }: { onBack: () => void }) {
-  const { state, open } = useStore();
-  const { bought } = state;
-  const spent = bought.reduce((t, b) => t + b.amount, 0);
-  const available = Math.max(open, 0);
-  const share = available + spent > 0 ? spent / (available + spent) : 0;
-
-  return (
-    <Screen
-      scene="home"
-      title="Yours"
-      leading={
-        <NavButton label="Back to your October" onClick={onBack}>
-          <ArrowLeftIcon />
-        </NavButton>
-      }
-    >
-      <div className="px-5">
-        <section className="on-photo-shadow -mt-1">
-          <p className="tabular text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">{money(available)}</p>
-          <div className="mt-1.5 flex items-center justify-between gap-3">
-            <p className="text-[19px] text-on-photo-2">available for you</p>
-            <span className="glass tabular flex h-10 shrink-0 items-center rounded-full px-4 text-[17px] font-semibold text-on-photo">
-              {money(spent)} spent
-            </span>
-          </div>
-        </section>
-        <div className="glass mt-4 h-3.5 overflow-hidden rounded-full" aria-hidden>
-          <div className="h-full rounded-full bg-[#f1ead9]" style={{ width: `${share * 100}%` }} />
-        </div>
-        <p className="on-photo-shadow mt-2.5 text-[14px] text-on-photo-2">
-          {open < 0
-            ? `You’ve gone ${money(-open)} past what was open. Moving a plan on the Free spending tab would balance it.`
-            : `Money that’s just for you, through the end of ${MONTH.name}.`}
-        </p>
-      </div>
-
-      <section className="mx-3 mt-5 overflow-hidden rounded-[30px] bg-card pb-2">
-        <h2 className="px-5 pb-1 pt-4 text-[19px] font-semibold">What you bought</h2>
-        {bought.length === 0 ? (
-          <p className="px-5 pb-4 pt-1 text-[15px] text-label-2">Nothing yet this month.</p>
-        ) : (
-          <ul>
-            {[...bought].reverse().map((b) => (
-              <li key={b.id} className="flex items-center gap-3.5 px-5 py-3 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
-                <span className="h-16 w-16 shrink-0 overflow-hidden rounded-[16px] bg-[#e9dccb] text-[#3b3128]">
-                  {b.image ? (
-                    <img src={b.image} alt="" className="h-full w-full object-cover" draggable={false} />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center">
-                      <BagIcon size={24} />
-                    </span>
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[16px] leading-[21px]">{b.note ?? `You bought ${b.name}.`}</span>
-                  <span className="mt-0.5 block truncate text-[13px] text-label-3">
-                    {[b.name, b.date].filter(Boolean).join(" · ")}
-                  </span>
-                </span>
-                <span className="tabular shrink-0 text-[17px] font-semibold">{money(b.amount)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </Screen>
   );
 }

@@ -81,8 +81,8 @@ card: include when the user asks about a specific item and you know its name and
   tight: share is about 25-40% (ask whether they need it this month)
   later ("Better later"): share is over 40% (slow down, ask why now, suggest ${NEXT_MONTH} if it isn't needed)
   If the user has already given a strong reason (needed this month) and it fits, use comfortable or tight and say they're good to buy it.
-- actions: 2-3 buttons, labels under 24 characters. Kinds: save_for_later, make_it_work, buy_anyway, other.
-  Usual sets: comfortable → "Buy it", "Save for later". tight and later → "I need it this month" (other), "I just want it" (other), "Save for ${NEXT_MONTH}". not_this_month → "Save for ${NEXT_MONTH}", "Buy anyway".
+- actions: exactly 2 buttons, labels under 24 characters. Kinds: save_for_later, make_it_work, buy_anyway, other.
+  Usual sets: comfortable → "Buy it", "Save for later". tight and later → "I need it this month" (other), "Save for ${NEXT_MONTH}". not_this_month → "Save for ${NEXT_MONTH}", "Buy anyway". Never more than 2 buttons.
 - The app calculates and shows the before/after numbers itself. Keep the numbers in your reply consistent with app_state.
 
 needs_price: true when the user shared an item but you can't tell its price (not visible in the photo, not in the message). Ask for the price in reply, and set card to null. When they answer with a number, the item is the one in app_state.
@@ -157,8 +157,8 @@ export function toCheckResult(raw: RawOutput): CheckResult | null {
       const actions = (Array.isArray(c.actions) ? c.actions : [])
         .map((a: { label?: unknown; kind?: unknown }) => ({ label: str(a?.label, 28), kind: a?.kind as ActionKind }))
         .filter((a): a is CardAction => !!a.label && KINDS.includes(a.kind))
-        .slice(0, 3);
-      card = { name, price, verdict, actions: actions.length >= 2 ? actions : defaultActions(verdict) };
+        .slice(0, 2);
+      card = { name, price, verdict, actions: actions.length === 2 ? actions : defaultActions(verdict) };
     }
   }
 
