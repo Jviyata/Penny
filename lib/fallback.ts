@@ -114,7 +114,7 @@ function handleAction(
     const forNextMonth = /november|next month/.test(said);
     const status = !forNextMonth && (verdict === "comfortable" || verdict === "tight") ? SHELF_STATUS[verdict] : SHELF_STATUS.later;
     return {
-      reply: `Saved ${name} to your Shelf. It’ll be there when you want to look again.`,
+      reply: `Saved ${name} to your wishlist. It’ll be there when you want to look again.`,
       updates: [{ type: "save_to_shelf", name: item.name, price: item.price, status }],
     };
   }

@@ -99,7 +99,7 @@ export function DemoFiles({ goTo }: { goTo: (t: Tab) => void }) {
           <div className="mt-2 flex items-center gap-2 px-1">
             <Mascot mood="calm_neutral" size={36} />
             <p className="text-[13px] leading-[17px] text-label-2">
-              Puts back $1,060, the four plans and the goals, and clears the chat and the Shelf.
+              Puts back $1,060, the four plans and the goals, and clears the chat and your wishlist.
             </p>
           </div>
         </div>

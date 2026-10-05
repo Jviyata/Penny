@@ -248,3 +248,16 @@ export const ChevronDownIcon = ({ size = 14, className }: P) => (
     <path d="m6 9 6 6 6-6" />
   </svg>
 );
+
+export const FlagIcon = ({ size = 26, filled, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M5.5 21V4" />
+    <path d="M5.5 4.5c2.5-1.3 4.6-1.3 7 0s4.5 1.3 6.5 0v9c-2 1.3-4 1.3-6.5 0s-4.5-1.3-7 0z" fill={filled ? "currentColor" : "none"} />
+  </svg>
+);
+
+export const HeartIcon = ({ size = 26, filled, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" fill={filled ? "currentColor" : "none"} />
+  </svg>
+);

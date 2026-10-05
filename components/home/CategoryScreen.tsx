@@ -5,7 +5,7 @@ import { money } from "@/lib/format";
 import { CATEGORY_NOTE, SPENDING, type JobId, type Spend } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { NavButton, Screen } from "../ui/Screen";
-import { ArrowLeftIcon, TargetIcon } from "../ui/Icons";
+import { ArrowLeftIcon, FlagIcon } from "../ui/Icons";
 import { CATEGORY_ICONS } from "./categories";
 
 /**
@@ -113,7 +113,7 @@ function Savings({ total }: { total: number }) {
               <li key={g.id} className="px-5 py-3">
                 <div className="flex items-center gap-3.5">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#dfe6d3] text-[#3b3128]">
-                    <TargetIcon size={22} />
+                    <FlagIcon size={22} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[17px]">{g.name}</span>

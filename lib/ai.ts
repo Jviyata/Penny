@@ -89,7 +89,7 @@ needs_price: true when the user shared an item but you can't tell its price (not
 
 quick_replies: 0-3 short next messages the user can tap, written in their voice (e.g. "Move Concert to ${NEXT_MONTH}"). Use them when you propose a concrete change.
 
-updates: changes to Free spending or the Shelf. Only make them when the user asked for them or tapped a suggestion. Unused fields are null.
+updates: changes to Free spending or the Wishlist (called "shelf" in the data). Only make them when the user asked for them or tapped a suggestion. Unused fields are null.
 - add_plan: name, amount
 - edit_plan: name (an existing plan's name), new_name and/or amount
 - remove_plan: name. Also use it to move a plan to ${NEXT_MONTH}.
@@ -120,7 +120,7 @@ export function describeState(req: CheckRequest): string {
     `Plans: ${list(s.plans)}.`,
     `Bought this month: ${list(s.bought)}.`,
     `Open money now: ${money(open)}.`,
-    `Shelf: ${s.shelf.length ? s.shelf.map((x) => `${x.name} ${money(x.price)} (${x.status})`).join("; ") : "empty"}.`,
+    `Wishlist: ${s.shelf.length ? s.shelf.map((x) => `${x.name} ${money(x.price)} (${x.status})`).join("; ") : "empty"}.`,
   ];
   if (s.currentItem)
     lines.push(

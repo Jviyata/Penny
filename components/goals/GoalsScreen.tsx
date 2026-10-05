@@ -5,7 +5,7 @@ import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
-import { PencilIcon, PlusIcon, TargetIcon } from "../ui/Icons";
+import { PencilIcon, PlusIcon, FlagIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
 
@@ -91,7 +91,7 @@ export function GoalsScreen() {
                   <li key={g.id} className="px-5 py-3 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
                     <div className="flex items-center gap-3.5">
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#dfe6d3] text-[#3b3128]">
-                        <TargetIcon size={22} />
+                        <FlagIcon size={22} />
                       </span>
                       <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
                         <span className="flex items-center gap-1.5 text-[17px]">

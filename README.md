@@ -29,7 +29,7 @@ Without an API key everything still works: `/api/check` returns 503 and the app 
 ## Demo mode
 
 - Turn it on in Settings (the gear on Home), or send a link with `?demo=1`. The flag is saved and removed from the address bar. `?demo=0` turns it off.
-- When it's on, a **Demo files** button appears at the top right. It opens a tray with the 3 sample screenshots (tap one to send it into the chat as if uploaded) and **Reset demo** (restores $1,060 and the four plans, and clears the chat, Shelf and Bought).
+- When it's on, a **Demo files** button appears at the top right. It opens a tray with the 3 sample screenshots (tap one to send it into the chat as if uploaded) and **Reset demo** (restores $1,060 and the four plans, and clears the chat, Wishlist and Bought).
 - When it's off, neither exists, so the app looks like the real product for recording.
 
 ## Deploy to Vercel

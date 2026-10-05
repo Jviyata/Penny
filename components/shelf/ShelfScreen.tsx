@@ -24,11 +24,11 @@ export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
   };
 
   return (
-    <Screen scene="shelf" title="The Shelf" subtitle="Things you want, just not right now.">
+    <Screen scene="shelf" title="Wishlist" subtitle="Things you want, just not right now.">
       {state.shelf.length === 0 ? (
         <section className="mx-3 mt-2 flex flex-col items-center rounded-[30px] bg-card px-8 pb-8 pt-6 text-center">
           <Mascot mood="calm_neutral" size={132} />
-          <p className="mt-2 text-[19px] font-semibold">Nothing on the Shelf yet</p>
+          <p className="mt-2 text-[19px] font-semibold">Nothing on your wishlist yet</p>
           <p className="mt-1 text-[15px] leading-[20px] text-label-2">
             When something fits better later, save it here and come back to it.
           </p>
@@ -66,7 +66,7 @@ export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 </button>
                 <button
                   type="button"
-                  aria-label={`Remove ${item.name} from the Shelf`}
+                  aria-label={`Remove ${item.name} from your wishlist`}
                   onClick={() => dispatch({ type: "removeFromShelf", id: item.id })}
                   className="absolute right-0 top-0 flex h-12 w-12 items-start justify-end p-3"
                 >

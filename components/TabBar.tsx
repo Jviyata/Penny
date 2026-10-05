@@ -1,14 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ChartIcon, HomeIcon, ShelfIcon, TargetIcon } from "./ui/Icons";
+import { ChartIcon, FlagIcon, HeartIcon, HomeIcon } from "./ui/Icons";
 import { Mascot } from "./ui/Mascot";
 
 export type Tab = "home" | "free" | "chat" | "goals" | "shelf";
 
 /**
  * Cream tab bar with Penny in the exact center as the "Can I afford this?" button ("Hi, I’m Penny! Let’s spend smart." bubble).
- * Home · Free spending | Penny | Goals · Shelf: two tabs each side, so Penny sits dead center.
+ * Home · Free spending | Penny | Goals · Wishlist: two tabs each side, so Penny sits dead center.
  */
 export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange: (t: Tab) => void; shelfCount: number }) {
   const onChat = active === "chat";
@@ -72,8 +72,8 @@ export function TabBar({ active, onChange, shelfCount }: { active: Tab; onChange
         </span>
       </div>
 
-      <TabButton id="goals" label="Goals" Icon={TargetIcon} active={active} onChange={onChange} />
-      <TabButton id="shelf" label="Shelf" Icon={ShelfIcon} active={active} onChange={onChange} badge={shelfCount} />
+      <TabButton id="goals" label="Goals" Icon={FlagIcon} active={active} onChange={onChange} />
+      <TabButton id="shelf" label="Wishlist" Icon={HeartIcon} active={active} onChange={onChange} badge={shelfCount} />
     </nav>
   );
 }
