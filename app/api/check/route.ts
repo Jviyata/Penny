@@ -45,7 +45,13 @@ export async function POST(req: Request) {
   const image = parseImage(body.message.image);
   if (body.message.image && !image) return json({ error: "bad_image" }, 400);
 
-  client ??= new Anthropic({ timeout: 25_000, maxRetries: 1 });
+  // Keys that aren't scoped to a workspace must name one (the workspace Penny's agent lives in).
+  const workspace = process.env.ANTHROPIC_WORKSPACE_ID;
+  client ??= new Anthropic({
+    timeout: 25_000,
+    maxRetries: 1,
+    defaultHeaders: workspace ? { "anthropic-workspace-id": workspace } : undefined,
+  });
 
   // 1. Penny's Managed Agent (her own training lives on the agent).
   if (process.env.PENNY_AGENT !== "off") {

@@ -23,6 +23,7 @@ Each "Can I afford this?" turn runs on Penny's **Claude Managed Agent** (`agent_
 | Env var (Vercel → Settings → Environment Variables) | |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | **Required** for any AI. Without it the offline engine answers. |
+| `ANTHROPIC_WORKSPACE_ID` | Needed if your API key isn't scoped to a workspace (`wrkspc_…`, the workspace Penny's agent is in). |
 | `PENNY_AGENT_ID` | Optional. Overrides the agent ID. |
 | `ANTHROPIC_ENVIRONMENT_ID` | Optional. Otherwise an environment named `penny` is found or created on first use. |
 | `PENNY_AGENT` | Set to `off` to skip the agent and use the direct call only. |
