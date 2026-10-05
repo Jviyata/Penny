@@ -141,10 +141,12 @@ export function ChatScreen({ active }: { active: boolean }) {
         onChange={(e) => sendPhoto(e.target.files?.[0])}
       />
 
-      <header className="on-photo-shadow absolute inset-x-0 top-0 z-20 px-5 pt-[calc(var(--sat)+8px)]">
-        <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.01em] text-on-photo">Can I afford this?</h1>
-        <p className="tabular mt-0.5 text-[15px] text-on-photo-2">
-          {money(Math.max(open, 0))} free to spend · {MONTH.daysLeft} days left
+      {/* Context, not competition: the page name and the number Penny works from */}
+      <header className="absolute inset-x-0 top-0 z-20 px-5 pt-[calc(var(--sat)+10px)]">
+        <h1 className="on-photo-shadow text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Can I afford this?</h1>
+        <p className="glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo">
+          <span className="h-2 w-2 rounded-full" style={{ background: open > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
+          <span className="font-semibold">{money(Math.max(open, 0))}</span> free to spend · {MONTH.daysLeft} days left
         </p>
       </header>
 
@@ -152,7 +154,7 @@ export function ChatScreen({ active }: { active: boolean }) {
         ref={scrollRef}
         className="scroll-y absolute inset-0 px-3"
         style={{
-          paddingTop: `calc(var(--sat) + 104px)`,
+          paddingTop: `calc(var(--sat) + 96px)`,
           paddingBottom: `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`, // Penny is small in the bar here
           // Messages fade out under the title instead of colliding with it.
           WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
@@ -355,63 +357,64 @@ function AskChoices({
   onPhoto: () => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-2 pb-2 text-center">
-      <Mascot mood="calm_neutral" size={96} label />
-      <p className="on-photo-shadow mt-2 text-[24px] font-bold leading-[29px] text-on-photo">What are you thinking of buying?</p>
-      <p className="on-photo-shadow mt-1 text-[15px] leading-[20px] text-on-photo-2">
-        I’ll show you what it means for the rest of {MONTH.name}.
-      </p>
+    <div className="flex min-h-full flex-col items-center px-2 text-center">
+      {/* Primary: Penny asks one question */}
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <Mascot mood="calm_neutral" size={84} label />
+        <p className="on-photo-shadow mt-2 text-[28px] font-bold leading-[33px] tracking-[-0.01em] text-on-photo">
+          What are you thinking of buying?
+        </p>
+        <p className="on-photo-shadow mt-1.5 text-[15px] leading-[20px] text-on-photo-2">
+          I’ll show you what it means for the rest of {MONTH.name}.
+        </p>
 
-      {canTalk ? (
-        <>
-          {/* The hero: talk to Penny */}
+        {/* Hero action: talk */}
+        {canTalk ? (
+          <>
+            <button
+              type="button"
+              onClick={onTalk}
+              aria-label="Talk to Penny"
+              className="relative mt-9 flex h-[124px] w-[124px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_18px_40px_-12px_rgba(20,12,4,0.7)] transition-transform active:scale-95"
+            >
+              <span className="absolute -inset-3 rounded-full ring-1 ring-white/25" aria-hidden />
+              <span className="absolute -inset-6 rounded-full ring-1 ring-white/12" aria-hidden />
+              <MicIcon size={52} />
+            </button>
+            <p className="on-photo-shadow mt-6 text-[17px] font-semibold text-on-photo">Tap to talk to Penny</p>
+          </>
+        ) : (
           <button
             type="button"
-            onClick={onTalk}
-            aria-label="Talk to Penny"
-            className="relative mt-8 flex h-[124px] w-[124px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_18px_40px_-12px_rgba(20,12,4,0.7)] transition-transform active:scale-95"
+            onClick={onType}
+            className="pressable mt-9 h-14 rounded-full bg-cta px-8 text-[17px] font-semibold text-on-cta"
           >
-            <span className="absolute -inset-3 rounded-full ring-1 ring-white/25" aria-hidden />
-            <span className="absolute -inset-6 rounded-full ring-1 ring-white/12" aria-hidden />
-            <MicIcon size={52} />
+            Type it
           </button>
-          <p className="on-photo-shadow mt-5 text-[17px] font-semibold text-on-photo">Tap to talk to Penny</p>
-        </>
-      ) : (
-        <button
-          type="button"
-          onClick={onType}
-          className="pressable mt-8 h-14 rounded-full bg-cta px-8 text-[17px] font-semibold text-on-cta"
-        >
-          Type it
-        </button>
-      )}
+        )}
+      </div>
 
-      {/* Quieter options */}
-      <div className="mt-6 flex items-center gap-3">
+      {/* Secondary: quieter ways in, grouped on one row */}
+      <div className="mb-3 mt-6 flex items-center gap-2 rounded-full bg-black/20 py-1.5 pl-1.5 pr-2 backdrop-blur-md">
         <button
           type="button"
           onClick={onPhoto}
-          aria-label="Add a photo, screenshot or file"
-          className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo"
+          className="pressable flex h-10 items-center gap-2 rounded-full pl-1 pr-3 text-[14px] font-medium text-on-photo"
         >
-          <PlusIcon size={22} />
+          <span className="glass flex h-9 w-9 items-center justify-center rounded-full">
+            <PlusIcon size={18} />
+          </span>
+          Photo, screenshot or file
         </button>
-        <span className="on-photo-shadow text-left text-[13px] leading-[17px] text-on-photo-2">
-          Photo, screenshot
-          <br />
-          or file
-        </span>
+        {canTalk && (
+          <>
+            <span className="h-4 w-px bg-white/25" aria-hidden />
+            <button type="button" onClick={onType} className="h-10 px-3 text-[14px] font-medium text-on-photo-2">
+              or type it
+            </button>
+          </>
+        )}
       </div>
-      {canTalk && (
-        <button
-          type="button"
-          onClick={onType}
-          className="on-photo-shadow mt-3 h-9 px-3 text-[13px] font-medium text-on-photo-2"
-        >
-          or type it
-        </button>
-      )}
     </div>
   );
 }
