@@ -6,7 +6,7 @@ import { useStore } from "@/lib/store";
 import { useVisualViewport } from "@/lib/useVisualViewport";
 import { TabBar, type Tab } from "./TabBar";
 import { HomeScreen } from "./home/HomeScreen";
-import { FreeSpendingScreen } from "./free/FreeSpendingScreen";
+import { SpendingScreen } from "./spending/SpendingScreen";
 import { ChatScreen } from "./chat/ChatScreen";
 import { ShelfScreen } from "./shelf/ShelfScreen";
 import { GoalsScreen } from "./goals/GoalsScreen";
@@ -29,7 +29,7 @@ export function AppShell() {
 
   const screens: Record<Tab, React.ReactNode> = {
     home: <HomeScreen goTo={setTab} resetSignal={homeReset} />,
-    free: <FreeSpendingScreen goTo={setTab} />,
+    free: <SpendingScreen goTo={setTab} />,
     chat: <ChatScreen active={tab === "chat"} />,
     goals: <GoalsScreen />,
     shelf: <ShelfScreen goTo={setTab} />,

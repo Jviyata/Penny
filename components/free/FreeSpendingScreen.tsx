@@ -5,15 +5,15 @@ import { BASE_FREE_TOTAL, MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { Line } from "@/lib/types";
-import { Screen } from "../ui/Screen";
-import { BagIcon, PencilIcon, PlusIcon, iconForName } from "../ui/Icons";
+import { NavButton, Screen } from "../ui/Screen";
+import { ArrowLeftIcon, BagIcon, PencilIcon, PlusIcon, iconForName } from "../ui/Icons";
 import type { Tab } from "../TabBar";
 import { LineEditorSheet, type EditorConfig } from "./LineEditorSheet";
 import { SwipeRow } from "./SwipeRow";
 
 type View = "plans" | "bought";
 
-export function FreeSpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
+export function FreeSpendingScreen({ goTo, onBack }: { goTo: (t: Tab) => void; onBack?: () => void }) {
   const { state, dispatch, open } = useStore();
   const { freeTotal, plans, bought } = state;
   const [editor, setEditor] = useState<EditorConfig | null>(null);
@@ -55,7 +55,17 @@ export function FreeSpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
 
   return (
     <>
-      <Screen scene="free" title="Free to spend">
+      <Screen
+        scene="free"
+        title="Free to spend"
+        leading={
+          onBack && (
+            <NavButton label="Back" onClick={onBack}>
+              <ArrowLeftIcon />
+            </NavButton>
+          )
+        }
+      >
         <div className="px-5">
           {/* The hero: what you can actually spend */}
           <section className="on-photo-shadow -mt-1">

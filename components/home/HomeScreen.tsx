@@ -9,6 +9,7 @@ import { GearIcon } from "../ui/Icons";
 import { NavButton, Screen } from "../ui/Screen";
 import type { Tab } from "../TabBar";
 import { CategoryScreen } from "./CategoryScreen";
+import { FreeSpendingScreen } from "../free/FreeSpendingScreen";
 import { CATEGORY_ICONS, CATEGORY_ORDER } from "./categories";
 import { Donut } from "./Donut";
 import { MonthMenu } from "./MonthMenu";
@@ -19,7 +20,7 @@ import { SettingsSheet } from "./SettingsSheet";
  */
 export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; resetSignal: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [detail, setDetail] = useState<JobId | null>(null);
+  const [detail, setDetail] = useState<JobId | "free" | null>(null);
   useEffect(() => setDetail(null), [resetSignal]);
   // Lets the tab bar hide Penny's intro bubble while a category page covers Home.
   useEffect(() => {
@@ -56,7 +57,7 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
 
           {/* Secondary: where the paycheck went (chart + its caption read as one unit) */}
           <div className="mt-4 flex min-h-[150px] flex-1 items-center justify-center [container-type:size] [@media(max-height:720px)]:mt-3">
-            <Donut onSelect={(id) => (id === "yours" ? goTo("free") : setDetail(id))} />
+            <Donut onSelect={(id) => setDetail(id === "yours" ? "free" : id)} />
           </div>
           <div className="mx-auto mt-2.5 flex h-9 items-center gap-4 rounded-full bg-black/25 px-4 text-[14px] text-on-photo-2 backdrop-blur-md">
             <span>
@@ -104,7 +105,11 @@ export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; rese
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 34, stiffness: 340 }}
           >
-            <CategoryScreen id={detail} onBack={() => setDetail(null)} />
+            {detail === "free" ? (
+              <FreeSpendingScreen goTo={goTo} onBack={() => setDetail(null)} />
+            ) : (
+              <CategoryScreen id={detail} onBack={() => setDetail(null)} />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
