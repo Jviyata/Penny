@@ -59,26 +59,20 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
 
   return (
     <>
-      <Screen scene="free" title="Spending" subtitle={`Everything that’s gone out in ${MONTH.name}.`}>
+      <Screen scene="free" title="Spending" inlineTitle>
         <div className="px-5">
           {/* Spent so far, with one bar split by category */}
-          <section className="on-photo-shadow">
-            <p className="text-[15px] font-semibold uppercase tracking-[0.06em] text-on-photo-2">Spent so far</p>
-            <p className="tabular mt-1 text-[56px] font-bold leading-none tracking-[-0.03em] text-on-photo">{money(totalSpent)}</p>
-            <p className="mt-2 text-[15px] text-on-photo-2">
-              of your {money(income)} paycheck · {MONTH.daysLeft} days left
-            </p>
-          </section>
-          <div className="mt-4 flex h-4 gap-[2px] overflow-hidden rounded-full bg-white/15" aria-hidden>
+          <p className="on-photo-shadow mt-2 text-[15px] text-on-photo-2">
+            <span className="tabular text-[34px] font-bold tracking-[-0.02em] text-on-photo">{money(totalSpent)}</span>
+            {" "}spent of {money(income)}
+          </p>
+          <div className="mt-2.5 flex h-3 gap-[2px] overflow-hidden rounded-full bg-white/15" aria-hidden>
             {rows
               .filter((r) => r.spent > 0)
               .map((r) => (
                 <span key={r.id} className="h-full" style={{ width: `${(r.spent / income) * 100}%`, background: CATEGORY_COLORS[r.id] }} />
               ))}
           </div>
-          <p className="on-photo-shadow mt-2 text-[13px] text-on-photo-2">
-            {money(Math.max(income - totalSpent, 0))} hasn’t gone out yet.
-          </p>
         </div>
 
         {/* By category */}
@@ -92,13 +86,13 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={r.id}
                 type="button"
                 onClick={() => setDetail(r.id)}
-                className="flex w-full items-center gap-3 px-5 py-2.5 text-left active:bg-fill"
+                className="flex w-full items-center gap-3 px-5 py-[7px] text-left active:bg-fill"
               >
                 <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] text-white"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] text-white"
                   style={{ background: color }}
                 >
-                  <Icon size={19} />
+                  <Icon size={17} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
@@ -108,7 +102,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                       <span className="text-label-3"> / {money(r.budget)}</span>
                     </span>
                   </span>
-                  <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-fill">
+                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-fill">
                     <span className="block h-full rounded-full" style={{ width: `${share * 100}%`, background: color }} />
                   </span>
                 </span>
@@ -161,8 +155,8 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <section className="mx-3 mt-4 overflow-hidden rounded-[26px] bg-card pb-2">
-      <div className="px-5 pb-1 pt-4">
+    <section className="mx-3 mt-4 overflow-hidden rounded-[26px] bg-card pb-2 first-of-type:mt-3">
+      <div className="px-5 pb-0.5 pt-3.5">
         <h2 className="text-[19px] font-semibold">{title}</h2>
         {subtitle && <p className="text-[13px] text-label-3">{subtitle}</p>}
       </div>
