@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { prepareImage, type PreparedImage } from "@/lib/image";
 import { useSpeech } from "@/lib/useSpeech";
-import { MicIcon, PhotoIcon, PlusIcon, StopIcon } from "../ui/Icons";
+import { MicIcon, PlusIcon, StopIcon } from "../ui/Icons";
 
 const PROBLEMS: Record<string, string> = {
   "not-allowed": "Penny needs your microphone. Allow it for this site in Safari, then tap to talk again.",
@@ -92,10 +92,10 @@ export function VoiceComposer({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy || speech.listening}
-          aria-label="Add a photo or screenshot"
+          aria-label="Add a photo, screenshot or file"
           className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
         >
-          <PhotoIcon size={22} />
+          <PlusIcon size={22} />
         </button>
         {/* No `capture` attribute: iOS offers Take Photo, Photo Library or Choose File. */}
         <input
@@ -127,12 +127,9 @@ export function VoiceComposer({
       <button
         type="button"
         onClick={onTextInstead}
-        className="pressable mt-0.5 flex h-11 items-center gap-2 rounded-full px-3 text-[15px] font-medium text-on-photo"
+        className="on-photo-shadow h-9 px-3 text-[13px] font-medium text-on-photo-2 underline-offset-2 active:underline"
       >
-        <span className="glass flex h-8 w-8 items-center justify-center rounded-full">
-          <PlusIcon size={16} />
-        </span>
-        <span className="on-photo-shadow">Want to text it instead?</span>
+        or type it
       </button>
     </div>
   );

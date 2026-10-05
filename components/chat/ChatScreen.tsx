@@ -10,7 +10,7 @@ import { useSend } from "@/lib/useSend";
 import { prepareImage } from "@/lib/image";
 import type { CardAction, ChatMessage } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { ImagesIcon, MicIcon, PhotoIcon } from "../ui/Icons";
+import { MicIcon, PlusIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
 import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
@@ -342,7 +342,7 @@ function Thinking() {
   );
 }
 
-/** The Ask Penny screen: one question, four ways to answer it. */
+/** The Ask Penny screen: talking is the hero; adding a photo or typing are quieter options. */
 function AskChoices({
   canTalk,
   onTalk,
@@ -354,41 +354,65 @@ function AskChoices({
   onType: () => void;
   onPhoto: () => void;
 }) {
-  const choices = [
-    ...(canTalk ? [{ label: "Talk", Icon: MicIcon, onClick: onTalk }] : []),
-    { label: "Type", Icon: KeyboardGlyph, onClick: onType },
-    { label: "Add a photo", Icon: PhotoIcon, onClick: onPhoto },
-    { label: "Add a screenshot", Icon: ImagesIcon, onClick: onPhoto },
-  ];
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-2 pb-2 text-center">
-      <Mascot mood="calm_neutral" size={108} label />
+      <Mascot mood="calm_neutral" size={96} label />
       <p className="on-photo-shadow mt-2 text-[24px] font-bold leading-[29px] text-on-photo">What are you thinking of buying?</p>
       <p className="on-photo-shadow mt-1 text-[15px] leading-[20px] text-on-photo-2">
         I’ll show you what it means for the rest of {MONTH.name}.
       </p>
-      <div className="mt-5 grid w-full grid-cols-2 gap-2.5">
-        {choices.map(({ label, Icon, onClick }) => (
-          <button
-            key={label}
-            type="button"
-            onClick={onClick}
-            className="pressable paper-glass flex h-[88px] flex-col items-center justify-center gap-1.5 rounded-[22px] text-[16px] font-semibold text-label"
-          >
-            <Icon size={26} />
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-function KeyboardGlyph({ size = 26 }: { size?: number }) {
-  return (
-    <span className="flex items-center justify-center font-bold leading-none" style={{ width: size, height: size, fontSize: size * 0.72 }} aria-hidden>
-      Aa
-    </span>
+      {canTalk ? (
+        <>
+          {/* The hero: talk to Penny */}
+          <button
+            type="button"
+            onClick={onTalk}
+            aria-label="Talk to Penny"
+            className="relative mt-8 flex h-[124px] w-[124px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_18px_40px_-12px_rgba(20,12,4,0.7)] transition-transform active:scale-95"
+          >
+            <span className="absolute -inset-3 rounded-full ring-1 ring-white/25" aria-hidden />
+            <span className="absolute -inset-6 rounded-full ring-1 ring-white/12" aria-hidden />
+            <MicIcon size={52} />
+          </button>
+          <p className="on-photo-shadow mt-5 text-[17px] font-semibold text-on-photo">Tap to talk to Penny</p>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={onType}
+          className="pressable mt-8 h-14 rounded-full bg-cta px-8 text-[17px] font-semibold text-on-cta"
+        >
+          Type it
+        </button>
+      )}
+
+      {/* Quieter options */}
+      <div className="mt-6 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onPhoto}
+          aria-label="Add a photo, screenshot or file"
+          className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo"
+        >
+          <PlusIcon size={22} />
+        </button>
+        <span className="on-photo-shadow text-left text-[13px] leading-[17px] text-on-photo-2">
+          Photo, screenshot
+          <br />
+          or file
+        </span>
+      </div>
+      {canTalk && (
+        <button
+          type="button"
+          onClick={onType}
+          className="on-photo-shadow mt-3 h-9 px-3 text-[13px] font-medium text-on-photo-2"
+        >
+          or type it
+        </button>
+      )}
+    </div>
   );
 }
 
