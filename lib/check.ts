@@ -3,7 +3,7 @@ import { fallbackCheck, type Snapshot } from "./fallback";
 import { money } from "./format";
 import type { ChatMessage, CheckRequest, CheckResult, Outgoing } from "./types";
 
-const TIMEOUT_MS = 22_000;
+const TIMEOUT_MS = 50_000; // the agent can take longer than a single call; the fallback covers anything slower
 
 /**
  * Ask "can I afford this?" via POST /api/check. Any failure (offline, timeout, rate limit,

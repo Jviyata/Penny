@@ -3,10 +3,13 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { APP_RULES, RESPONSE_SCHEMA, describeState, toCheckResult } from "@/lib/ai";
 import { rateLimit, visitorKey } from "@/lib/rateLimit";
+import { askPennyAgent } from "@/lib/pennyAgent";
 import type { CheckRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
+
+const AGENT_TIMEOUT_MS = 30_000;
 
 const MODEL = "claude-sonnet-5-5";
 const MAX_IMAGE_CHARS = 4_000_000; // ~3 MB of JPEG; the client sends ~150-400 KB
@@ -44,6 +47,19 @@ export async function POST(req: Request) {
 
   client ??= new Anthropic({ timeout: 25_000, maxRetries: 1 });
 
+  // 1. Penny's Managed Agent (her own training lives on the agent).
+  if (process.env.PENNY_AGENT !== "off") {
+    try {
+      const text = await askPennyAgent(client, agentPrompt(body), image, AGENT_TIMEOUT_MS);
+      const result = toCheckResult(extractJson(text));
+      if (result) return json({ result, via: "agent" }, 200);
+      console.error("[check] agent reply wasn't usable JSON", text.slice(0, 200));
+    } catch (err) {
+      console.error("[check] agent failed, using direct call", err instanceof Error ? err.message : err);
+    }
+  }
+
+  // 2. Direct Messages API call with the same rules (also the fallback when the agent fails).
   try {
     const response = await client.beta.messages.create({
       model: MODEL,
@@ -103,6 +119,32 @@ function parseImage(dataUrl: string | undefined) {
   const m = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
   if (!m || m[2].length > MAX_IMAGE_CHARS) return null;
   return { mediaType: m[1] as "image/jpeg" | "image/png" | "image/webp" | "image/gif", data: m[2] };
+}
+
+/** One self-contained message for the agent: app rules, the JSON shape, live numbers, history, the question. */
+function agentPrompt(body: CheckRequest): string {
+  const history = body.history
+    .slice(-HISTORY_TURNS)
+    .filter((h) => typeof h.text === "string" && h.text.trim())
+    .map((h) => `${h.role === "user" ? "User" : "Penny"}: ${h.text.slice(0, 600)}`)
+    .join("\n");
+  const text = body.message.text.trim().slice(0, 2000) || "(sent a photo)";
+  return [
+    APP_RULES,
+    `Reply with ONE JSON object only (no prose, no code fences) matching this JSON schema:\n${JSON.stringify(RESPONSE_SCHEMA)}`,
+    describeState(body),
+    history ? `<conversation_so_far>\n${history}\n</conversation_so_far>` : "",
+    `User: ${text}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** Pull the JSON object out of a reply, tolerating code fences or a stray sentence around it. */
+function extractJson(text: string) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  return start >= 0 && end > start ? safeParse(text.slice(start, end + 1)) : {};
 }
 
 function safeParse(text: string) {

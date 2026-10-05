@@ -16,6 +16,17 @@ Open http://localhost:3000. On a laptop it shows inside an iPhone frame; on a ph
 
 Without an API key everything still works: `/api/check` returns 503 and the app quietly answers with its local fallback engine (`lib/fallback.ts`).
 
+## Penny's AI
+
+Each "Can I afford this?" turn runs on Penny's **Claude Managed Agent** (`agent_01GZ9g1famujx7KVZqZiWkjZ`, whose own system prompt holds her training). If the agent fails or is slow, the route falls back to a direct Claude call with `prompts/system.txt`, and if that fails too, the app's offline engine answers. Users never see an error.
+
+| Env var (Vercel → Settings → Environment Variables) | |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | **Required** for any AI. Without it the offline engine answers. |
+| `PENNY_AGENT_ID` | Optional. Overrides the agent ID. |
+| `ANTHROPIC_ENVIRONMENT_ID` | Optional. Otherwise an environment named `penny` is found or created on first use. |
+| `PENNY_AGENT` | Set to `off` to skip the agent and use the direct call only. |
+
 ## Things you'll want to swap
 
 | What | Where |
