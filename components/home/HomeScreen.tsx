@@ -98,7 +98,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
 }
 
 function GoalCard({ goal, big, onClick }: { goal: Goal; big?: boolean; onClick: () => void }) {
-  const { Icon, bg, fg } = goalLook(goal.name);
+  const { Icon, bg, fg, photo } = goalLook(goal.name);
   const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
   return (
     <button
@@ -109,10 +109,10 @@ function GoalCard({ goal, big, onClick }: { goal: Goal; big?: boolean; onClick: 
       }`}
     >
       <span
-        className={`flex shrink-0 items-center justify-center ${big ? "h-[68px] w-[76px] rounded-[16px]" : "h-[52px] w-[44px] rounded-[13px]"}`}
-        style={{ background: bg, color: fg }}
+        className={`flex shrink-0 items-center justify-center overflow-hidden ${big ? "h-[68px] w-[76px] rounded-[16px]" : "h-[52px] w-[44px] rounded-[13px]"}`}
+        style={photo ? { background: `center / cover url(${photo})` } : { background: bg, color: fg }}
       >
-        <Icon size={big ? 32 : 21} />
+        {!photo && <Icon size={big ? 32 : 21} />}
       </span>
       <span className="min-w-0 flex-1">
         <span className={`block truncate font-semibold text-label ${big ? "text-[16px]" : "text-[14px]"}`}>{goal.name}</span>

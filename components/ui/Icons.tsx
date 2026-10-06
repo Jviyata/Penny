@@ -299,8 +299,9 @@ export const WaveIcon = ({ size = 24, className }: P) => (
 );
 
 /** Icon + tint for a goal, from its name. */
-export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string } {
+export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string; photo?: string } {
   const n = name.toLowerCase();
+  if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86", photo: "/goals/japan.jpg" };
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
   if (/laptop|computer|phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
   if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#ede4d8", fg: "#7a5a3a" };

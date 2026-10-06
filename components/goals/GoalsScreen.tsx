@@ -93,10 +93,13 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
                   <li key={g.id} className="px-5 py-3 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
                     <div className="flex items-center gap-3.5">
                       {(() => {
-                        const { Icon, bg, fg } = goalLook(g.name);
+                        const { Icon, bg, fg, photo } = goalLook(g.name);
                         return (
-                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]" style={{ background: bg, color: fg }}>
-                            <Icon size={22} />
+                          <span
+                            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[14px]"
+                            style={photo ? { background: `center / cover url(${photo})` } : { background: bg, color: fg }}
+                          >
+                            {!photo && <Icon size={22} />}
                           </span>
                         );
                       })()}
