@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { prepareImage, type PreparedImage } from "@/lib/image";
 import { useSpeech } from "@/lib/useSpeech";
-import { MicIcon, PlusIcon, StopIcon } from "../ui/Icons";
+import { KeyboardIcon, MicIcon, PlusIcon, StopIcon } from "../ui/Icons";
 
 const PROBLEMS: Record<string, string> = {
   "not-allowed": "Penny needs your microphone. Allow it for this site in Safari, then tap to talk again.",
@@ -118,9 +118,10 @@ export function VoiceComposer({
           <button
             type="button"
             onClick={onTextInstead}
-            className="pressable glass h-11 shrink-0 rounded-full px-4 text-[15px] font-medium text-on-photo"
+            aria-label="Type instead"
+            className="pressable glass flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-on-photo"
           >
-            Type
+            <KeyboardIcon size={20} />
           </button>
           <input
             ref={fileRef}

@@ -223,6 +223,13 @@ export const ImagesIcon = ({ size = 18, className }: P) => (
   </svg>
 );
 
+export const KeyboardIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className} strokeWidth={1.8}>
+    <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+    <path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M6.5 13.5h.01M17 13.5h.01M9.5 14h5" />
+  </svg>
+);
+
 export const ResetIcon = ({ size = 18, className }: P) => (
   <svg {...base(size)} className={className}>
     <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4h4" />

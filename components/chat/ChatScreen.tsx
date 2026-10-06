@@ -10,7 +10,7 @@ import { useSend } from "@/lib/useSend";
 import { prepareImage } from "@/lib/image";
 import type { CardAction, ChatMessage, PlansCard } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { ArrowLeftIcon, MicIcon, PlusIcon, ResetIcon } from "../ui/Icons";
+import { ChevronIcon, KeyboardIcon, MicIcon, PlusIcon, ResetIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
 import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
@@ -169,7 +169,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
   };
 
   const last = messages[messages.length - 1];
-  const fadeTop = "calc(var(--sat) + 96px)";
+  const fadeTop = "calc(var(--sat) + 62px)";
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -183,18 +183,23 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
         onChange={(e) => sendPhoto(e.target.files?.[0])}
       />
 
-      {/* Context, not competition: the page name and the number Penny works from */}
-      <header className="absolute inset-x-0 top-0 z-20 px-5 pt-[calc(var(--sat)+10px)]">
-        <div className="flex items-center gap-2.5">
+      {/* One slim row: back, the page name, and the number Penny works from */}
+      <header className="absolute inset-x-0 top-0 z-20 px-3 pt-[calc(var(--sat)+8px)]">
+        <div className="flex h-10 items-center gap-1">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back to Overview"
-            className="pressable -ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-card text-label shadow-[0_4px_14px_-8px_rgba(30,20,10,0.35)]"
+            className="pressable flex h-10 w-9 shrink-0 items-center justify-center text-label"
           >
-            <ArrowLeftIcon size={20} />
+            <ChevronIcon size={20} className="rotate-180" />
           </button>
-          <h1 className="flex-1 text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Talk to Penny</h1>
+          <h1 className="min-w-0 flex-1 truncate text-[16px] font-semibold text-on-photo">Talk to Penny</h1>
+          <p className="paper-glass tabular flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12.5px] text-label-2">
+            <span className="h-2 w-2 rounded-full" style={{ background: state.freeTotal > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
+            <span className="font-semibold text-label">{money(Math.max(state.freeTotal, 0))}</span> left to spend
+            {messages.length === 0 && <span className="[@media(max-width:380px)]:hidden">· {MONTH.daysLeft} days</span>}
+          </p>
           {messages.length > 0 && (
             <button
               type="button"
@@ -204,28 +209,27 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 scrollRef.current?.scrollTo({ top: 0 });
               }}
               disabled={thinking}
-              className="pressable flex h-10 items-center gap-1.5 rounded-full bg-card px-3.5 text-[14px] font-semibold text-label shadow-[0_4px_14px_-8px_rgba(30,20,10,0.35)] disabled:opacity-40"
+              aria-label="New chat"
+              className="pressable paper-glass ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label disabled:opacity-40"
             >
               <ResetIcon size={16} />
-              New chat
             </button>
           )}
         </div>
-        <p className={`glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo ${messages.length > 0 ? "[@media(max-height:720px)]:hidden" : ""}`}>
-          <span className="h-2 w-2 rounded-full" style={{ background: state.freeTotal > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
-          <span className="font-semibold">{money(Math.max(state.freeTotal, 0))}</span> left to spend · {MONTH.daysLeft} days left
-        </p>
       </header>
 
       <div
         ref={scrollRef}
-        className={`scroll-y absolute inset-0 px-3 ${messages.length > 0 ? "[@media(max-height:720px)]:[--chat-top:74px]" : ""}`}
+        className="scroll-y absolute inset-0 px-3"
         style={{
-          paddingTop: `calc(var(--sat) + var(--chat-top, 104px))`,
-          paddingBottom: `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`, // Penny is small in the bar here
+          paddingTop: `calc(var(--sat) + 62px)`,
+          // The start screen has no input bar, so its corner buttons sit just above the tabs.
+          paddingBottom: showChoices
+            ? "calc(var(--tabbar-h) + var(--sab) + 4px)"
+            : `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`,
           // Messages fade out under the title instead of colliding with it.
-          WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
-          maskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
+          WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 48px), #000 ${fadeTop})`,
+          maskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 48px), #000 ${fadeTop})`,
         }}
       >
         {empty ? (
@@ -441,7 +445,10 @@ function Thinking() {
   );
 }
 
-/** The Ask Penny screen: talking is the hero; adding a photo or typing are quieter options. */
+/**
+ * The Talk to Penny start screen: Penny asks one question and the mic sits right under it.
+ * Quieter ways in sit in the bottom corners: + (photo or demo item) on the left, keyboard on the right.
+ */
 function AskChoices({
   canTalk,
   onTalk,
@@ -454,67 +461,59 @@ function AskChoices({
   onPhoto: () => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center px-2 text-center">
-      {/* Primary: Penny asks one question */}
-      <div className="flex flex-1 flex-col items-center justify-center">
-        <Mascot mood="calm_neutral" size={84} label />
-        <p className="on-photo-shadow mt-2 text-[28px] font-bold leading-[33px] tracking-[-0.01em] text-on-photo">
-          What are you thinking of buying?
+    <div className="flex min-h-full flex-col items-center text-center">
+      <div className="flex flex-1 flex-col items-center justify-center px-4">
+        <Mascot mood="listening" size={104} />
+        <p className="mt-3 text-[32px] font-normal leading-[37px] tracking-[-0.02em] text-label">
+          What are you
+          <br />
+          thinking of buying?
         </p>
-        <p className="on-photo-shadow mt-1.5 text-[15px] leading-[20px] text-on-photo-2">
-          I’ll show you what it means for the rest of {MONTH.name}.
-        </p>
+        <p className="mt-2 text-[15px] leading-[20px] text-label-2">Tell me and I’ll help you decide.</p>
 
-        {/* Hero action: talk */}
-        {canTalk ? (
-          <>
-            <button
-              type="button"
-              onClick={onTalk}
-              aria-label="Talk to Penny"
-              className="relative mt-9 flex h-[124px] w-[124px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_18px_40px_-12px_rgba(20,12,4,0.7)] transition-transform active:scale-95"
-            >
-              <span className="absolute -inset-3 rounded-full ring-1 ring-black/10" aria-hidden />
-              <span className="absolute -inset-6 rounded-full ring-1 ring-black/5" aria-hidden />
-              <MicIcon size={52} />
-            </button>
-            <p className="on-photo-shadow mt-6 text-[17px] font-semibold text-on-photo">Tap to talk to Penny</p>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={onType}
-            className="pressable mt-9 h-14 rounded-full bg-cta px-8 text-[17px] font-semibold text-on-cta"
-          >
-            Type it
-          </button>
-        )}
-      </div>
-
-      {/* Secondary: quieter ways in, grouped on one row */}
-      <div className="mb-3 mt-6 flex items-center gap-2 rounded-full bg-[var(--fill)] py-1.5 pl-1.5 pr-2 backdrop-blur-md">
         <button
           type="button"
-          onClick={onPhoto}
-          className="pressable flex h-10 items-center gap-2 rounded-full pl-1 pr-3 text-[14px] font-medium text-on-photo"
+          onClick={canTalk ? onTalk : onType}
+          aria-label={canTalk ? "Talk to Penny" : "Type to Penny"}
+          className="relative mt-9 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_0_0_10px_rgba(169,194,126,0.22),0_0_44px_8px_rgba(169,194,126,0.55)] transition-transform active:scale-95"
         >
-          <span className="glass flex h-9 w-9 items-center justify-center rounded-full">
-            <PlusIcon size={18} />
-          </span>
-          Photo, screenshot or file
+          {canTalk ? <MicIcon size={28} /> : <KeyboardIcon size={28} />}
         </button>
-        {canTalk && (
-          <>
-            <span className="h-4 w-px bg-black/15" aria-hidden />
-            <button type="button" onClick={onType} className="h-10 px-3 text-[14px] font-medium text-on-photo-2">
-              or type it
-            </button>
-          </>
-        )}
+        <p className="mt-5 text-[14px] font-medium text-label-2">{canTalk ? "Tap to talk" : "Tap to type"}</p>
+      </div>
+
+      {/* Secondary ways in, one per corner */}
+      <div className="flex w-full items-end justify-between px-1.5 pb-2">
+        <CornerButton onClick={onPhoto} label="Add a photo or pick an item" caption="Add photo">
+          <PlusIcon size={22} />
+        </CornerButton>
+        <CornerButton onClick={onType} label="Type instead" caption="Type">
+          <KeyboardIcon size={22} />
+        </CornerButton>
       </div>
     </div>
   );
 }
+
+function CornerButton({
+  onClick,
+  label,
+  caption,
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  caption: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} className="pressable flex w-16 flex-col items-center gap-1">
+      <span className="paper-glass flex h-12 w-12 items-center justify-center rounded-full text-label">{children}</span>
+      <span className="text-[12px] font-medium text-label-2">{caption}</span>
+    </button>
+  );
+}
+
 
 /** After picking Talk or Type, before the first message. */
 function EmptyState() {
