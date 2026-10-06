@@ -6,7 +6,7 @@ import { useSend } from "@/lib/useSend";
 import type { ShelfItem } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
 import { NavButton, Screen } from "../ui/Screen";
-import { ArrowLeftIcon, XIcon } from "../ui/Icons";
+import { ArrowLeftIcon, BagIcon, XIcon } from "../ui/Icons";
 import type { Tab } from "../TabBar";
 
 export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
@@ -59,13 +59,13 @@ export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
                     {item.image ? (
                       <img src={item.image} alt="" className="h-full w-full object-cover" draggable={false} />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-[44px] font-bold text-label-3">
-                        {item.name.charAt(0)}
+                      <div className="flex h-full items-center justify-center text-label-3">
+                        <BagIcon size={44} />
                       </div>
                     )}
                   </div>
                   <div className="px-3.5 pb-3.5 pt-2.5">
-                    <p className="truncate text-[16px] font-semibold">{item.name}</p>
+                    <p className="line-clamp-2 text-[16px] font-semibold leading-[20px]">{item.name}</p>
                     <p className="tabular text-[15px] text-label-2">{money(item.price)}</p>
                     <p className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] leading-[17px] text-label-2">
                       <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--v-later)]" />

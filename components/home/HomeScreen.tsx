@@ -14,7 +14,14 @@ import { SettingsSheet } from "./SettingsSheet";
  * Overview: greeting, the Talk to Penny card, your goals, and what's left to spend.
  * The paycheck donut and categories live on the Spending tab.
  */
-export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: number }) {
+export function HomeScreen({
+  goTo,
+  openLeftToSpend,
+}: {
+  goTo: (t: Tab) => void;
+  resetSignal?: number;
+  openLeftToSpend: () => void;
+}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { state, open } = useStore();
   const { goals, freeTotal } = state;
@@ -30,9 +37,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
           <div>
             <h1 className="text-[26px] font-bold leading-[31px] tracking-[-0.01em] text-label">Hi, {state.userName}</h1>
             <p className="mt-0.5 text-[15px] leading-[20px] text-label-2 [@media(max-height:720px)]:hidden">
-              Let’s spend smart
-              <br />
-              so future you is happy.
+              Spend on purpose.
             </p>
           </div>
           <button
@@ -77,13 +82,13 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
         {/* This month: the one number that matters most, so it gets the strongest card */}
         <div className="mt-4 flex items-center justify-between px-1 [@media(max-height:720px)]:mt-2.5">
           <h2 className="text-[19px] font-bold tracking-[-0.01em] text-label">This month</h2>
-          <button type="button" onClick={() => goTo("free")} className="flex h-8 items-center gap-1 text-[14px] text-label-2">
+          <button type="button" onClick={openLeftToSpend} className="flex h-8 items-center gap-1 text-[14px] text-label-2">
             Details <ChevronIcon size={14} />
           </button>
         </div>
         <button
           type="button"
-          onClick={() => goTo("free")}
+          onClick={openLeftToSpend}
           className="pressable mt-1.5 block w-full rounded-[24px] bg-[#2f3626] px-5 pb-3.5 pt-3 text-left text-white shadow-[0_12px_28px_-18px_rgba(30,35,20,0.6)] [@media(max-height:720px)]:pb-3 [@media(max-height:720px)]:pt-2.5"
         >
           <span className="flex items-end justify-between gap-3">

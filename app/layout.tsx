@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Can I Afford This?",
+  title: "SpendQ · with Penny",
   description: "See what a purchase means for the rest of your month before you buy it.",
-  applicationName: "Can I Afford This?",
+  applicationName: "SpendQ",
   appleWebApp: {
     capable: true,
-    title: "Afford This?",
+    title: "SpendQ",
     // Content runs under the status bar; safe-area insets keep it clear of the Dynamic Island.
     statusBarStyle: "default", // dark status-bar text on the white app
   },

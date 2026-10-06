@@ -42,10 +42,10 @@ function Spending({ id, total, Icon }: { id: Exclude<JobId, "savings">; total: n
     <>
       <div className="px-5">
         <section className="on-photo-shadow -mt-1">
-          <p className="tabular text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">{money(spent)}</p>
+          <p className="tabular text-[48px] font-bold leading-[52px] tracking-[-0.025em] text-label">{money(spent)}</p>
           <div className="mt-1.5 flex items-center justify-between gap-3">
             <p className="text-[19px] text-on-photo-2">of {money(total)} this month</p>
-            <span className="glass tabular flex h-10 shrink-0 items-center rounded-full px-4 text-[17px] font-semibold text-on-photo">
+            <span className="tabular flex h-9 shrink-0 items-center rounded-full bg-fill px-3.5 text-[16px] font-semibold text-label">
               {Math.round(share * 100)}%
             </span>
           </div>
@@ -95,7 +95,7 @@ function Savings({ total }: { total: number }) {
     <>
       <div className="px-5">
         <section className="on-photo-shadow -mt-1">
-          <p className="tabular text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">{money(total)}</p>
+          <p className="tabular text-[48px] font-bold leading-[52px] tracking-[-0.025em] text-label">{money(total)}</p>
           <p className="mt-1.5 text-[19px] text-on-photo-2">set aside this month</p>
           <p className="mt-2.5 text-[14px] text-on-photo-2">
             {CATEGORY_NOTE.savings} {money(saved)} saved so far across {GOALS.length} goals.

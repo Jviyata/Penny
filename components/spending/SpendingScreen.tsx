@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { SPENDING, type JobId } from "@/lib/monthDetails";
@@ -22,16 +22,19 @@ const NAME: Record<CatId, string> = {
   groceries: "Groceries",
   transit: "Transit",
   savings: "Savings",
-  free: "Free spending",
+  free: "Left to spend",
 };
 const BILLS: JobId[] = ["rent", "bills", "loans"];
 
 const day = (date?: string) => Number(date?.replace(/\D/g, "") || 0);
 
 /** Spending: how the month splits by category, or your bills, as a stack of pastel cards. */
-export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
+export function SpendingScreen({ goTo, openLeftSignal = 0 }: { goTo: (t: Tab) => void; openLeftSignal?: number }) {
   const { state } = useStore();
   const [detail, setDetail] = useState<CatId | null>(null);
+  useEffect(() => {
+    if (openLeftSignal > 0) setDetail("free");
+  }, [openLeftSignal]);
 
   // How the month's money is split, biggest first (this month's budget per category).
   const income = MONTH.income;

@@ -94,7 +94,7 @@ export function itemResult(item: { name: string; price: number }, open: number):
         ? `Easy one. You’ll still have plenty of breathing room for the next ${days} days.`
         : `It’ll use about ${pct}% of what you have left, so you’re still in a comfortable spot.`,
     tight: `It’s a pretty big chunk of what you have left (about ${pct}%). Do you need it this month, or do you just want it?`,
-    later: `This would use about ${pct}% of your free money. Is there a reason you need it right now?`,
+    later: `This would use about ${pct}% of what you have left to spend. Is there a reason you need it right now?`,
     not_this_month: `I’d move this to ${NEXT_MONTH} rather than pull from money you’ve already set aside.`,
   }[verdict];
   return { reply, card: { name: item.name, price: item.price, verdict, actions: defaultActions(verdict) } };

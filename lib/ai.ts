@@ -66,7 +66,9 @@ export const RESPONSE_SCHEMA = {
 export const APP_RULES = `
 ## How the app works (written by the app, not the user)
 
-Each user turn starts with an <app_state> block the app writes with live numbers. It is the truth; the user doesn't see it. The month's income and bills are fixed. Only "Free spending" (the total to work with and its plans) can change.
+Each user turn starts with an <app_state> block the app writes with live numbers. It is the truth; the user doesn't see it. The month's income and bills are fixed. Only "Left to spend" (the total to work with) and its plans can change.
+
+Money words: the app's main number is "Left to spend" (the total in app_state). Always use that number and those words when talking about what the user has. "Not planned yet" is the part of it no plan has claimed; only mention it if the user asks about plans. Never say "free money" or "free to spend".
 
 Respond with JSON only, matching the schema:
 
@@ -75,15 +77,15 @@ reply: 1-3 short sentences, like a text message, in Penny's voice and following 
 card: include when the user asks about a specific item and you know its name and price; otherwise null.
 - name: a short product name (2-4 words), read from the photo or the message. Don't include the price.
 - price: dollars as a number.
-- verdict, using open = "Open money now" (Free to Spend Remaining) and share = price ÷ open:
-  not_this_month ("Not right now"): price is more than open
-  comfortable: share is 25% or less
-  tight: share is about 25-40% (ask whether they need it this month)
-  later ("Better later"): share is over 40% (slow down, ask why now, suggest ${NEXT_MONTH} if it isn't needed)
+- verdict, using left = "Left to spend" and share = price ÷ left:
+  not_this_month ("Not right now"): price is more than left
+  comfortable: share is 15% or less
+  tight: share is about 15-30% (spreading it over 2 months keeps the month easy)
+  later ("Better later"): share is over 30% (spreading it over 3 months takes the pressure off)
   If the user has already given a strong reason (needed this month) and it fits, use comfortable or tight and say they're good to buy it.
 - actions: exactly 2 buttons, labels under 24 characters. Kinds: save_for_later, make_it_work, buy_anyway, other.
   Usual sets: comfortable → "Buy it", "Save for later". tight and later → "I need it this month" (other), "Save for ${NEXT_MONTH}". not_this_month → "Save for ${NEXT_MONTH}", "Buy anyway". Never more than 2 buttons.
-- The app calculates and shows the before/after numbers itself. Keep the numbers in your reply consistent with app_state.
+- The app shows the item with three options (Buy now, Wait 2 months, Wait 3 months), the before/after numbers and the trade-offs itself, so when there's a card, reply can be one short sentence.
 
 needs_price: true when the user shared an item but you can't tell its price (not visible in the photo, not in the message). Ask for the price in reply, and set card to null. When they answer with a number, the item is the one in app_state.
 
@@ -116,10 +118,10 @@ export function describeState(req: CheckRequest): string {
   const lines = [
     `Month: ${MONTH.name}, ${MONTH.daysLeft} days left. Next month: ${NEXT_MONTH}.`,
     `Came in: ${money(MONTH.income)}. Already has a job (fixed): ${money(JOBS_TOTAL)} (${MONTH.jobs.map((j) => `${j.name} ${money(j.amount)}`).join(", ")}).`,
-    `Free spending total: ${money(s.freeTotal)}${s.freeTotal !== BASE_FREE_TOTAL ? ` (adjusted from ${money(BASE_FREE_TOTAL)})` : ""}.`,
+    `Left to spend (the main number): ${money(s.freeTotal)}${s.freeTotal !== BASE_FREE_TOTAL ? ` (adjusted from ${money(BASE_FREE_TOTAL)})` : ""}.`,
     `Plans: ${list(s.plans)}.`,
     `Bought this month: ${list(s.bought)}.`,
-    `Open money now: ${money(open)}.`,
+    `Not planned yet (part of left to spend): ${money(open)}.`,
     `Wishlist: ${s.shelf.length ? s.shelf.map((x) => `${x.name} ${money(x.price)} (${x.status})`).join("; ") : "empty"}.`,
   ];
   if (s.currentItem)

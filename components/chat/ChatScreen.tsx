@@ -267,7 +267,9 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           )
         ) : (
           <div className="flex min-h-full flex-col justify-end gap-2.5 [@media(max-height:720px)]:gap-1.5">
-            {messages.map((m, i) => (
+            {messages.map((m, i) =>
+              // Penny's full answer starts with the item itself, so the question right before it would repeat it.
+              m.role === "user" && messages[i + 1]?.plans ? null : (
               <Message
                 key={m.id}
                 m={m}
@@ -279,7 +281,8 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 onToggle={(k) => togglePlans(m, k)}
                 onReply={(t) => send({ text: t })}
               />
-            ))}
+              ),
+            )}
             {thinking && <Thinking />}
           </div>
         )}
@@ -329,7 +332,8 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           />
         ) : (
           <>
-            {canTalk && (
+            {/* Once a chat is going, the mic inside the text box is enough */}
+            {canTalk && messages.length === 0 && (
               <div className="flex justify-end px-3 pb-1">
                 <button
                   type="button"

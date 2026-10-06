@@ -8,7 +8,7 @@ import { newId } from "./format";
 import { useStore } from "./store";
 import { moodFor } from "./mood";
 import { applyUpdates, sameName } from "./updates";
-import type { CheckResult, Item, Outgoing, ResultCard } from "./types";
+import type { CheckResult, Item, Outgoing, PlansCard } from "./types";
 
 const MIN_THINKING_MS = 700; // long enough to read "Reading it…", short enough to feel quick
 
@@ -60,26 +60,29 @@ export function useSend() {
 
       // Numbers on the card always come from the budget math, never from the model.
       const next = applyUpdates(snapshot, updates);
-      const open = openMoney(next.freeTotal, next.plans, next.bought);
-      const mood = moodFor(result, openMoney(snapshot.freeTotal, snapshot.plans, snapshot.bought), open);
+      const mood = moodFor(result, openMoney(snapshot.freeTotal, snapshot.plans, snapshot.bought), openMoney(next.freeTotal, next.plans, next.bought));
 
-      let card: ResultCard | undefined;
+      // An item with a price gets Penny's full answer (the same one the demo gallery shows):
+      // worked out from Left to spend, so every screen agrees on the number.
+      let plans: PlansCard | undefined;
       if (result.card) {
         const image =
           msg.image?.thumb ??
           (currentItem && (sameName(currentItem.name, result.card.name) || currentItem.name === "This item")
             ? currentItem.image
             : undefined);
-        card = { ...result.card, image, openBefore: open, openAfter: Math.round((open - result.card.price) * 100) / 100 };
+        plans = { name: result.card.name, price: result.card.price, left: next.freeTotal, image };
       }
 
       if (updates.length) dispatch({ type: "applyUpdates", updates });
       dispatch({
         type: "addMessage",
-        message: { id: newId(), role: "assistant", text: result.reply, card, quickReplies: result.quickReplies, failed: offline, mood },
+        message: plans
+          ? { id: newId(), role: "assistant", text: "", plans, failed: offline }
+          : { id: newId(), role: "assistant", text: result.reply, quickReplies: result.quickReplies, failed: offline, mood },
       });
 
-      if (card) dispatch({ type: "setCurrentItem", item: { name: card.name, price: card.price, image: card.image } });
+      if (plans) dispatch({ type: "setCurrentItem", item: { name: plans.name, price: plans.price, image: plans.image } });
       else if (updates.some((u) => u.type === "add_bought")) dispatch({ type: "setCurrentItem", item: null });
 
       dispatch({ type: "setThinking", on: false });

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Can I Afford This?",
-    short_name: "Afford This?",
+    name: "SpendQ",
+    short_name: "SpendQ",
     description: "See what a purchase means for the rest of your month before you buy it.",
     start_url: "/",
     scope: "/",

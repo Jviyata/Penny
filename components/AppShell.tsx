@@ -21,6 +21,8 @@ export function AppShell() {
   useVisualViewport();
   const { state } = useStore();
   const [tab, setTab] = useState<Tab>("home");
+  // Overview's "This month" card opens the Left to spend page inside Spending.
+  const [openLeft, setOpenLeft] = useState(0);
 
   // This is a demo app: every visit starts with onboarding.
   const [onboarding, setOnboarding] = useState(true);
@@ -36,8 +38,17 @@ export function AppShell() {
   };
 
   const screens: Record<Tab, React.ReactNode> = {
-    home: <HomeScreen goTo={setTab} resetSignal={homeReset} />,
-    free: <SpendingScreen goTo={setTab} />,
+    home: (
+      <HomeScreen
+        goTo={setTab}
+        resetSignal={homeReset}
+        openLeftToSpend={() => {
+          setTab("free");
+          setOpenLeft((n) => n + 1);
+        }}
+      />
+    ),
+    free: <SpendingScreen goTo={setTab} openLeftSignal={openLeft} />,
     chat: <ChatScreen active={tab === "chat"} onBack={() => setTab("home")} />,
     goals: <GoalsScreen goTo={setTab} />,
     shelf: <ShelfScreen goTo={setTab} />,
