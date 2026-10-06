@@ -104,13 +104,13 @@ export function PlanCards({
       <div>
         <div className="rounded-[18px] bg-card px-4 py-3 [@media(max-height:720px)]:py-2">
           <p className="text-[13px] font-medium text-label-2">
-            {current.impact} impact · the trade-offs
+            {current.impact} impact · {current.getIt} · you’d cut back:
           </p>
           <ul className="mt-1.5 flex flex-col gap-1">
             {current.tradeoffs.slice(0, 3).map((t, i) => (
               <li
                 key={t.text}
-                className={`flex items-center gap-2.5 text-[15px] leading-[20px] text-label ${i === 2 ? "[@media(max-height:720px)]:hidden" : ""}`}
+                className={`flex items-center gap-2.5 text-[14px] leading-[19px] text-label ${i === 2 ? "[@media(max-height:720px)]:hidden" : ""}`}
               >
                 <span
                   className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${

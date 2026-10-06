@@ -15,7 +15,8 @@ export type PlanOption = {
   amount: number; // paid now (Buy Now) or set aside each month (Wait)
   amountNote: string; // "today" or "a month for 2 months"
   left: number; // left to spend this month after this choice
-  tradeoffs: { good: boolean; text: string }[];
+  getIt: string; // "yours today" / "yours in December"
+  tradeoffs: { good: boolean; text: string }[]; // what you'd cut to afford it
   impact: Impact;
   cta: string;
 };
@@ -34,28 +35,39 @@ function impactOf(costThisMonth: number, left: number): Impact {
 }
 
 /**
- * What a cost actually comes out of, smallest sacrifice first: the cushion, then extra shopping,
- * then eating out, then weekend plans. Rough monthly amounts for each, scaled to the month.
+ * What a cost means in real life: the everyday things you'd cut to cover it, in the order most
+ * people trim first (a bit less on groceries, your nails, dinners out, coffee runs, a weekend plan,
+ * then extra shopping). Returns the three biggest cuts, so pricier things show bigger sacrifices.
+ * `when` says which months it applies to ("this month", "in Oct & Nov").
  */
-function whatItCosts(cost: number, left: number): string[] {
-  const scale = left / 1060;
-  const buckets = [
-    { name: "spending cushion", size: Math.round(100 * scale) },
-    { name: "extra shopping", size: Math.round(150 * scale) },
-    { name: "eating out", size: Math.round(250 * scale) },
-    { name: "weekend plans", size: Math.round(200 * scale) },
-  ];
-  const out: string[] = [];
-  let rest = cost;
-  for (const b of buckets) {
-    if (rest <= 0) break;
-    const take = Math.min(rest, b.size);
-    rest -= take;
-    if (take >= b.size) out.push(`Uses up your ${money(b.size)} ${b.name}`);
-    else if (take >= 15) out.push(`Trims ${b.name} by ${money(take)}`);
+function giveUps(cost: number, when: string): string[] {
+  const cuts: { text: string; amount: number }[] = [];
+  let rest = Math.round(cost);
+  const take = (amount: number, text: string) => {
+    cuts.push({ text: `${text} ${when}`, amount });
+    rest -= amount;
+  };
+
+  if (rest >= 15) take(Math.min(rest, 50), `${money(Math.min(rest, 50))} less on groceries`);
+  if (rest >= 30) take(45, "Skip getting your nails done");
+  if (rest >= 25) {
+    const dinners = Math.min(3, Math.max(1, Math.round(rest / 35)));
+    take(dinners * 35, dinners === 1 ? "One fewer dinner out" : `${dinners} fewer dinners out`);
   }
-  return out;
+  if (rest >= 40) take(80, "Sit out a weekend plan");
+  if (rest >= 10 && rest < 40) {
+    const coffees = Math.min(6, Math.ceil(rest / 6));
+    take(coffees * 6, `Skip ${coffees} coffee runs`);
+  }
+  if (rest >= 10) take(rest, `${money(rest)} less on extra shopping`); // tiny leftovers aren't worth a line
+
+  return cuts
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 3)
+    .map((c) => c.text);
 }
+
+const short = (m: string) => m.slice(0, 3);
 
 export function planFor(name: string, price: number, left: number): PlanSummary {
   const now = price;
@@ -73,15 +85,8 @@ export function planFor(name: string, price: number, left: number): PlanSummary 
       amountNote: "today",
       left: left - now,
       impact: nowImpact,
-      tradeoffs: [
-        { good: true, text: "You have it right away" },
-        ...(nowImpact === "Low"
-          ? [{ good: true, text: `Barely dents ${MONTH.name}` }]
-          : whatItCosts(now, left)
-              .slice(0, 2)
-              .map((text) => ({ good: false, text }))),
-        { good: nowImpact !== "High", text: `${money(left - now)} left for ${MONTH.daysLeft} days` },
-      ],
+      getIt: "yours today",
+      tradeoffs: giveUps(now, "this month").map((text) => ({ good: false, text })),
       cta: "Buy it now",
     },
     {
@@ -91,13 +96,8 @@ export function planFor(name: string, price: number, left: number): PlanSummary 
       amountNote: "a month, for 2 months",
       left: left - per2,
       impact: impactOf(per2, left),
-      tradeoffs: [
-        { good: true, text: `Keeps ${money(left - per2)} free this month` },
-        ...whatItCosts(per2, left)
-          .slice(0, 1)
-          .map((text) => ({ good: false, text })),
-        { good: false, text: `You’ll have it in ${later2}` },
-      ],
+      getIt: `yours in ${later2}`,
+      tradeoffs: giveUps(per2, `in ${short(MONTH.name)} & ${short(monthAfter(1))}`).map((text) => ({ good: false, text })),
       cta: "Start saving",
     },
     {
@@ -107,11 +107,11 @@ export function planFor(name: string, price: number, left: number): PlanSummary 
       amountNote: "a month, for 3 months",
       left: left - per3,
       impact: impactOf(per3, left),
-      tradeoffs: [
-        { good: true, text: "The most breathing room" },
-        { good: true, text: `Keeps ${money(left - per3)} free this month` },
-        { good: false, text: `Longest wait, until ${later3}` },
-      ],
+      getIt: `yours in ${later3}`,
+      tradeoffs: giveUps(per3, `${short(MONTH.name)}–${short(monthAfter(2))}`).map((text) => ({
+        good: false,
+        text,
+      })),
       cta: "Start saving",
     },
   ];
