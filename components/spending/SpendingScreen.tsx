@@ -9,8 +9,7 @@ import { useStore } from "@/lib/store";
 import { FreeSpendingScreen } from "../free/FreeSpendingScreen";
 import { CategoryScreen } from "../home/CategoryScreen";
 import { MonthMenu } from "../home/MonthMenu";
-import { CATEGORY_ICONS, CATEGORY_ORDER } from "../home/categories";
-import { CalendarIcon, CheckIcon, SparklesIcon } from "../ui/Icons";
+import { CATEGORY_ORDER } from "../home/categories";
 import { Screen } from "../ui/Screen";
 import type { Tab } from "../TabBar";
 
@@ -112,10 +111,11 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={r.id}
                 index={i}
+                last={i === rows.length - 1}
                 color={FOLDER[r.id]}
-                Icon={r.id === "free" ? SparklesIcon : CATEGORY_ICONS[r.id]}
                 title={r.name}
-                sub={`${money(r.amount)} · ${Math.round((total > 0 ? r.amount / total : 0) * 100)}% of your month`}
+                note={`${Math.round((total > 0 ? r.amount / total : 0) * 100)}% of your month`}
+                amount={money(r.amount)}
                 onClick={() => setDetail(r.id)}
               />
             ))}
@@ -126,10 +126,11 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={b.id}
                 index={i}
+                last={i === paidBills.length - 1 && dueBills.length === 0}
                 color={FOLDER[b.cat]}
-                Icon={CheckIcon}
                 title={b.name}
-                sub={`${money(b.amount)} · Paid ${b.date}`}
+                note={`Paid ${b.date}`}
+                amount={money(b.amount)}
                 onClick={() => setDetail(b.cat)}
               />
             ))}
@@ -137,10 +138,11 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={b.id}
                 index={paidBills.length + i}
-                color={FOLDER_DUE}
-                Icon={CalendarIcon}
+                last={i === dueBills.length - 1}
+                color={FOLDER_DUE[i % FOLDER_DUE.length]}
                 title={b.name}
-                sub={`${money(b.amount)} · Due ${b.date}`}
+                note={`Due ${b.date}`}
+                amount={money(b.amount)}
                 onClick={() => setDetail(b.cat)}
               />
             ))}
@@ -180,10 +182,11 @@ const FOLDER: Record<CatId, string> = {
   bills: "#c08b3e",
   transit: "#5f86a6",
 };
-const FOLDER_DUE = "#a59a8e"; // bills still coming up
+// Bills still coming up: neighboring taupes, so each card's scoop still shows against the one above.
+const FOLDER_DUE = ["#ab9f92", "#9c9084", "#8e8276"];
 
 /** How much of each card hides under the next one. */
-const TUCK = 30;
+const TUCK = 28;
 
 /**
  * Cards stacked like a deck: each one tucks under the next, so every card shows one band.
@@ -192,10 +195,10 @@ const TUCK = 30;
 function Stack({ count, children }: { count: number; children: React.ReactNode }) {
   return (
     <div
-      className="mx-3 mt-4 [--stack-top:242px] [@media(max-height:720px)]:[--stack-top:196px]"
+      className="mx-4 mt-4 [--stack-top:242px] [@media(max-height:720px)]:[--stack-top:196px]"
       style={
         {
-          "--step": `clamp(50px, calc((100cqh - var(--sat) - var(--sab) - var(--tabbar-h) - var(--stack-top) - ${TUCK}px) / ${count}), 84px)`,
+          "--step": `clamp(50px, calc((100cqh - var(--sat) - var(--sab) - var(--tabbar-h) - var(--stack-top) - 12px) / ${count}), 76px)`,
         } as React.CSSProperties
       }
     >
@@ -204,66 +207,66 @@ function Stack({ count, children }: { count: number; children: React.ReactNode }
   );
 }
 
-/** The scoop at the top of each card: an ellipse punched out of the top edge, centered. */
-const NOTCH = "radial-gradient(ellipse 34px 15px at 50% 0, transparent 96%, #000 100%)";
-
-function ChevronUpIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="10" viewBox="0 0 16 10" fill="none" aria-hidden>
-      <path d="M3 7.5 8 3l5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+/**
+ * The C-shaped scoop at the top middle of each card, with soft shoulders.
+ * It's punched out of the card with a mask, so the card above shows through.
+ */
+const SCOOP_W = 92;
+const SCOOP_H = 15;
+const SCOOP_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='${SCOOP_W}' height='${SCOOP_H}' viewBox='0 0 ${SCOOP_W} ${SCOOP_H}'><path d='M0 0 C12 0 15 ${SCOOP_H} 30 ${SCOOP_H} H62 C77 ${SCOOP_H} 80 0 92 0 Z'/></svg>`;
+const SCOOP_MASK = {
+  WebkitMaskImage: `url("data:image/svg+xml,${encodeURIComponent(SCOOP_SVG)}"), linear-gradient(#000 0 0)`,
+  WebkitMaskPosition: "top center, 0 0",
+  WebkitMaskSize: `${SCOOP_W}px ${SCOOP_H}px, 100% 100%`,
+  WebkitMaskRepeat: "no-repeat",
+  WebkitMaskComposite: "xor",
+  maskImage: `url("data:image/svg+xml,${encodeURIComponent(SCOOP_SVG)}"), linear-gradient(#000 0 0)`,
+  maskPosition: "top center, 0 0",
+  maskSize: `${SCOOP_W}px ${SCOOP_H}px, 100% 100%`,
+  maskRepeat: "no-repeat",
+  maskComposite: "exclude",
+} as React.CSSProperties;
 
 function StackCard({
   index,
+  last,
   color,
-  Icon,
   title,
-  sub,
+  note,
+  amount,
   onClick,
 }: {
   index: number;
+  last: boolean;
   color: string;
-  Icon: typeof CheckIcon;
   title: string;
-  sub: string;
+  note: string;
+  amount: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex w-full flex-col text-left text-white active:brightness-95"
+      className="relative flex w-full flex-col text-left text-white transition-transform active:scale-[0.99]"
       style={{
-        height: `calc(var(--step) + ${TUCK}px)`,
+        height: last ? "var(--step)" : `calc(var(--step) + ${TUCK}px)`,
         marginTop: index === 0 ? 0 : -TUCK,
         zIndex: index + 1,
-        filter: "drop-shadow(0 -4px 10px rgba(30, 20, 10, 0.14))",
       }}
     >
-      {/* Rounded card with a scoop cut out of the top middle; the card above peeks through it */}
       <span
-        className="absolute inset-0 rounded-[24px]"
-        style={{
-          background: color,
-          WebkitMaskImage: index > 0 ? NOTCH : undefined,
-          maskImage: index > 0 ? NOTCH : undefined,
-        }}
+        className="absolute inset-0 rounded-[22px] shadow-[0_-1px_0_rgba(255,255,255,0.25)_inset]"
+        style={{ background: color, ...(index > 0 ? SCOOP_MASK : {}) }}
         aria-hidden
       />
-      {index > 0 && <ChevronUpIcon className="absolute left-1/2 top-[1px] -translate-x-1/2 text-white/80" />}
 
-      <span className="relative flex h-[var(--step)] w-full items-center gap-3 pl-5 pr-4 pt-1">
+      <span className="relative flex h-[var(--step)] w-full items-center gap-4 px-5 pt-1">
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[19px] font-bold leading-[24px] tracking-[-0.01em]">{title}</span>
-          <span className="tabular mt-0.5 block truncate text-[14px] leading-[18px] text-white/85">{sub}</span>
+          <span className="block truncate text-[17px] font-semibold leading-[22px]">{title}</span>
+          <span className="block truncate text-[13px] leading-[17px] text-white/75">{note}</span>
         </span>
-        <span
-          className="flex h-[min(42px,calc(var(--step)-16px))] w-[min(42px,calc(var(--step)-16px))] shrink-0 items-center justify-center rounded-full bg-white/20"
-        >
-          <Icon size={19} />
-        </span>
+        <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em]">{amount}</span>
       </span>
     </button>
   );
