@@ -10,7 +10,7 @@ import { useSend } from "@/lib/useSend";
 import { prepareImage } from "@/lib/image";
 import type { CardAction, ChatMessage } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { ArrowLeftIcon, MicIcon, PlusIcon } from "../ui/Icons";
+import { ArrowLeftIcon, MicIcon, PlusIcon, ResetIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
 import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
@@ -91,6 +91,10 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
   // A new result card scrolls to its top, so the photo and headline lead; anything else goes to the end.
   useEffect(() => {
     const el = scrollRef.current;
+    if (el && messages.length === 0) {
+      el.scrollTo({ top: 0 }); // fresh chat: start at the top
+      return;
+    }
     const lastMsg = messages[messages.length - 1];
     if (el && lastMsg?.card && !thinking) {
       const node = el.querySelector<HTMLElement>(`[data-msg="${lastMsg.id}"]`);
@@ -152,7 +156,22 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           >
             <ArrowLeftIcon size={20} />
           </button>
-          <h1 className="text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Talk to Penny</h1>
+          <h1 className="flex-1 text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Talk to Penny</h1>
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                dispatch({ type: "clearChat" });
+                setStarted(false);
+                scrollRef.current?.scrollTo({ top: 0 });
+              }}
+              disabled={thinking}
+              className="pressable flex h-10 items-center gap-1.5 rounded-full bg-card px-3.5 text-[14px] font-semibold text-label shadow-[0_4px_14px_-8px_rgba(30,20,10,0.35)] disabled:opacity-40"
+            >
+              <ResetIcon size={16} />
+              New chat
+            </button>
+          )}
         </div>
         <p className="glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo">
           <span className="h-2 w-2 rounded-full" style={{ background: open > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />

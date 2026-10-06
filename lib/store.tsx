@@ -41,6 +41,7 @@ export type Action =
   | { type: "editGoal"; id: string; name: string; target: number }
   | { type: "removeGoal"; id: string }
   | { type: "addToGoal"; id: string; amount: number }
+  | { type: "clearChat" }
   | { type: "resetDemo" };
 
 const startingBudget = () => ({
@@ -112,6 +113,8 @@ function reducer(state: State, action: Action): State {
           g.id === action.id ? { ...g, saved: g.saved + action.amount, thisMonth: g.thisMonth + action.amount } : g,
         ),
       };
+    case "clearChat":
+      return { ...state, messages: [], currentItem: null };
     case "resetDemo":
       return { ...state, ...startingBudget() };
   }
