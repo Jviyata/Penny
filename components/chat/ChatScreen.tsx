@@ -20,7 +20,7 @@ import { DemoGallery } from "./DemoGallery";
 import { PlanCards } from "./PlanCards";
 import { newId } from "@/lib/format";
 import type { DemoItem } from "@/lib/demoItems";
-import type { PlanOption } from "@/lib/planOptions";
+import { monthAfter, type PlanOption } from "@/lib/planOptions";
 
 type Mode = "talk" | "text";
 
@@ -89,21 +89,44 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       dispatch({ type: "setThinking", on: false });
     }, 1100);
   };
+  // Penny's three choices change the real numbers:
+  // Buy now spends the price; waiting sets this month's share aside into a new goal for the item.
   const choosePlan = (m: ChatMessage, o: PlanOption) => {
     if (!m.plans || m.plans.chosen) return;
-    const { name, price } = m.plans;
-    // Left to Spend drops by what this choice costs this month (the whole price, or the first month's saving).
+    const { name, price, image } = m.plans;
     dispatch({ type: "setTotal", amount: state.freeTotal - o.amount });
     if (o.id !== "now") {
+      const months = o.id === "wait2" ? 2 : 3;
       dispatch({
-        type: "applyUpdates",
-        updates: [{ type: "save_to_shelf", name, price, status: `Saving ${money(o.amount)} a month` }],
+        type: "startSavingGoal",
+        goal: {
+          id: newId(),
+          name,
+          target: price,
+          saved: o.amount,
+          thisMonth: o.amount,
+          by: `By ${monthAfter(months)}`,
+          image,
+        },
       });
     }
     dispatch({ type: "updatePlans", messageId: m.id, patch: { chosen: o.id } });
   };
-  const togglePlans = (m: ChatMessage, key: "remind" | "priceWatch") =>
-    m.plans && dispatch({ type: "updatePlans", messageId: m.id, patch: { [key]: !m.plans[key] } as Partial<PlansCard> });
+  // "Remind me when I'm ready to buy" keeps the item on the Wishlist; tapping again takes it off.
+  const togglePlans = (m: ChatMessage, key: "remind" | "priceWatch") => {
+    if (!m.plans) return;
+    const on = !m.plans[key];
+    if (key === "remind") {
+      const { name, price, image } = m.plans;
+      dispatch({
+        type: "applyUpdates",
+        updates: on
+          ? [{ type: "save_to_shelf", name, price, image, status: "Penny will remind you" }]
+          : [{ type: "remove_from_shelf", name }],
+      });
+    }
+    dispatch({ type: "updatePlans", messageId: m.id, patch: { [key]: on } as Partial<PlansCard> });
+  };
 
   const empty = messages.length === 0 && !thinking;
   const showChoices = empty && !started && !listening;

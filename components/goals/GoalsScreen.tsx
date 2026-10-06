@@ -114,7 +114,11 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
               {goals.map((g) => {
                 const p = g.target > 0 ? Math.min(1, g.saved / g.target) : 0;
                 const done = g.saved >= g.target;
-                const { Icon, bg, fg, photo, fit } = goalLook(g.name);
+                const look = goalLook(g.name);
+                const { Icon, bg, fg } = look;
+                // Goals started from Penny carry the item's own picture.
+                const photo = g.image ?? look.photo;
+                const fit = g.image ? "cover" : look.fit;
                 return (
                   <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${denser ? "py-[5px]" : dense ? "py-2" : "py-3 [@media(max-height:720px)]:py-2"}`}>
                     <span

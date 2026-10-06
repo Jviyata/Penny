@@ -105,7 +105,10 @@ export function PlanCards({
         >
           {settled ? (
             <>
-              <CheckIcon size={15} /> {plans.chosen === "now" ? "Bought" : "Saving started"}
+              <CheckIcon size={15} />{" "}
+              {plans.chosen === "now"
+                ? `Bought · ${money(plans.left - plans.price)} left to spend`
+                : "Saving started · added to Goals"}
             </>
           ) : current.id === "now" ? (
             `Confirm: buy for ${money(current.amount)}`

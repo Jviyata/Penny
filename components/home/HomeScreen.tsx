@@ -108,7 +108,11 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
 
 /** One goal: its picture, its name, and how far along it is. Amounts live on the Goals tab. */
 function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
-  const { Icon, bg, fg, photo, fit } = goalLook(goal.name);
+  const look = goalLook(goal.name);
+  const { Icon, bg, fg } = look;
+  // Goals started from Penny carry the item's own picture.
+  const photo = goal.image ?? look.photo;
+  const fit = goal.image ? "cover" : look.fit;
   const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
   return (
     <button type="button" onClick={onClick} className="pressable flex flex-col overflow-hidden rounded-[22px] bg-card text-left">

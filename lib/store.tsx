@@ -45,7 +45,8 @@ export type Action =
   | { type: "updatePlans"; messageId: string; patch: Partial<PlansCard> }
   | { type: "clearChat" }
   | { type: "resetDemo" }
-  | { type: "finishOnboarding"; name: string; goals: Goal[] };
+  | { type: "finishOnboarding"; name: string; goals: Goal[] }
+  | { type: "startSavingGoal"; goal: Goal };
 
 const startingBudget = () => ({
   freeTotal: BASE_FREE_TOTAL,
@@ -127,8 +128,17 @@ function reducer(state: State, action: Action): State {
       return { ...state, messages: [], currentItem: null };
     case "resetDemo":
       return { ...state, ...startingBudget() };
+    case "startSavingGoal":
+      // Newest first, so it shows on Overview right away.
+      return { ...state, goals: [action.goal, ...state.goals.filter((g) => g.name !== action.goal.name)] };
     case "finishOnboarding":
-      return { ...state, userName: action.name || USER_NAME, goals: action.goals.length ? action.goals : state.goals };
+      // Every visit is a fresh demo: start from the October numbers with the goals just picked.
+      return {
+        ...state,
+        ...startingBudget(),
+        userName: action.name || USER_NAME,
+        goals: action.goals.length ? action.goals : startingBudget().goals,
+      };
   }
 }
 

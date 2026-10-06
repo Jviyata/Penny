@@ -19,6 +19,7 @@ export type Goal = {
   saved: number; // including this month
   thisMonth: number; // part of October's $1,000
   by: string; // "Next spring"
+  image?: string; // picture for goals started from Penny (the item's photo)
 };
 
 export const SPENDING: Record<Exclude<JobId, "savings">, Spend[]> = {

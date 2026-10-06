@@ -23,7 +23,7 @@ export type PlanOption = {
 export type PlanSummary = { headline: string; detail: string; pick: PlanId; options: PlanOption[] };
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const monthAfter = (n: number) => MONTHS[(MONTHS.indexOf(MONTH.name) + n) % 12];
+export const monthAfter = (n: number) => MONTHS[(MONTHS.indexOf(MONTH.name) + n) % 12];
 
 /** Share of this month's money a choice uses → how much it changes the month. */
 function impactOf(costThisMonth: number, left: number): Impact {
