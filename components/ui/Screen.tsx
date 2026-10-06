@@ -36,7 +36,7 @@ export function Screen({
     <div className="absolute inset-0 isolate overflow-hidden">
       <Scene name={scene} />
 
-      <div className="scroll-y relative h-full pt-[var(--sat)] pb-[calc(var(--tabbar-h)+var(--sab)+80px)]">
+      <div className="scroll-y relative h-full pt-[var(--sat)] pb-[calc(var(--tabbar-h)+var(--sab)+20px)]">
         {/* Header buttons sit above the content below them, so menus (Oct ⌄) open over it. */}
         <div className={`relative z-[45] flex h-11 items-center justify-between ${inlineTitle ? "mt-1 pl-5 pr-3" : "px-3"}`}>
           <div className="flex min-w-0 items-center">

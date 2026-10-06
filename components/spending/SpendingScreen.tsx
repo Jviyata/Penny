@@ -48,7 +48,24 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
   const totalSpent = rows.reduce((t, r) => t + r.spent, 0);
   const income = MONTH.income;
 
-  const paidBills = BILLS.flatMap((id) => SPENDING[id as Exclude<JobId, "savings">].filter((s) => !s.upcoming).map((s) => ({ ...s, cat: id })));
+  // Paid bills, with electric, internet and phone combined into one Utilities line.
+  const paidUtilities = SPENDING.bills.filter((s) => !s.upcoming);
+  const paidBills = [
+    ...SPENDING.rent.filter((s) => !s.upcoming).map((s) => ({ ...s, cat: "rent" as JobId })),
+    ...(paidUtilities.length
+      ? [
+          {
+            id: "utilities",
+            name: "Utilities",
+            what: "Power, internet, phone",
+            date: paidUtilities.map((u) => u.date).sort((x, y) => day(y) - day(x))[0],
+            amount: paidUtilities.reduce((t, u) => t + u.amount, 0),
+            cat: "bills" as JobId,
+          },
+        ]
+      : []),
+    ...SPENDING.loans.filter((s) => !s.upcoming).map((s) => ({ ...s, cat: "loans" as JobId })),
+  ];
   const dueBills = BILLS.flatMap((id) => SPENDING[id as Exclude<JobId, "savings">].filter((s) => s.upcoming).map((s) => ({ ...s, cat: id })));
 
   const activity = [
@@ -63,10 +80,14 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
       <Screen scene="free" title="Spending" inlineTitle>
         {/* Where the paycheck went: tap a slice to open it */}
         <div className="px-5">
-          <div className="mx-auto mt-2 flex h-[248px] items-center justify-center [container-type:size]">
+          <div
+            className="mx-auto mt-1 flex items-center justify-center [container-type:size]"
+            // Takes whatever height the bills leave on this phone, so the page fits without scrolling.
+            style={{ height: "clamp(118px, calc(100cqh - var(--sat) - var(--sab) - 592px), 250px)" }}
+          >
             <Donut onSelect={(id) => setDetail(id === "yours" ? "free" : id)} />
           </div>
-          <div className="mt-3 flex items-center justify-center gap-4 text-[14px] text-label-2">
+          <div className="mt-2 flex items-center justify-center gap-4 text-[14px] text-label-2">
             <span>
               <span className="tabular text-[17px] font-semibold text-label">{money(JOBS_TOTAL)}</span> already assigned
             </span>
@@ -75,7 +96,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <span className="tabular text-[17px] font-semibold text-label">{money(BASE_FREE_TOTAL)}</span> left
             </span>
           </div>
-          <p className="mt-1 text-center text-[13px] text-label-3">
+          <p className="mt-1 text-center text-[13px] text-label-3 [@media(max-height:720px)]:hidden">
             Tap a slice to see what went into it, like your groceries.
           </p>
         </div>
@@ -85,7 +106,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
           {paidBills.map((b) => (
             <Row key={b.id} color={CATEGORY_COLORS[b.cat]} name={b.name} sub={`${b.what} · Paid ${b.date}`} amount={b.amount} paid />
           ))}
-          {dueBills.length > 0 && <p className="px-5 pb-1 pt-3 text-[13px] font-semibold uppercase tracking-[0.05em] text-label-3">Coming up</p>}
+          {dueBills.length > 0 && <p className="px-5 pb-0.5 pt-2 text-[13px] font-semibold uppercase tracking-[0.05em] text-label-3">Coming up</p>}
           {dueBills.map((b) => (
             <Row key={b.id} color={CATEGORY_COLORS[b.cat]} name={b.name} sub={`${b.what} · Due ${b.date}`} amount={b.amount} muted />
           ))}
@@ -117,8 +138,8 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <section className="mx-3 mt-4 overflow-hidden rounded-[26px] bg-card pb-2 first-of-type:mt-3">
-      <div className="px-5 pb-0.5 pt-3.5">
+    <section className="mx-3 mt-3 overflow-hidden rounded-[26px] bg-card pb-1.5">
+      <div className="flex items-baseline justify-between px-5 pb-0.5 pt-3">
         <h2 className="text-[19px] font-semibold">{title}</h2>
         {subtitle && <p className="text-[13px] text-label-3">{subtitle}</p>}
       </div>
@@ -143,11 +164,11 @@ function Row({
   muted?: boolean;
 }) {
   return (
-    <div className="flex min-h-[58px] items-center gap-3 px-5 py-2">
+    <div className="flex min-h-[46px] items-center gap-3 px-5 py-1 [@media(max-height:720px)]:min-h-[36px]">
       <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: color, opacity: muted ? 0.45 : 1 }} aria-hidden />
       <span className="min-w-0 flex-1">
         <span className={`block truncate text-[16px] ${muted ? "text-label-2" : ""}`}>{name}</span>
-        <span className="block truncate text-[13px] text-label-3">{sub}</span>
+        <span className="block truncate text-[13px] text-label-3 [@media(max-height:720px)]:hidden">{sub}</span>
       </span>
       {paid && <CheckIcon size={15} className="shrink-0 text-[var(--v-comfortable)]" />}
       <span className={`tabular shrink-0 text-[16px] font-medium ${muted ? "text-label-2" : ""}`}>{money(amount)}</span>
