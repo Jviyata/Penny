@@ -5,7 +5,7 @@ import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
-import { PencilIcon, PlusIcon, FlagIcon } from "../ui/Icons";
+import { PencilIcon, PlusIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
 import type { Tab } from "../TabBar";
@@ -52,36 +52,57 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
   return (
     <>
       <Screen scene="goals" title="Goals" subtitle="What you’re saving toward.">
-        <div className="px-5">
-          <section className="on-photo-shadow">
-            <p className="tabular text-[56px] font-bold leading-none tracking-[-0.025em] text-on-photo">{money(saved)}</p>
-            <div className="mt-1.5 flex items-center justify-between gap-3">
-              <p className="text-[19px] text-on-photo-2">saved of {money(target)}</p>
-              <span className="glass tabular flex h-10 shrink-0 items-center rounded-full px-4 text-[17px] font-semibold text-on-photo">
-                {Math.round(share * 100)}%
-              </span>
+        <div className="-mt-1 px-5">
+          {/* Total saved, with the overall percent */}
+          <section className="flex items-end justify-between gap-3">
+            <div>
+              <p className="tabular text-[44px] font-bold leading-none tracking-[-0.025em] text-label">{money(saved)}</p>
+              <p className="mt-1 text-[16px] text-label-2">saved of {money(target)}</p>
             </div>
+            <span className="tabular mb-0.5 flex h-9 shrink-0 items-center rounded-full bg-fill px-3.5 text-[16px] font-semibold text-label">
+              {Math.round(share * 100)}%
+            </span>
           </section>
-          <div className="glass mt-4 h-3.5 overflow-hidden rounded-full" aria-hidden>
+          <div className="mt-3 h-3 overflow-hidden rounded-full bg-fill" aria-hidden>
             <div className="h-full rounded-full bg-[#8fa66b] transition-[width] duration-500" style={{ width: `${share * 100}%` }} />
           </div>
         </div>
 
-        <section className="mx-3 mt-5 overflow-hidden rounded-[30px] bg-card pb-2">
-          <div className="flex items-center justify-between px-5 pb-1 pt-4">
-            <h2 className="text-[19px] font-semibold">Your goals</h2>
+        {/* Wishlist: right under the bar so it's easy to reach */}
+        <button
+          type="button"
+          onClick={() => goTo("shelf")}
+          className="pressable mx-3 mt-4 flex w-[calc(100%-24px)] items-center gap-3 rounded-[22px] bg-card px-4 py-3 text-left"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#f4e3e3] text-[#9b4a4a]">
+            <HeartIcon size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-semibold">Wishlist</span>
+            <span className="block truncate text-[13px] text-label-2">
+              {state.shelf.length > 0
+                ? `${state.shelf.length} ${state.shelf.length === 1 ? "thing" : "things"} you want, just not right now`
+                : "Things you want, just not right now"}
+            </span>
+          </span>
+          <ChevronIcon className="text-label-3" />
+        </button>
+
+        <section className="mx-3 mt-3 overflow-hidden rounded-[26px] bg-card pb-1">
+          <div className="flex items-center justify-between px-4 pt-2">
+            <h2 className="text-[18px] font-semibold">Your goals</h2>
             <button
               type="button"
               onClick={addGoal}
-              className="pressable -mr-2 flex h-11 items-center gap-1 px-2 text-[15px] font-medium text-label-2"
+              className="pressable -mr-2 flex h-10 items-center gap-1 px-2 text-[15px] font-medium text-label-2"
             >
               <PlusIcon size={16} /> Add
             </button>
           </div>
 
           {goals.length === 0 ? (
-            <div className="flex flex-col items-center px-8 pb-6 pt-2 text-center">
-              <Mascot mood="calm_neutral" size={96} />
+            <div className="flex flex-col items-center px-8 pb-5 pt-1 text-center">
+              <Mascot mood="calm_neutral" size={80} />
               <p className="mt-1 text-[15px] leading-[20px] text-label-2">No goals yet. Add one to start tracking it.</p>
             </div>
           ) : (
@@ -89,69 +110,44 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
               {goals.map((g) => {
                 const p = g.target > 0 ? Math.min(1, g.saved / g.target) : 0;
                 const done = g.saved >= g.target;
+                const { Icon, bg, fg, photo, fit } = goalLook(g.name);
                 return (
-                  <li key={g.id} className="px-5 py-3 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
-                    <div className="flex items-center gap-3.5">
-                      {(() => {
-                        const { Icon, bg, fg, photo, fit } = goalLook(g.name);
-                        return (
-                          <span
-                            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[14px]"
-                            style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
-                          >
-                            {!photo && <Icon size={22} />}
-                          </span>
-                        );
-                      })()}
-                      <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
-                        <span className="flex items-center gap-1.5 text-[17px]">
+                  <li key={g.id} className="flex items-center gap-3 px-4 py-3 [@media(max-height:720px)]:py-2 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
+                    <span
+                      className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"
+                      style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
+                    >
+                      {!photo && <Icon size={24} />}
+                    </span>
+                    <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
+                      <span className="flex items-baseline gap-2">
+                        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[16px] font-medium">
                           <span className="truncate">{g.name}</span>
-                          <PencilIcon size={13} className="shrink-0 text-label-3" />
+                          <PencilIcon size={12} className="shrink-0 text-label-3" />
                         </span>
-                        <span className="block text-[14px] text-label-3">
-                          {done ? "Reached" : `${money(g.target - g.saved)} to go`} · {g.by}
-                        </span>
-                      </button>
-                      <span className="text-right">
-                        <span className="tabular block text-[17px] font-medium">{money(g.saved)}</span>
-                        <span className="tabular block text-[13px] text-label-3">of {money(g.target)}</span>
+                        <span className="tabular shrink-0 text-[15px] font-semibold">{Math.round(p * 100)}%</span>
                       </span>
-                    </div>
-                    <div className="mt-2.5 flex items-center gap-3 pl-[62px]">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill" aria-label={`${Math.round(p * 100)}% of the way`}>
-                        <div className="h-full rounded-full bg-[var(--v-comfortable)] transition-[width] duration-500" style={{ width: `${p * 100}%` }} />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => addMoney(g)}
-                        aria-label={`Add money to ${g.name}`}
-                        className="pressable flex h-9 items-center gap-1 rounded-full bg-fill px-3 text-[14px] font-semibold text-label"
-                      >
-                        <PlusIcon size={14} /> Add
-                      </button>
-                    </div>
+                      <span className="tabular block truncate text-[13px] text-label-2">
+                        {money(g.saved)} of {money(g.target)} · {done ? "Reached" : g.by}
+                      </span>
+                      <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-fill" aria-label={`${Math.round(p * 100)}% of the way`}>
+                        <span className="block h-full rounded-full bg-[#8fa66b] transition-[width] duration-500" style={{ width: `${p * 100}%` }} />
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addMoney(g)}
+                      aria-label={`Add money to ${g.name}`}
+                      className="pressable flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-fill text-label"
+                    >
+                      <PlusIcon size={16} />
+                    </button>
                   </li>
                 );
               })}
             </ul>
           )}
         </section>
-
-        {/* Wishlist lives here now (it's not a tab) */}
-        <button
-          type="button"
-          onClick={() => goTo("shelf")}
-          className="pressable mx-3 mt-3 flex w-[calc(100%-24px)] items-center gap-3.5 rounded-[24px] bg-card px-5 py-4 text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)]"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#f4e3e3] text-[#9b4a4a]">
-            <HeartIcon size={22} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[17px] font-semibold">Wishlist</span>
-            <span className="block text-[14px] text-label-2">Things you want, just not right now.</span>
-          </span>
-          <ChevronIcon className="text-label-3" />
-        </button>
       </Screen>
       <LineEditorSheet config={editor} onClose={() => setEditor(null)} />
     </>
