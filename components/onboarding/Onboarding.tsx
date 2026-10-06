@@ -20,7 +20,7 @@ const GOAL_CHOICES: Goal[] = [
   GOALS.find((g) => g.id === "emergency")!,
   { id: "move", name: "Move out", target: 3000, saved: 0, thisMonth: 0, by: "Next summer" },
   { id: "car", name: "Car", target: 8000, saved: 0, thisMonth: 0, by: "In 2 years" },
-  { id: "loans", name: "Student loans", target: 5000, saved: 0, thisMonth: 0, by: "Extra payments" },
+  { id: "furniture", name: "New furniture", target: 1200, saved: 0, thisMonth: 0, by: "By spring" },
 ];
 
 const STEPS = 5; // after the welcome screen
