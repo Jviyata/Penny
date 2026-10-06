@@ -248,7 +248,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           // The start screen has no input bar, so its corner buttons sit just above the tabs.
           paddingBottom: showChoices
             ? "calc(var(--tabbar-h) + var(--sab) + 4px)"
-            : `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`,
+            : `calc(${composerH + 40}px + var(--tabbar-h) + var(--sab))`, // clear of the bar's fade, so the last buttons stay crisp
           // Messages fade out under the title instead of colliding with it.
           WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 48px), #000 ${fadeTop})`,
           maskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 48px), #000 ${fadeTop})`,
