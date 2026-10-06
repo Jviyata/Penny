@@ -264,7 +264,7 @@ function StackCard({
           <span className="block truncate text-[17px] font-semibold leading-[22px]">{title}</span>
           <span className="block truncate text-[13px] leading-[17px] text-white/90">{note}</span>
         </span>
-        <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em]">{amount}</span>
+        <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em] text-[#1d1a17] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">{amount}</span>
       </span>
     </button>
   );
