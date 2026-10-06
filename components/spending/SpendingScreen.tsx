@@ -112,7 +112,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={r.id}
                 index={i}
                 last={i === rows.length - 1}
-                color={FOLDER[r.id]}
+                color={TAB_COLORS[i % TAB_COLORS.length]}
                 title={r.name}
                 note={`${Math.round((total > 0 ? r.amount / total : 0) * 100)}% of your month`}
                 amount={money(r.amount)}
@@ -127,7 +127,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={b.id}
                 index={i}
                 last={i === paidBills.length - 1 && dueBills.length === 0}
-                color={FOLDER[b.cat]}
+                color={TAB_COLORS[i % TAB_COLORS.length]}
                 title={b.name}
                 note={`Paid ${b.date}`}
                 amount={money(b.amount)}
@@ -139,7 +139,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={b.id}
                 index={paidBills.length + i}
                 last={i === dueBills.length - 1}
-                color={FOLDER_DUE[i % FOLDER_DUE.length]}
+                color={TAB_COLORS[(paidBills.length + i) % TAB_COLORS.length]}
                 title={b.name}
                 note={`Due ${b.date}`}
                 amount={money(b.amount)}
@@ -172,18 +172,16 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
   );
 }
 
-/** Folder colors: soft but deep enough that white text stays easy to read. */
-const FOLDER: Record<CatId, string> = {
-  rent: "#6b8547",
-  free: "#929d42",
-  savings: "#9a8a78",
-  groceries: "#5f8d68",
-  loans: "#c26b5d",
-  bills: "#c08b3e",
-  transit: "#5f86a6",
-};
-// Bills still coming up: neighboring taupes, so each card's scoop still shows against the one above.
-const FOLDER_DUE = ["#ab9f92", "#9c9084", "#8e8276"];
+/** Card colors, top to bottom of the stack: soft blue through to soft olive. */
+const TAB_COLORS = [
+  "#B7C9E2", // soft blue
+  "#9EC3D5", // dusty sky
+  "#8DBFC4", // muted aqua
+  "#86B7A7", // soft teal
+  "#9DBA91", // sage
+  "#B3C486", // pistachio
+  "#C4C98A", // soft olive
+];
 
 /** How much of each card hides under the next one. */
 const TUCK = 28;
@@ -248,7 +246,7 @@ function StackCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex w-full flex-col text-left text-white transition-transform active:scale-[0.99]"
+      className="relative flex w-full flex-col text-left text-[#1d1a17] transition-transform active:scale-[0.99]"
       style={{
         height: last ? "var(--step)" : `calc(var(--step) + ${TUCK}px)`,
         marginTop: index === 0 ? 0 : -TUCK,
@@ -264,7 +262,7 @@ function StackCard({
       <span className="relative flex h-[var(--step)] w-full items-center gap-4 px-5 pt-1">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[17px] font-semibold leading-[22px]">{title}</span>
-          <span className="block truncate text-[13px] leading-[17px] text-white/75">{note}</span>
+          <span className="block truncate text-[13px] leading-[17px] text-[#1d1a17]/65">{note}</span>
         </span>
         <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em]">{amount}</span>
       </span>
