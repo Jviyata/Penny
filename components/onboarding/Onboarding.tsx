@@ -142,25 +142,32 @@ function Heading({ title, sub }: { title: React.ReactNode; sub?: string }) {
   );
 }
 
-/** 0. Welcome: the name, Penny, and one way in (it's a demo, so no accounts). */
+/**
+ * 0. Welcome. One clear order: Penny says hi (speech bubble right above her), then the name,
+ * then the promise, then the one button.
+ */
 function Welcome({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="pt-10 [@media(max-height:720px)]:pt-4">
-        <p className="text-[56px] font-bold leading-[60px] tracking-[-0.04em]" style={{ color: GREEN }}>
+    <div className="flex h-full flex-col items-center text-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
+        {/* Penny, with her greeting as a speech bubble pointing down at her */}
+        <div className="relative rounded-[20px] bg-white px-5 py-2.5 text-[18px] font-semibold text-label shadow-[0_8px_24px_-12px_rgba(30,40,30,0.35)]">
+          Hi, I’m Penny!
+          <span className="absolute -bottom-[7px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-white" aria-hidden />
+        </div>
+        <div className="relative mt-4 flex items-center justify-center">
+          <span className="absolute h-[230px] w-[230px] rounded-full bg-[#e9efe2] [@media(max-height:720px)]:h-[170px] [@media(max-height:720px)]:w-[170px]" aria-hidden />
+          <Mascot mood="go_for_it" size={230} className="relative [@media(max-height:720px)]:!h-[170px] [@media(max-height:720px)]:!w-[170px]" />
+        </div>
+
+        <p className="mt-8 text-[52px] font-bold leading-[56px] tracking-[-0.04em] [@media(max-height:720px)]:mt-5 [@media(max-height:720px)]:text-[44px]" style={{ color: GREEN }}>
           {BRAND}
         </p>
-        <p className="mt-2 text-[19px] text-label-2">Know what to spend on.</p>
+        <p className="mt-2 text-[19px] leading-[24px] text-label-2">Know what to spend on.</p>
       </div>
-      <div className="relative flex flex-1 items-center justify-center">
-        <span className="absolute h-[260px] w-[260px] rounded-full bg-[#e9efe2] [@media(max-height:720px)]:h-[200px] [@media(max-height:720px)]:w-[200px]" aria-hidden />
-        <Mascot mood="go_for_it" size={250} className="relative [@media(max-height:720px)]:!h-[190px] [@media(max-height:720px)]:!w-[190px]" />
-        <span className="absolute bottom-[12%] right-2 rounded-[18px] rounded-bl-[6px] bg-white px-3.5 py-2 text-[15px] font-medium text-label shadow-[0_6px_20px_-10px_rgba(30,40,30,0.35)]">
-          Hi, I’m Penny!
-        </span>
-      </div>
-      <div className="pb-1">
-        <button type="button" onClick={onStart} className="pressable h-[54px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
+
+      <div className="w-full pb-1">
+        <button type="button" onClick={onStart} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
           Get started
         </button>
       </div>
