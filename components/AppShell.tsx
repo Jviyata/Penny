@@ -1,7 +1,7 @@
 "use client";
 
 import { MotionConfig } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { useVisualViewport } from "@/lib/useVisualViewport";
 import { TabBar, type Tab } from "./TabBar";
@@ -11,6 +11,9 @@ import { ChatScreen } from "./chat/ChatScreen";
 import { ShelfScreen } from "./shelf/ShelfScreen";
 import { GoalsScreen } from "./goals/GoalsScreen";
 import { DemoFiles } from "./demo/DemoFiles";
+import { Onboarding } from "./onboarding/Onboarding";
+
+const ONBOARDED_KEY = "ciat:onboarded";
 
 /**
  * All four screens stay mounted so scroll position, drafts and chat survive tab switches.
@@ -20,6 +23,32 @@ export function AppShell() {
   useVisualViewport();
   const { state } = useStore();
   const [tab, setTab] = useState<Tab>("home");
+
+  // First visit on this device shows onboarding; ?onboarding=1 shows it again.
+  const [onboarding, setOnboarding] = useState(false);
+  useEffect(() => {
+    let show = false;
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("onboarding") === "1") {
+        show = true;
+        url.searchParams.delete("onboarding");
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      } else {
+        show = localStorage.getItem(ONBOARDED_KEY) !== "1";
+      }
+    } catch {
+      show = false;
+    }
+    setOnboarding(show);
+  }, []);
+  const finishOnboarding = () => {
+    try {
+      localStorage.setItem(ONBOARDED_KEY, "1");
+    } catch {}
+    setTab("home");
+    setOnboarding(false);
+  };
   // Tapping the tab you're already on goes back to its top level (iOS convention).
   const [homeReset, setHomeReset] = useState(0);
   const selectTab = (t: Tab) => {
@@ -62,6 +91,7 @@ export function AppShell() {
         })}
         <TabBar active={tab} onChange={selectTab} shelfCount={state.shelf.length} />
         <DemoFiles goTo={setTab} />
+        {onboarding && <Onboarding onDone={finishOnboarding} />}
       </div>
     </MotionConfig>
   );

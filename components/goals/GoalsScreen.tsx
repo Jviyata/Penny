@@ -20,6 +20,8 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
   const saved = goals.reduce((t, g) => t + g.saved, 0);
   const target = goals.reduce((t, g) => t + g.target, 0);
   const share = target > 0 ? Math.min(1, saved / target) : 0;
+  // More than three goals: tighter rows so the page still fits on one screen.
+  const dense = goals.length > 3;
 
   const addGoal = () =>
     setEditor({
@@ -112,9 +114,9 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 const done = g.saved >= g.target;
                 const { Icon, bg, fg, photo, fit } = goalLook(g.name);
                 return (
-                  <li key={g.id} className="flex items-center gap-3 px-4 py-3 [@media(max-height:720px)]:py-2 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
+                  <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${dense ? "py-2" : "py-3 [@media(max-height:720px)]:py-2"}`}>
                     <span
-                      className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"
+                      className={`relative flex shrink-0 items-center justify-center overflow-hidden ${dense ? "h-[52px] w-[52px] rounded-[14px]" : "h-[72px] w-[72px] rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"}`}
                       style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
                     >
                       {!photo && <Icon size={24} />}

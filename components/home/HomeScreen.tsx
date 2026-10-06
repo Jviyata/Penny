@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { USER_NAME } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
@@ -29,7 +28,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
         {/* Greeting */}
         <header className="flex items-start justify-between px-1">
           <div>
-            <h1 className="text-[26px] font-bold leading-[31px] tracking-[-0.01em] text-label">Hi, {USER_NAME}</h1>
+            <h1 className="text-[26px] font-bold leading-[31px] tracking-[-0.01em] text-label">Hi, {state.userName}</h1>
             <p className="mt-0.5 text-[15px] leading-[20px] text-label-2 [@media(max-height:720px)]:hidden">
               Let’s spend smart
               <br />

@@ -223,6 +223,22 @@ export const ImagesIcon = ({ size = 18, className }: P) => (
   </svg>
 );
 
+export const ClockIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </svg>
+);
+
+export const CarIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M4 16v-3.5l2-5h12l2 5V16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 12.5h16" />
+    <circle cx="7.5" cy="14.5" r=".8" />
+    <circle cx="16.5" cy="14.5" r=".8" />
+    <path d="M6 17v1.5M18 17v1.5" />
+  </svg>
+);
+
 export const KeyboardIcon = ({ size = 22, className }: P) => (
   <svg {...base(size)} className={className} strokeWidth={1.8}>
     <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
@@ -312,7 +328,9 @@ export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
   if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
-  if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#ede4d8", fg: "#7a5a3a" };
+  if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#efe6da", fg: "#8a6a48" };
+  if (/car\b|\bcar|vehicle/.test(n)) return { Icon: CarIcon, bg: "#dfe8ef", fg: "#4d6a80" };
+  if (/loan|student|debt/.test(n)) return { Icon: CapIcon, bg: "#ece4f1", fg: "#6c5684" };
   if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#f6dcdd", fg: "#4f6b2c", photo: "/goals/emergency.jpg", fit: "100% auto" };
   return { Icon: FlagIcon, bg: "#efe8dc", fg: "#6b5a44" };
 }

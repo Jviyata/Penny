@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import { BASE_FREE_TOTAL, STARTING_BOUGHT, STARTING_PLANS } from "./demoData";
+import { BASE_FREE_TOTAL, STARTING_BOUGHT, STARTING_PLANS, USER_NAME } from "./demoData";
 import { GOALS, type Goal } from "./monthDetails";
 import { openMoney } from "./budget";
 import { newId } from "./format";
@@ -9,6 +9,7 @@ import { applyUpdates } from "./updates";
 import type { ChatMessage, Item, Line, PlansCard, ShelfItem, Update } from "./types";
 
 export type State = {
+  userName: string;
   freeTotal: number;
   goals: Goal[];
   plans: Line[];
@@ -43,7 +44,8 @@ export type Action =
   | { type: "addToGoal"; id: string; amount: number }
   | { type: "updatePlans"; messageId: string; patch: Partial<PlansCard> }
   | { type: "clearChat" }
-  | { type: "resetDemo" };
+  | { type: "resetDemo" }
+  | { type: "finishOnboarding"; name: string; goals: Goal[] };
 
 const startingBudget = () => ({
   freeTotal: BASE_FREE_TOTAL,
@@ -55,7 +57,7 @@ const startingBudget = () => ({
   currentItem: null as Item | null,
 });
 
-const initialState: State = { ...startingBudget(), demoMode: false, hydrated: false, thinking: false };
+const initialState: State = { ...startingBudget(), userName: USER_NAME, demoMode: false, hydrated: false, thinking: false };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -125,6 +127,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, messages: [], currentItem: null };
     case "resetDemo":
       return { ...state, ...startingBudget() };
+    case "finishOnboarding":
+      return { ...state, userName: action.name || USER_NAME, goals: action.goals.length ? action.goals : state.goals };
   }
 }
 
@@ -174,9 +178,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state.hydrated) return;
-    const { freeTotal, goals, plans, bought, messages, shelf, currentItem } = state;
+    const { userName, freeTotal, goals, plans, bought, messages, shelf, currentItem } = state;
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ freeTotal, goals, plans, bought, messages, shelf, currentItem }));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ userName, freeTotal, goals, plans, bought, messages, shelf, currentItem }));
     } catch {
       // Storage full (images) or blocked: the app keeps working in memory.
     }
