@@ -167,9 +167,8 @@ function Welcome({ onStart }: { onStart: () => void }) {
       </div>
 
       <div className="w-full pb-1">
-        <p className="mb-3 flex items-center justify-center gap-2 text-[13px] text-label-2">
-          <span className="rounded-full bg-[#e6ecdf] px-2.5 py-[3px] text-[11px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
-          Sample data · no bank connection
+        <p className="mb-3 flex justify-center">
+          <span className="rounded-full bg-[#e6ecdf] px-3 py-1 text-[12px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
         </p>
         <button type="button" onClick={onStart} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
           Get started
