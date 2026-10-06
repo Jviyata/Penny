@@ -27,25 +27,23 @@ export function PlanCards({
   const [selected, setSelected] = useState<PlanId>(plans.chosen ?? pick);
   const settled = !!plans.chosen;
   const current = options.find((o) => o.id === selected)!;
-  // The one thing to know about this option: buying gets it now; waiting says when.
-  const keyLine = current.id === "now" ? current.tradeoffs[0].text : current.tradeoffs[current.tradeoffs.length - 1].text;
 
   return (
-    <div className="flex w-full flex-col gap-4 px-1 [@media(max-height:720px)]:gap-3">
+    <div className="flex w-full flex-col gap-4 px-1 [@media(max-height:720px)]:gap-2">
       {/* The item, with Penny */}
       <div className="flex items-center gap-3">
         {plans.image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={plans.image} alt="" className="h-[64px] w-[64px] shrink-0 rounded-[18px] [@media(max-height:720px)]:h-[52px] [@media(max-height:720px)]:w-[52px]" draggable={false} />
+          <img src={plans.image} alt="" className="h-[64px] w-[64px] shrink-0 rounded-[18px] [@media(max-height:720px)]:h-[40px] [@media(max-height:720px)]:w-[40px] [@media(max-height:720px)]:rounded-[12px]" draggable={false} />
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] text-label-2">{plans.name}</p>
-          <p className="tabular text-[28px] font-bold leading-[32px] tracking-[-0.02em] text-label">{money(plans.price)}</p>
+          <p className="truncate text-[15px] text-label-2 [@media(max-height:720px)]:text-[13px]">{plans.name}</p>
+          <p className="tabular text-[28px] font-bold leading-[32px] tracking-[-0.02em] text-label [@media(max-height:720px)]:text-[20px] [@media(max-height:720px)]:leading-[22px]">{money(plans.price)}</p>
         </div>
         <Mascot
           mood={pick === "now" ? "approved" : pick === "wait2" ? "thinking" : "not_right_now"}
           size={68}
-          className="shrink-0 [@media(max-height:720px)]:!h-[54px] [@media(max-height:720px)]:!w-[54px]"
+          className="shrink-0 [@media(max-height:720px)]:!h-[40px] [@media(max-height:720px)]:!w-[40px]"
         />
       </div>
 
@@ -53,7 +51,7 @@ export function PlanCards({
       <p className="text-[19px] font-semibold leading-[24px] tracking-[-0.01em] text-label">{headline}</p>
 
       {/* Money: now → after */}
-      <div className="flex items-center justify-between rounded-[20px] bg-card px-5 py-3.5 [@media(max-height:720px)]:py-3">
+      <div className="flex items-center justify-between rounded-[20px] bg-card px-5 py-3.5 [@media(max-height:720px)]:py-2">
         <div>
           <p className="text-[13px] text-label-2">Left to spend</p>
           <p className="tabular text-[22px] font-semibold leading-[26px] text-label">{money(plans.left)}</p>
@@ -102,16 +100,36 @@ export function PlanCards({
         })}
       </div>
 
-      {/* One line about the selected option, then the button */}
+      {/* The trade-offs for the selected option (they change as you tap), then the button */}
       <div>
-        <p className="text-center text-[14px] text-label-2">
-          {current.impact} impact · {keyLine}
-        </p>
+        <div className="rounded-[18px] bg-card px-4 py-3 [@media(max-height:720px)]:py-2">
+          <p className="text-[13px] font-medium text-label-2">
+            {current.impact} impact · the trade-offs
+          </p>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {current.tradeoffs.slice(0, 3).map((t, i) => (
+              <li
+                key={t.text}
+                className={`flex items-center gap-2.5 text-[15px] leading-[20px] text-label ${i === 2 ? "[@media(max-height:720px)]:hidden" : ""}`}
+              >
+                <span
+                  className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                    t.good ? "bg-[#e1ead0] text-[#4f6b2c]" : "bg-[#f4e6cc] text-[#8a621b]"
+                  }`}
+                  aria-label={t.good ? "Good" : "Trade-off"}
+                >
+                  {t.good ? <CheckIcon size={11} /> : "–"}
+                </span>
+                {t.text}
+              </li>
+            ))}
+          </ul>
+        </div>
         <button
           type="button"
           onClick={() => onChoose(current)}
           disabled={settled}
-          className="pressable mt-2.5 flex h-12 w-full items-center justify-center gap-1.5 rounded-full bg-[#5f7340] text-[16px] font-semibold text-white disabled:opacity-100 [@media(max-height:720px)]:h-11"
+          className="pressable mt-2.5 flex h-12 w-full items-center justify-center gap-1.5 rounded-full bg-[#5f7340] text-[16px] font-semibold text-white disabled:opacity-100 [@media(max-height:720px)]:h-10"
         >
           {settled ? (
             <>
@@ -141,7 +159,7 @@ function Chip({ on, onClick, label, done }: { on: boolean; onClick: () => void; 
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`pressable flex h-10 items-center justify-center gap-1 whitespace-nowrap rounded-full px-1.5 text-[12.5px] font-medium tracking-[-0.01em] ${
+      className={`pressable flex h-10 items-center justify-center gap-1 whitespace-nowrap [@media(max-height:720px)]:h-9 rounded-full px-1.5 text-[12.5px] font-medium tracking-[-0.01em] ${
         on ? "bg-[#e1ead0] text-[#4f6b2c]" : "border border-[var(--sep)] bg-card text-label"
       }`}
     >
