@@ -9,7 +9,7 @@ import { useStore } from "@/lib/store";
 import { FreeSpendingScreen } from "../free/FreeSpendingScreen";
 import { CategoryScreen } from "../home/CategoryScreen";
 import { MonthMenu } from "../home/MonthMenu";
-import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ORDER } from "../home/categories";
+import { CATEGORY_ICONS, CATEGORY_ORDER } from "../home/categories";
 import { CalendarIcon, CheckIcon, SparklesIcon } from "../ui/Icons";
 import { Screen } from "../ui/Screen";
 import type { Tab } from "../TabBar";
@@ -112,8 +112,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={r.id}
                 index={i}
-                tint={TINT[r.id]}
-                color={CATEGORY_COLORS[r.id]}
+                color={FOLDER[r.id]}
                 Icon={r.id === "free" ? SparklesIcon : CATEGORY_ICONS[r.id]}
                 title={r.name}
                 sub={`${money(r.amount)} · ${Math.round((total > 0 ? r.amount / total : 0) * 100)}% of your month`}
@@ -127,8 +126,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={b.id}
                 index={i}
-                tint={TINT[b.cat]}
-                color={CATEGORY_COLORS[b.cat]}
+                color={FOLDER[b.cat]}
                 Icon={CheckIcon}
                 title={b.name}
                 sub={`${money(b.amount)} · Paid ${b.date}`}
@@ -139,8 +137,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
               <StackCard
                 key={b.id}
                 index={paidBills.length + i}
-                tint="#ffffff"
-                color="#bdb2a5"
+                color={FOLDER_DUE}
                 Icon={CalendarIcon}
                 title={b.name}
                 sub={`${money(b.amount)} · Due ${b.date}`}
@@ -173,16 +170,17 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
   );
 }
 
-/** Soft pastel card color per category (the solid CATEGORY_COLORS stay for icons and rings). */
-const TINT: Record<CatId, string> = {
-  rent: "#dfe7cc",
-  free: "#eef1c6",
-  savings: "#ece6dd",
-  groceries: "#d9e9d1",
-  loans: "#f4dbd3",
-  bills: "#f6e8c6",
-  transit: "#d8e5ef",
+/** Folder colors: soft but deep enough that white text stays easy to read. */
+const FOLDER: Record<CatId, string> = {
+  rent: "#6b8547",
+  free: "#929d42",
+  savings: "#9a8a78",
+  groceries: "#5f8d68",
+  loans: "#c26b5d",
+  bills: "#c08b3e",
+  transit: "#5f86a6",
 };
+const FOLDER_DUE = "#a59a8e"; // bills still coming up
 
 /** How much of each card hides under the next one. */
 const TUCK = 30;
@@ -206,9 +204,11 @@ function Stack({ count, children }: { count: number; children: React.ReactNode }
   );
 }
 
+/** Height of the folder tab that sticks up on the left of each card. */
+const TAB = 14;
+
 function StackCard({
   index,
-  tint,
   color,
   Icon,
   title,
@@ -216,7 +216,6 @@ function StackCard({
   onClick,
 }: {
   index: number;
-  tint: string;
   color: string;
   Icon: typeof CheckIcon;
   title: string;
@@ -227,36 +226,30 @@ function StackCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative block w-full text-left active:brightness-[0.97]"
-      style={{ height: `calc(var(--step) + ${TUCK}px)`, marginTop: index === 0 ? 0 : -TUCK, zIndex: index + 1 }}
+      className="relative flex w-full flex-col text-left text-white active:brightness-95"
+      style={{
+        height: `calc(var(--step) + ${TUCK}px)`,
+        marginTop: index === 0 ? 0 : -TUCK,
+        zIndex: index + 1,
+        filter: "drop-shadow(0 -4px 10px rgba(30, 20, 10, 0.14))",
+      }}
     >
-      {/* The tab on top of each card, like a folder */}
-      <svg className="absolute -top-[11px] left-1/2 -translate-x-1/2" width="128" height="12" viewBox="0 0 128 12" aria-hidden>
-        <path d="M0 12 C16 12 18 0 34 0 H94 C110 0 112 12 128 12 Z" fill={tint} />
+      {/* Folder shape: a tab on the left, a soft step down, then the lower right edge */}
+      <span className="absolute left-0 top-0 h-full w-[62%] rounded-l-[22px]" style={{ background: color }} aria-hidden />
+      <svg className="absolute top-0 left-[calc(62%-1px)]" width="36" height={TAB} viewBox={`0 0 36 ${TAB}`} aria-hidden>
+        <path d={`M0 0 C18 0 18 ${TAB} 36 ${TAB} L0 ${TAB} Z`} fill={color} />
       </svg>
-      <span className="absolute -top-[6px] left-1/2 h-[3px] w-7 -translate-x-1/2 rounded-full bg-black/10" aria-hidden />
+      <span className="absolute inset-x-0 bottom-0 rounded-tr-[22px] rounded-b-[22px]" style={{ top: TAB, background: color }} aria-hidden />
 
-      <span
-        className="absolute inset-0 overflow-hidden rounded-[30px] shadow-[0_-8px_20px_-14px_rgba(40,30,15,0.35)]"
-        style={{ background: tint }}
-      >
-        {/* Dashed rings around the badge */}
-        <svg className="absolute -right-[46px] top-[calc(var(--step)/2-88px)]" width="176" height="176" viewBox="0 0 176 176" aria-hidden>
-          {[40, 58, 76].map((r) => (
-            <circle key={r} cx="88" cy="88" r={r} fill="none" stroke={color} strokeOpacity="0.35" strokeWidth="2.5" strokeDasharray="4 7" strokeLinecap="round" />
-          ))}
-        </svg>
-
-        <span className="relative flex h-[calc(var(--step)-6px)] items-center gap-3 pl-5 pr-4">
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[19px] font-bold leading-[24px] tracking-[-0.01em] text-[#1d1a17]">{title}</span>
-            <span className="tabular mt-0.5 block truncate text-[14px] leading-[18px] text-[#1d1a17]/60">{sub}</span>
-          </span>
-          <span className="flex h-[min(50px,calc(var(--step)-8px))] w-[min(50px,calc(var(--step)-8px))] shrink-0 items-center justify-center rounded-full p-[4px]" style={{ background: `${color}55` }}>
-            <span className="flex h-full w-full items-center justify-center rounded-full text-white" style={{ background: color }}>
-              <Icon size={20} />
-            </span>
-          </span>
+      <span className="relative flex h-[var(--step)] w-full items-center gap-3 pl-5 pr-4">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[19px] font-bold leading-[24px] tracking-[-0.01em]">{title}</span>
+          <span className="tabular mt-0.5 block truncate text-[14px] leading-[18px] text-white/85">{sub}</span>
+        </span>
+        <span
+          className="mt-[10px] flex h-[min(42px,calc(var(--step)-22px))] w-[min(42px,calc(var(--step)-22px))] shrink-0 items-center justify-center rounded-full bg-white/20"
+        >
+          <Icon size={19} />
         </span>
       </span>
     </button>
