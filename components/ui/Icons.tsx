@@ -336,9 +336,9 @@ export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
   if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
-  if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#efe6da", fg: "#8a6a48" };
-  if (/car\b|\bcar|vehicle/.test(n)) return { Icon: CarIcon, bg: "#dfe8ef", fg: "#4d6a80" };
-  if (/furniture|sofa|couch|desk|bed\b/.test(n)) return { Icon: SofaIcon, bg: "#f1e7dc", fg: "#8a6342" };
+  if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#fbdbde", fg: "#8a6a48", photo: "/goals/moveout.jpg", fit: "100% auto" };
+  if (/car\b|\bcar|vehicle/.test(n)) return { Icon: CarIcon, bg: "#fcdadb", fg: "#4d6a80", photo: "/goals/car.jpg", fit: "100% auto" };
+  if (/furniture|sofa|couch|desk|bed\b/.test(n)) return { Icon: SofaIcon, bg: "#fcd8da", fg: "#8a6342", photo: "/goals/furniture.jpg", fit: "100% auto" };
   if (/loan|student|debt/.test(n)) return { Icon: CapIcon, bg: "#ece4f1", fg: "#6c5684" };
   if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#f6dcdd", fg: "#4f6b2c", photo: "/goals/emergency.jpg", fit: "100% auto" };
   return { Icon: FlagIcon, bg: "#efe8dc", fg: "#6b5a44" };

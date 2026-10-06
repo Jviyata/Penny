@@ -22,6 +22,8 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
   const share = target > 0 ? Math.min(1, saved / target) : 0;
   // More than three goals: tighter rows so the page still fits on one screen.
   const dense = goals.length > 3;
+  const denser = goals.length > 4; // five or six goals: smallest rows
+
 
   const addGoal = () =>
     setEditor({
@@ -114,25 +116,25 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 const done = g.saved >= g.target;
                 const { Icon, bg, fg, photo, fit } = goalLook(g.name);
                 return (
-                  <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${dense ? "py-2" : "py-3 [@media(max-height:720px)]:py-2"}`}>
+                  <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${denser ? "py-[5px]" : dense ? "py-2" : "py-3 [@media(max-height:720px)]:py-2"}`}>
                     <span
-                      className={`relative flex shrink-0 items-center justify-center overflow-hidden ${dense ? "h-[52px] w-[52px] rounded-[14px]" : "h-[72px] w-[72px] rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"}`}
+                      className={`relative flex shrink-0 items-center justify-center overflow-hidden ${denser ? "h-[42px] w-[42px] rounded-[12px]" : dense ? "h-[52px] w-[52px] rounded-[14px]" : "h-[72px] w-[72px] rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"}`}
                       style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
                     >
                       {!photo && <Icon size={24} />}
                     </span>
                     <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
                       <span className="flex items-baseline gap-2">
-                        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[16px] font-medium">
+                        <span className={`flex min-w-0 flex-1 items-center gap-1.5 font-medium ${denser ? "text-[15px] leading-[19px]" : "text-[16px]"}`}>
                           <span className="truncate">{g.name}</span>
                           <PencilIcon size={12} className="shrink-0 text-label-3" />
                         </span>
                         <span className="tabular shrink-0 text-[15px] font-semibold">{Math.round(p * 100)}%</span>
                       </span>
-                      <span className="tabular block truncate text-[13px] text-label-2">
+                      <span className={`tabular block truncate text-label-2 ${denser ? "text-[12px] leading-[15px]" : "text-[13px]"}`}>
                         {money(g.saved)} of {money(g.target)} · {done ? "Reached" : g.by}
                       </span>
-                      <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-fill" aria-label={`${Math.round(p * 100)}% of the way`}>
+                      <span className={`block overflow-hidden rounded-full bg-fill ${denser ? "mt-1 h-1.5" : "mt-1.5 h-2"}`} aria-label={`${Math.round(p * 100)}% of the way`}>
                         <span className="block h-full rounded-full bg-[#8fa66b] transition-[width] duration-500" style={{ width: `${p * 100}%` }} />
                       </span>
                     </button>
