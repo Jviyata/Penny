@@ -82,7 +82,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             onDragEnd={onDragEnd}
             className="absolute inset-0 flex flex-col px-6"
           >
-            {step === 0 && <Welcome onLogIn={finish} onCreate={() => go(1)} />}
+            {step === 0 && <Welcome onStart={() => go(1)} />}
             {step === 1 && <Intention />}
             {step === 2 && <Fits />}
             {step === 3 && <GoalsInView />}
@@ -142,8 +142,8 @@ function Heading({ title, sub }: { title: React.ReactNode; sub?: string }) {
   );
 }
 
-/** 0. Welcome: the name, Penny, and the way in. */
-function Welcome({ onLogIn, onCreate }: { onLogIn: () => void; onCreate: () => void }) {
+/** 0. Welcome: the name, Penny, and one way in (it's a demo, so no accounts). */
+function Welcome({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="pt-10 [@media(max-height:720px)]:pt-4">
@@ -159,12 +159,9 @@ function Welcome({ onLogIn, onCreate }: { onLogIn: () => void; onCreate: () => v
           Hi, I’m Penny!
         </span>
       </div>
-      <div className="flex flex-col gap-2.5 pb-1">
-        <button type="button" onClick={onLogIn} className="pressable h-[54px] rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
-          Log in
-        </button>
-        <button type="button" onClick={onCreate} className="pressable h-[54px] rounded-full border-[1.5px] text-[17px] font-medium" style={{ borderColor: GREEN, color: GREEN }}>
-          Create account
+      <div className="pb-1">
+        <button type="button" onClick={onStart} className="pressable h-[54px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
+          Get started
         </button>
       </div>
     </div>

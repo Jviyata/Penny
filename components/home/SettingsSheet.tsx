@@ -24,19 +24,6 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           Adds a Demo files button with sample product screenshots and a reset. Turn it off for a clean product view.
           You can also open the app with <span className="whitespace-nowrap font-mono">?demo=1</span>.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            // Onboarding shows on a fresh load once this is cleared.
-            try {
-              localStorage.removeItem("ciat:onboarded");
-            } catch {}
-            window.location.reload();
-          }}
-          className="pressable mt-2 flex min-h-12 w-full items-center rounded-[14px] bg-fill px-4 text-left text-[17px]"
-        >
-          Replay onboarding
-        </button>
       </div>
     </Sheet>
   );
