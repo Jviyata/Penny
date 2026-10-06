@@ -464,7 +464,7 @@ function AskChoices({
     <div className="flex min-h-full flex-col items-center text-center">
       <div className="flex flex-1 flex-col items-center justify-center px-4">
         <Mascot mood="listening" size={104} />
-        <p className="mt-3 text-[32px] font-normal leading-[37px] tracking-[-0.02em] text-label">
+        <p className="mt-3 text-[32px] font-bold leading-[37px] tracking-[-0.02em] text-label">
           What are you
           <br />
           thinking of buying?
