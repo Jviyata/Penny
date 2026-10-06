@@ -28,6 +28,17 @@ export type ChatMessage = {
   quickReplies?: string[];
   failed?: boolean; // reply came from the offline fallback
   mood?: Mood; // the mascot's expression for this reply
+  plans?: PlansCard; // the Buy Now / Wait 2 / Wait 3 cards for a demo gallery item
+};
+
+/** Penny's pricing-plan style answer. The options are recomputed from these numbers when shown. */
+export type PlansCard = {
+  name: string;
+  price: number;
+  left: number; // left to spend when asked
+  chosen?: "now" | "wait2" | "wait3";
+  remind?: boolean;
+  priceWatch?: boolean;
 };
 
 export type ShelfItem = {

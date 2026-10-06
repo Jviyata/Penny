@@ -315,3 +315,11 @@ html[data-keyboard="open"] .device-screen {
     height: var(--app-h, 100lvh);
   }
 }
+
+/* Sideways carousels (Penny's plan cards) scroll without a visible bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

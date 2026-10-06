@@ -13,10 +13,13 @@ export function Composer({
   onSend,
   busy,
   onListening,
+  onAdd,
 }: {
   onSend: (text: string, image?: PreparedImage) => void;
   busy: boolean;
   onListening?: (on: boolean) => void;
+  /** Opens the demo gallery instead of the file picker. */
+  onAdd?: () => void;
 }) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<PreparedImage | null>(null);
@@ -74,7 +77,7 @@ export function Composer({
           type="button"
           aria-label="Add a photo or screenshot"
           onPointerDown={keepFocus}
-          onClick={() => fileRef.current?.click()}
+          onClick={() => (onAdd ? onAdd() : fileRef.current?.click())}
           className="pressable paper-glass flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-label"
         >
           <PhotoIcon size={24} />

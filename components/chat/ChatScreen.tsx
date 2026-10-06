@@ -8,7 +8,7 @@ import { money } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { useSend } from "@/lib/useSend";
 import { prepareImage } from "@/lib/image";
-import type { CardAction, ChatMessage } from "@/lib/types";
+import type { CardAction, ChatMessage, PlansCard } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
 import { ArrowLeftIcon, MicIcon, PlusIcon, ResetIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
@@ -16,11 +16,16 @@ import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
 import { speechAvailable } from "@/lib/useSpeech";
 import { ResultCard } from "./ResultCard";
+import { DemoGallery } from "./DemoGallery";
+import { PlanCards } from "./PlanCards";
+import { newId } from "@/lib/format";
+import type { DemoItem } from "@/lib/demoItems";
+import type { PlanOption } from "@/lib/planOptions";
 
 type Mode = "talk" | "text";
 
 export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => void }) {
-  const { state, dispatch, open } = useStore();
+  const { state, dispatch } = useStore();
   const send = useSend();
   const { messages, thinking } = state;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -68,6 +73,39 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       if (photoRef.current) photoRef.current.value = "";
     }
   };
+  // The + button opens the demo gallery; tapping an item sends it to Penny like an uploaded photo.
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const pickDemo = (item: DemoItem) => {
+    if (thinking) return;
+    setGalleryOpen(false);
+    setStarted(true);
+    dispatch({ type: "addMessage", message: { id: newId(), role: "user", text: `${item.name} · ${money(item.price)}`, image: item.art } });
+    dispatch({ type: "setThinking", on: true });
+    const left = state.freeTotal;
+    window.setTimeout(() => {
+      dispatch({
+        type: "addMessage",
+        message: { id: newId(), role: "assistant", text: "", plans: { name: item.name, price: item.price, left } },
+      });
+      dispatch({ type: "setThinking", on: false });
+    }, 1100);
+  };
+  const choosePlan = (m: ChatMessage, o: PlanOption) => {
+    if (!m.plans || m.plans.chosen) return;
+    const { name, price } = m.plans;
+    // Left to Spend drops by what this choice costs this month (the whole price, or the first month's saving).
+    dispatch({ type: "setTotal", amount: state.freeTotal - o.amount });
+    if (o.id !== "now") {
+      dispatch({
+        type: "applyUpdates",
+        updates: [{ type: "save_to_shelf", name, price, status: `Saving ${money(o.amount)} a month` }],
+      });
+    }
+    dispatch({ type: "updatePlans", messageId: m.id, patch: { chosen: o.id } });
+  };
+  const togglePlans = (m: ChatMessage, key: "remind" | "priceWatch") =>
+    m.plans && dispatch({ type: "updatePlans", messageId: m.id, patch: { [key]: !m.plans[key] } as Partial<PlansCard> });
+
   const empty = messages.length === 0 && !thinking;
   const showChoices = empty && !started && !listening;
 
@@ -96,7 +134,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       return;
     }
     const lastMsg = messages[messages.length - 1];
-    if (el && lastMsg?.card && !thinking) {
+    if (el && (lastMsg?.card || lastMsg?.plans) && !thinking) {
       const node = el.querySelector<HTMLElement>(`[data-msg="${lastMsg.id}"]`);
       const top = parseFloat(getComputedStyle(el).paddingTop) || 0;
       if (node) {
@@ -174,8 +212,8 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           )}
         </div>
         <p className="glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo">
-          <span className="h-2 w-2 rounded-full" style={{ background: open > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
-          <span className="font-semibold">{money(Math.max(open, 0))}</span> free to spend · {MONTH.daysLeft} days left
+          <span className="h-2 w-2 rounded-full" style={{ background: state.freeTotal > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
+          <span className="font-semibold">{money(Math.max(state.freeTotal, 0))}</span> left to spend · {MONTH.daysLeft} days left
         </p>
       </header>
 
@@ -196,7 +234,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
               canTalk={canTalk}
               onTalk={talkNow}
               onType={textInstead}
-              onPhoto={() => photoRef.current?.click()}
+              onPhoto={() => setGalleryOpen(true)}
             />
           ) : (
             <EmptyState />
@@ -211,6 +249,8 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 showReplies={m === last && !thinking}
                 busy={thinking}
                 onAction={(a) => onAction(m, a)}
+                onChoose={(o) => choosePlan(m, o)}
+                onToggle={(k) => togglePlans(m, k)}
                 onReply={(t) => send({ text: t })}
               />
             ))}
@@ -258,6 +298,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             onListening={onListening}
             onSend={(text, image) => send({ text, image })}
             onTextInstead={textInstead}
+            onAdd={() => setGalleryOpen(true)}
           />
         ) : (
           <>
@@ -273,10 +314,25 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 </button>
               </div>
             )}
-            <Composer busy={thinking} onListening={onListening} onSend={(text, image) => send({ text, image })} />
+            <Composer
+              busy={thinking}
+              onListening={onListening}
+              onSend={(text, image) => send({ text, image })}
+              onAdd={() => setGalleryOpen(true)}
+            />
           </>
         )}
       </div>
+
+      <DemoGallery
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        onPick={pickDemo}
+        onBrowse={() => {
+          setGalleryOpen(false);
+          photoRef.current?.click();
+        }}
+      />
     </div>
   );
 }
@@ -288,6 +344,8 @@ function Message({
   busy,
   onAction,
   onReply,
+  onChoose,
+  onToggle,
 }: {
   m: ChatMessage;
   animate: boolean;
@@ -295,6 +353,8 @@ function Message({
   busy: boolean;
   onAction: (a: CardAction) => void;
   onReply: (t: string) => void;
+  onChoose: (o: PlanOption) => void;
+  onToggle: (key: "remind" | "priceWatch") => void;
 }) {
   const mine = m.role === "user";
   return (
@@ -314,7 +374,9 @@ function Message({
         />
       )}
 
-      {m.card ? (
+      {m.plans ? (
+        <PlanCards plans={m.plans} onChoose={onChoose} onToggle={onToggle} />
+      ) : m.card ? (
         <div className="flex w-full justify-center">
           <ResultCard card={m.card} reply={m.text} disabled={busy} onAction={onAction} />
         </div>

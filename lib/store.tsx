@@ -6,7 +6,7 @@ import { GOALS, type Goal } from "./monthDetails";
 import { openMoney } from "./budget";
 import { newId } from "./format";
 import { applyUpdates } from "./updates";
-import type { ChatMessage, Item, Line, ShelfItem, Update } from "./types";
+import type { ChatMessage, Item, Line, PlansCard, ShelfItem, Update } from "./types";
 
 export type State = {
   freeTotal: number;
@@ -41,6 +41,7 @@ export type Action =
   | { type: "editGoal"; id: string; name: string; target: number }
   | { type: "removeGoal"; id: string }
   | { type: "addToGoal"; id: string; amount: number }
+  | { type: "updatePlans"; messageId: string; patch: Partial<PlansCard> }
   | { type: "clearChat" }
   | { type: "resetDemo" };
 
@@ -111,6 +112,13 @@ function reducer(state: State, action: Action): State {
         ...state,
         goals: state.goals.map((g) =>
           g.id === action.id ? { ...g, saved: g.saved + action.amount, thisMonth: g.thisMonth + action.amount } : g,
+        ),
+      };
+    case "updatePlans":
+      return {
+        ...state,
+        messages: state.messages.map((m) =>
+          m.id === action.messageId && m.plans ? { ...m, plans: { ...m.plans, ...action.patch } } : m,
         ),
       };
     case "clearChat":

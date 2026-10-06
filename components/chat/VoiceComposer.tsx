@@ -25,6 +25,7 @@ export function VoiceComposer({
   onTextInstead,
   onListening,
   handle,
+  onAdd,
 }: {
   onSend: (text: string, image?: PreparedImage) => void;
   busy: boolean;
@@ -32,6 +33,8 @@ export function VoiceComposer({
   onListening?: (on: boolean) => void;
   /** Lets the "Talk" option on the Ask Penny screen start listening within the same tap. */
   handle?: React.RefObject<{ talk: () => void } | null>;
+  /** Opens the demo gallery instead of the file picker. */
+  onAdd?: () => void;
 }) {
   const [heard, setHeard] = useState("");
   // If the mic can't start, stay in talk mode and say why; the user decides whether to type.
@@ -90,7 +93,7 @@ export function VoiceComposer({
       <div className="flex justify-end pr-6">
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => (onAdd ? onAdd() : fileRef.current?.click())}
           disabled={busy || speech.listening}
           aria-label="Add a photo, screenshot or file"
           className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
