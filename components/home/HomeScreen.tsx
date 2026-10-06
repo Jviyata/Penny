@@ -106,7 +106,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
         {!photo && <Icon size={30} />}
       </span>
       <span className="block w-full px-3 pb-3 pt-2.5">
-        <span className="line-clamp-2 block h-[34px] text-[14px] font-semibold leading-[17px] text-label">{goal.name}</span>
+        <span className="block truncate text-[14px] font-semibold text-label">{shortName(goal.name)}</span>
         <span className="mt-1.5 flex items-center gap-2">
           <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fill">
             <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
@@ -116,4 +116,9 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
       </span>
     </button>
   );
+}
+
+/** Short tile label: "Emergency fund" → "Emergency". */
+function shortName(name: string) {
+  return name.replace(/\s+fund$/i, "");
 }
