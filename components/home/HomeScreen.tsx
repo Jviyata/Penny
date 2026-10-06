@@ -104,26 +104,38 @@ function GoalCard({ goal, big, onClick }: { goal: Goal; big?: boolean; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className={`pressable flex w-full items-center rounded-[24px] bg-card text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)] ${
-        big ? "mt-1.5 gap-3.5 p-3" : "gap-2.5 p-2.5"
+      className={`pressable flex w-full items-stretch overflow-hidden rounded-[24px] bg-card text-left ${
+        big ? "mt-1.5 h-[104px] [@media(max-height:720px)]:h-[88px]" : "h-[96px] [@media(max-height:720px)]:h-[84px]"
       }`}
     >
+      {/* The picture fills the left side of the card, edge to edge, with the percent on top */}
       <span
-        className={`flex shrink-0 items-center justify-center overflow-hidden ${big ? "h-[68px] w-[76px] rounded-[16px]" : "h-[52px] w-[44px] rounded-[13px]"}`}
+        className={`relative flex shrink-0 items-center justify-center ${big ? "w-[120px]" : "w-[64px]"}`}
         style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
       >
-        {!photo && <Icon size={big ? 32 : 21} />}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className={`block truncate font-semibold text-label ${big ? "text-[16px]" : "text-[14px]"}`}>{goal.name}</span>
-        <span className={`tabular block text-label-2 ${big ? "mt-0.5 text-[14px]" : "mt-0.5 text-[12px]"}`}>
-          {money(goal.saved)} of {money(goal.target)}
+        {!photo && <Icon size={big ? 36 : 24} />}
+        <span
+          className={`tabular absolute left-1.5 top-1.5 rounded-full bg-white/90 font-bold text-label shadow-[0_1px_3px_rgba(0,0,0,0.08)] ${
+            big ? "px-2 py-0.5 text-[14px]" : "px-1.5 py-[1px] text-[12px]"
+          }`}
+        >
+          {Math.round(pct * 100)}%
         </span>
-        <span className="mt-2 flex items-center gap-2">
-          <span className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
-            <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
+      </span>
+      <span className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "px-4" : "pl-3 pr-2.5"}`}>
+        <span className={`block truncate font-semibold text-label ${big ? "text-[17px]" : "text-[14px]"}`}>{goal.name}</span>
+        {big ? (
+          <span className="tabular mt-0.5 block truncate text-[14px] text-label-2">
+            {money(goal.saved)} of {money(goal.target)}
           </span>
-          <span className={`tabular text-label-2 ${big ? "text-[13px]" : "text-[12px]"}`}>{Math.round(pct * 100)}%</span>
+        ) : (
+          <span className="tabular mt-0.5 block text-[12px] leading-[15px] text-label-2">
+            <span className="block font-medium text-label">{money(goal.saved)}</span>
+            <span className="block">of {money(goal.target)}</span>
+          </span>
+        )}
+        <span className={`block overflow-hidden rounded-full bg-fill ${big ? "mt-2.5 h-2" : "mt-2 h-1.5"}`}>
+          <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
         </span>
       </span>
     </button>

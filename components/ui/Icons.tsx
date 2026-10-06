@@ -306,6 +306,6 @@ export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg
   if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
   if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#ede4d8", fg: "#7a5a3a" };
-  if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#e3ead2", fg: "#4f6b2c", photo: "/goals/emergency.jpg" };
+  if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#f6dcdd", fg: "#4f6b2c", photo: "/goals/emergency.jpg", fit: "100% auto" };
   return { Icon: FlagIcon, bg: "#efe8dc", fg: "#6b5a44" };
 }
