@@ -76,49 +76,12 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
             </span>
           </div>
           <p className="mt-1 text-center text-[13px] text-label-3">
-            {money(totalSpent)} spent so far · tap a slice to see it
+            Tap a slice to see what went into it, like your groceries.
           </p>
         </div>
 
-        {/* By category */}
-        <Card title="By category">
-          {rows.map((r) => {
-            const Icon = r.id === "free" ? SparklesIcon : CATEGORY_ICONS[r.id];
-            const color = CATEGORY_COLORS[r.id];
-            const share = r.budget > 0 ? Math.min(1, r.spent / r.budget) : 0;
-            return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setDetail(r.id)}
-                className="flex w-full items-center gap-3 px-5 py-[7px] text-left active:bg-fill"
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] text-white"
-                  style={{ background: color }}
-                >
-                  <Icon size={17} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-[16px] font-medium">{r.name}</span>
-                    <span className="tabular shrink-0 text-[15px]">
-                      <span className="font-semibold">{money(r.spent)}</span>
-                      <span className="text-label-3"> / {money(r.budget)}</span>
-                    </span>
-                  </span>
-                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-fill">
-                    <span className="block h-full rounded-full" style={{ width: `${share * 100}%`, background: color }} />
-                  </span>
-                </span>
-                <ChevronIcon size={14} className="shrink-0 text-label-3" />
-              </button>
-            );
-          })}
-        </Card>
-
         {/* Bills */}
-        <Card title="Bills" subtitle={`${paidBills.length} paid · ${dueBills.length} coming up`}>
+        <Card title="Your bills" subtitle={`${paidBills.length} paid · ${dueBills.length} coming up`}>
           {paidBills.map((b) => (
             <Row key={b.id} color={CATEGORY_COLORS[b.cat]} name={b.name} sub={`${b.what} · Paid ${b.date}`} amount={b.amount} paid />
           ))}
@@ -128,12 +91,6 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
           ))}
         </Card>
 
-        {/* Everything else, newest first */}
-        <Card title="Recent activity">
-          {activity.map((a) => (
-            <Row key={a.key} color={CATEGORY_COLORS[a.cat]} name={a.name} sub={[NAME[a.cat], a.date].filter(Boolean).join(" · ")} amount={a.amount} />
-          ))}
-        </Card>
       </Screen>
 
       <AnimatePresence>
