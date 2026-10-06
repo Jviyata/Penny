@@ -3,7 +3,7 @@
 /* ---------- Color tokens: warm photo scenes, frosted glass, cream paper ---------- */
 :root {
   --bg: #f8f6f1; /* warm white page */
-  --card: #ffffff; /* cards */
+  --card: rgba(255, 255, 255, 0.5); /* frosted glass cards */
   --fill: #f1eee7; /* rows, fields, tracks */
   --label: #1d1a17; /* ink on paper */
   --label-2: rgba(29, 26, 23, 0.6);
@@ -11,14 +11,14 @@
   --sep: rgba(29, 26, 23, 0.1);
   --tint: #5e7a3a; /* the mascot's green, deepened for text */
   --tint-soft: #e3ead2;
-  --bar: #ffffff; /* tab bar */
+  --bar: rgba(255, 255, 255, 0.62); /* frosted tab bar */
   --scrim: rgba(20, 14, 8, 0.35);
 
   /* Frosted glass over photos (same in light and dark) */
   --glass: rgba(21, 18, 16, 0.05);
   --glass-strong: rgba(21, 18, 16, 0.07);
   --glass-line: rgba(21, 18, 16, 0.08);
-  --paper-glass: #ffffff;
+  --paper-glass: rgba(255, 255, 255, 0.62);
   --on-photo: #151210; /* ink (was white-on-photo) */
   --on-photo-2: rgba(21, 18, 16, 0.58);
 
@@ -90,11 +90,27 @@ html[data-keyboard="open"] {
   text-shadow: none;
 }
 
-/* ---------- Scenes: plain warm white (no photos) ---------- */
+/* ---------- Scenes: plain warm white ---------- */
 .scene {
   position: absolute;
   inset: 0;
   background: var(--bg);
+}
+
+/* ---------- Glass: every card, sheet and the tab bar ---------- */
+.bg-card,
+.paper-glass,
+.glass-tint {
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(40, 30, 15, 0.05),
+    0 12px 32px -18px rgba(40, 30, 15, 0.3);
+  /* glassy sheen: brighter top-left, softer bottom-right */
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 45%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 255, 255, 0.35) 100%);
 }
 
 /* ---------- Base: behave like an app, not a page ---------- */

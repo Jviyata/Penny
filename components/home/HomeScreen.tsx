@@ -7,6 +7,7 @@ import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { ArrowRightIcon, ChevronIcon, UserIcon, WalletIcon2, WaveIcon, goalLook } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
+import { Scene } from "../ui/Screen";
 import type { Tab } from "../TabBar";
 import { SettingsSheet } from "./SettingsSheet";
 
@@ -21,7 +22,8 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
 
   return (
     <>
-      <div className="scroll-y absolute inset-0 bg-[var(--bg)] px-4 pb-[calc(var(--tabbar-h)+var(--sab)+12px)] pt-[calc(var(--sat)+10px)]">
+      <Scene name="home" />
+      <div className="scroll-y absolute inset-0 px-4 pb-[calc(var(--tabbar-h)+var(--sab)+12px)] pt-[calc(var(--sat)+10px)]">
         {/* Greeting */}
         <header className="flex items-start justify-between px-1">
           <div>
@@ -43,7 +45,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
         </header>
 
         {/* Talk to Penny */}
-        <section className="relative mt-4 overflow-hidden rounded-[26px] bg-[#e4e9d8] px-5 pb-5 pt-5 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
+        <section className="relative mt-4 glass-tint overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-5 pt-5 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
           <WaveIcon size={22} className="text-[#2f3424]" />
           <h2 className="mt-2 w-[58%] text-[28px] font-bold leading-[31px] tracking-[-0.02em] text-[#151210]">Talk to Penny</h2>
           <p className="mt-1.5 w-[52%] text-[14px] leading-[19px] text-[#151210]/65 [@media(max-height:720px)]:hidden">Let’s check before you buy.</p>

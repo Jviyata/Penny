@@ -15,7 +15,7 @@ const TABS: { id: Tab; label: string; Icon: typeof HomeIcon }[] = [
 export function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void; shelfCount?: number }) {
   return (
     <nav
-      className="absolute inset-x-0 bottom-0 z-30 grid h-[calc(var(--tabbar-h)+var(--sab))] grid-cols-3 rounded-t-[24px] bg-[var(--bar)] pb-[var(--sab)] shadow-[0_-1px_0_var(--sep),0_-10px_30px_-20px_rgba(30,18,8,0.35)] [html[data-keyboard=open]_&]:hidden"
+      className="absolute inset-x-0 bottom-0 z-30 grid h-[calc(var(--tabbar-h)+var(--sab))] glass-tint grid-cols-3 rounded-t-[24px] bg-[var(--bar)] pb-[var(--sab)] shadow-[0_-1px_0_var(--sep),0_-10px_30px_-20px_rgba(30,18,8,0.35)] [html[data-keyboard=open]_&]:hidden"
       aria-label="Tabs"
     >
       {TABS.map(({ id, label, Icon }) => {
