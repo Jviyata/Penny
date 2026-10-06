@@ -4,11 +4,9 @@ import type { ReactNode } from "react";
 
 export type SceneName = "home" | "free" | "chat" | "shelf" | "goals";
 
-/** Warm photo backdrop for a screen. See /public/bg/README.md to swap in real photos. */
-export function Scene({ name, photo }: { name: SceneName; photo?: string }) {
-  // `photo` names an optional extra photo layer (a category's /bg/<photo>.jpg) over the scene.
-  const style = photo ? ({ "--category-photo": `var(--scene-${photo}, none)` } as React.CSSProperties) : undefined;
-  return <div className={`scene scene-${name}`} style={style} aria-hidden />;
+/** Plain warm-white backdrop for a screen. */
+export function Scene({ name }: { name: SceneName }) {
+  return <div className={`scene scene-${name}`} aria-hidden />;
 }
 
 /**
@@ -17,7 +15,6 @@ export function Scene({ name, photo }: { name: SceneName; photo?: string }) {
  */
 export function Screen({
   scene,
-  photo,
   title,
   subtitle,
   leading,
@@ -26,8 +23,6 @@ export function Screen({
   children,
 }: {
   scene: SceneName;
-  /** Optional per-page photo layered over the scene (see Scene). */
-  photo?: string;
   title: string;
   subtitle?: ReactNode;
   leading?: ReactNode;
@@ -39,7 +34,7 @@ export function Screen({
   return (
     // isolate: this screen's layers (header menus, etc.) stay inside it, under the tab bar.
     <div className="absolute inset-0 isolate overflow-hidden">
-      <Scene name={scene} photo={photo} />
+      <Scene name={scene} />
 
       <div className="scroll-y relative h-full pt-[var(--sat)] pb-[calc(var(--tabbar-h)+var(--sab)+80px)]">
         {/* Header buttons sit above the content below them, so menus (Oct ⌄) open over it. */}

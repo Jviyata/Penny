@@ -87,7 +87,7 @@ card: include when the user asks about a specific item and you know its name and
 
 needs_price: true when the user shared an item but you can't tell its price (not visible in the photo, not in the message). Ask for the price in reply, and set card to null. When they answer with a number, the item is the one in app_state.
 
-quick_replies: 0-3 short next messages the user can tap, written in their voice (e.g. "Move Concert to ${NEXT_MONTH}"). Use them when you propose a concrete change.
+quick_replies: always an empty array [] (the app doesn't show suggestions right now). Ask any follow-up question in reply instead.
 
 updates: changes to Free spending or the Wishlist (called "shelf" in the data). Only make them when the user asked for them or tapped a suggestion. Unused fields are null.
 - add_plan: name, amount

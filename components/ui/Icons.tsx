@@ -261,3 +261,49 @@ export const HeartIcon = ({ size = 26, filled, className }: P) => (
     <path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" fill={filled ? "currentColor" : "none"} />
   </svg>
 );
+
+export const LaptopIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <rect x="4.5" y="5" width="15" height="10.5" rx="1.5" />
+    <path d="M2.5 18.5h19" />
+  </svg>
+);
+
+export const ShieldIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3.5 5 6v5.5c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+
+export const WalletIcon2 = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <rect x="3.5" y="6.5" width="17" height="12" rx="2.5" />
+    <path d="M6 6.5V5.5a1.5 1.5 0 0 1 1.8-1.5L17 6" />
+    <rect x="13.5" y="10.5" width="7" height="4" rx="1.5" />
+  </svg>
+);
+
+export const UserIcon = ({ size = 24, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="9.5" />
+    <circle cx="12" cy="9.5" r="3.2" />
+    <path d="M6.2 18.4c1.3-2.3 3.4-3.4 5.8-3.4s4.5 1.1 5.8 3.4" />
+  </svg>
+);
+
+export const WaveIcon = ({ size = 24, className }: P) => (
+  <svg {...base(size)} className={className} strokeWidth={2}>
+    <path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4" />
+  </svg>
+);
+
+/** Icon + tint for a goal, from its name. */
+export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string } {
+  const n = name.toLowerCase();
+  if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
+  if (/laptop|computer|phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
+  if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#ede4d8", fg: "#7a5a3a" };
+  if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#e3ead2", fg: "#4f6b2c" };
+  return { Icon: FlagIcon, bg: "#efe8dc", fg: "#6b5a44" };
+}

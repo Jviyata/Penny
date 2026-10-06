@@ -1,119 +1,129 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { BASE_FREE_TOTAL, JOBS_TOTAL, MONTH, USER_NAME } from "@/lib/demoData";
+import { useState } from "react";
+import { BASE_FREE_TOTAL, USER_NAME } from "@/lib/demoData";
 import { money } from "@/lib/format";
-import type { JobId } from "@/lib/monthDetails";
-import { GearIcon } from "../ui/Icons";
-import { NavButton, Screen } from "../ui/Screen";
+import type { Goal } from "@/lib/monthDetails";
+import { useStore } from "@/lib/store";
+import { ArrowRightIcon, ChevronIcon, UserIcon, WalletIcon2, WaveIcon, goalLook } from "../ui/Icons";
+import { Mascot } from "../ui/Mascot";
 import type { Tab } from "../TabBar";
-import { CategoryScreen } from "./CategoryScreen";
-import { FreeSpendingScreen } from "../free/FreeSpendingScreen";
-import { CATEGORY_ICONS, CATEGORY_ORDER } from "./categories";
-import { Donut } from "./Donut";
-import { MonthMenu } from "./MonthMenu";
 import { SettingsSheet } from "./SettingsSheet";
 
 /**
- * Home hierarchy: the available number (primary) → where the paycheck went (secondary) → categories (tertiary).
+ * Overview: greeting, the Talk to Penny card, your goals, and what's left to spend.
+ * The paycheck donut and categories live on the Spending tab.
  */
-export function HomeScreen({ goTo, resetSignal }: { goTo: (t: Tab) => void; resetSignal: number }) {
+export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [detail, setDetail] = useState<JobId | "free" | null>(null);
-  useEffect(() => setDetail(null), [resetSignal]);
-  // Lets the tab bar hide Penny's intro bubble while a category page covers Home.
-  useEffect(() => {
-    document.documentElement.dataset.homeDetail = detail ? "open" : "closed";
-  }, [detail]);
+  const { goals } = useStore().state;
+  const [first, ...others] = goals;
 
   return (
     <>
-      <Screen
-        scene="home"
-        title={`Hi, ${USER_NAME}`}
-        inlineTitle
-        trailing={
-          <>
-            <MonthMenu />
-            <NavButton label="Settings" onClick={() => setSettingsOpen(true)}>
-              <GearIcon size={22} />
-            </NavButton>
-          </>
-        }
-      >
-        {/* Fills the screen below the header; the donut flexes to take the leftover height. */}
-        <div className="flex h-[calc(100%-48px)] flex-col px-5 pb-3">
-          {/* Primary: the one number that matters */}
-          <section className="on-photo-shadow mt-4 [@media(max-height:720px)]:mt-2">
-            <p className="text-[15px] font-semibold uppercase tracking-[0.06em] text-on-photo-2">Available this month</p>
-            <p className="tabular mt-1 text-[64px] font-bold leading-none tracking-[-0.03em] text-on-photo [@media(max-height:720px)]:text-[52px]">
-              {money(BASE_FREE_TOTAL)}
+      <div className="scroll-y absolute inset-0 bg-[var(--bg)] px-4 pb-[calc(var(--tabbar-h)+var(--sab)+20px)] pt-[calc(var(--sat)+14px)]">
+        {/* Greeting */}
+        <header className="flex items-start justify-between px-1">
+          <div>
+            <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.01em] text-label">Hi, {USER_NAME}</h1>
+            <p className="mt-1 text-[17px] leading-[23px] text-label-2">
+              Let’s spend smart
+              <br />
+              so future you is happy.
             </p>
-            <p className="mt-2 text-[15px] text-on-photo-2">
-              of your {money(MONTH.income)} paycheck · {MONTH.daysLeft} days left
-            </p>
-          </section>
-
-          {/* Secondary: where the paycheck went (chart + its caption read as one unit) */}
-          <div className="mt-4 flex min-h-[150px] flex-1 items-center justify-center [container-type:size] [@media(max-height:720px)]:mt-3">
-            <Donut onSelect={(id) => setDetail(id === "yours" ? "free" : id)} />
           </div>
-          <div className="mx-auto mt-2.5 flex h-9 items-center gap-4 rounded-full bg-black/25 px-4 text-[14px] text-on-photo-2 backdrop-blur-md">
-            <span>
-              <span className="tabular text-[17px] font-semibold text-on-photo">{money(JOBS_TOTAL)}</span> already assigned
-            </span>
-            <span className="h-3 w-px bg-white/35" aria-hidden />
-            <span>
-              <span className="tabular text-[17px] font-semibold text-on-photo">{money(BASE_FREE_TOTAL)}</span> left
-            </span>
-          </div>
-
-          {/* 3. Jump into any part of the month */}
-          {/* Tertiary: categories */}
-          <p className="on-photo-shadow mt-5 [@media(max-height:720px)]:mt-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-on-photo-2">Categories</p>
-          <nav className="mt-2 grid grid-cols-6 gap-1" aria-label="Categories">
-            {CATEGORY_ORDER.map((id) => {
-              const Icon = CATEGORY_ICONS[id];
-              const job = MONTH.jobs.find((j) => j.id === id)!;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setDetail(id)}
-                  className="pressable flex flex-col items-center gap-1 text-on-photo"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/12 ring-1 ring-white/25 backdrop-blur-md">
-                    <Icon size={19} />
-                  </span>
-                  <span className="on-photo-shadow text-[11px] font-medium text-on-photo-2">
-                    {job.name === "Student loans" ? "Loans" : job.name}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </Screen>
-      <AnimatePresence>
-        {detail && (
-          <motion.div
-            key={detail}
-            className="absolute inset-0 z-10"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 34, stiffness: 340 }}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Profile and settings"
+            className="pressable -mr-1 flex h-12 w-12 items-center justify-center rounded-full text-label"
           >
-            {detail === "free" ? (
-              <FreeSpendingScreen goTo={goTo} onBack={() => setDetail(null)} />
-            ) : (
-              <CategoryScreen id={detail} onBack={() => setDetail(null)} />
-            )}
-          </motion.div>
+            <UserIcon size={34} />
+          </button>
+        </header>
+
+        {/* Talk to Penny */}
+        <section className="relative mt-5 overflow-hidden rounded-[28px] bg-[#e4e9d8] px-6 pb-6 pt-6">
+          <WaveIcon size={28} className="text-[#2f3424]" />
+          <h2 className="mt-3 w-[58%] text-[36px] font-bold leading-[38px] tracking-[-0.02em] text-[#151210]">Talk to Penny</h2>
+          <p className="mt-2 w-[52%] text-[16px] leading-[21px] text-[#151210]/65">Let’s check before you buy.</p>
+          <button
+            type="button"
+            onClick={() => goTo("chat")}
+            className="pressable relative z-10 mt-5 flex h-[52px] items-center gap-3 rounded-full bg-[#3c4230] pl-6 pr-5 text-[17px] font-medium text-white"
+          >
+            Talk to Penny
+            <ArrowRightIcon size={20} />
+          </button>
+          <Mascot mood="listening" size={190} className="absolute -right-3 bottom-1 drop-shadow-none" />
+        </section>
+
+        {/* Your goals */}
+        <div className="mt-6 flex items-center justify-between px-1">
+          <h2 className="text-[22px] font-bold tracking-[-0.01em] text-label">Your goals</h2>
+          <button type="button" onClick={() => goTo("goals")} className="flex h-10 items-center gap-1 text-[15px] text-label-2">
+            See all <ChevronIcon size={14} />
+          </button>
+        </div>
+        {first && <GoalCard goal={first} big onClick={() => goTo("goals")} />}
+        {others.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {others.slice(0, 2).map((g) => (
+              <GoalCard key={g.id} goal={g} onClick={() => goTo("goals")} />
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+
+        {/* Left to spend */}
+        <button
+          type="button"
+          onClick={() => goTo("free")}
+          className="pressable mt-3 flex w-full items-center gap-4 rounded-[24px] bg-card px-4 py-4 text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)]"
+        >
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] bg-[#efe8dc] text-[#6b5a44]">
+            <WalletIcon2 size={26} />
+          </span>
+          <span className="flex-1">
+            <span className="tabular block text-[30px] font-bold leading-none tracking-[-0.02em] text-label">{money(BASE_FREE_TOTAL)}</span>
+            <span className="mt-1 block text-[16px] text-label-2">left to spend this month</span>
+          </span>
+          <ChevronIcon className="text-label-3" />
+        </button>
+      </div>
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
+  );
+}
+
+function GoalCard({ goal, big, onClick }: { goal: Goal; big?: boolean; onClick: () => void }) {
+  const { Icon, bg, fg } = goalLook(goal.name);
+  const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`pressable flex w-full items-center rounded-[24px] bg-card text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)] ${
+        big ? "mt-2 gap-4 p-3.5" : "gap-2.5 p-2.5"
+      }`}
+    >
+      <span
+        className={`flex shrink-0 items-center justify-center ${big ? "h-[92px] w-[100px] rounded-[18px]" : "h-[56px] w-[46px] rounded-[14px]"}`}
+        style={{ background: bg, color: fg }}
+      >
+        <Icon size={big ? 40 : 22} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate font-semibold text-label ${big ? "text-[18px]" : "text-[14px]"}`}>{goal.name}</span>
+        <span className={`tabular block text-label-2 ${big ? "mt-1 text-[16px]" : "mt-0.5 text-[12px]"}`}>
+          {money(goal.saved)} of {money(goal.target)}
+        </span>
+        <span className="mt-2 flex items-center gap-2">
+          <span className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
+            <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
+          </span>
+          <span className={`tabular text-label-2 ${big ? "text-[15px]" : "text-[12px]"}`}>{Math.round(pct * 100)}%</span>
+        </span>
+      </span>
+    </button>
   );
 }

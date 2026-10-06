@@ -6,7 +6,7 @@ import { CATEGORY_NOTE, SPENDING, type JobId, type Spend } from "@/lib/monthDeta
 import { useStore } from "@/lib/store";
 import { NavButton, Screen } from "../ui/Screen";
 import { ArrowLeftIcon, FlagIcon } from "../ui/Icons";
-import { CATEGORY_ICONS } from "./categories";
+import { CATEGORY_COLORS, CATEGORY_ICONS } from "./categories";
 
 /**
  * One slice of the month, opened from the donut or the icon row:
@@ -19,7 +19,6 @@ export function CategoryScreen({ id, onBack }: { id: JobId; onBack: () => void }
   return (
     <Screen
       scene="home"
-      photo={id}
       title={job.name}
       leading={
         <NavButton label="Back to your October" onClick={onBack}>
@@ -52,7 +51,7 @@ function Spending({ id, total, Icon }: { id: Exclude<JobId, "savings">; total: n
           </div>
         </section>
         <div className="glass mt-4 h-3.5 overflow-hidden rounded-full" aria-hidden>
-          <div className="h-full rounded-full bg-[#f1ead9]" style={{ width: `${share * 100}%` }} />
+          <div className="h-full rounded-full" style={{ width: `${share * 100}%`, background: CATEGORY_COLORS[id] }} />
         </div>
         <p className="on-photo-shadow mt-2.5 text-[14px] text-on-photo-2">{CATEGORY_NOTE[id]}</p>
       </div>

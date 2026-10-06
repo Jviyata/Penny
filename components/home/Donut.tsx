@@ -2,22 +2,16 @@ import { BASE_FREE_TOTAL, MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import type { JobId } from "@/lib/monthDetails";
 import { HouseIcon, SparklesIcon } from "../ui/Icons";
-import { CATEGORY_ICONS } from "./categories";
+import { CATEGORY_COLORS, CATEGORY_ICONS } from "./categories";
 
 type Slice = { id: string; name: string; amount: number; color: string; Icon: typeof HouseIcon; hero?: boolean };
 
-const COLORS: Record<string, string> = {
-  rent: "rgba(240, 214, 190, 0.38)",
-  savings: "rgba(206, 232, 212, 0.42)",
-  loans: "rgba(246, 206, 206, 0.42)",
-  groceries: "rgba(240, 220, 182, 0.4)",
-  bills: "rgba(222, 212, 244, 0.42)",
-  transit: "rgba(178, 208, 232, 0.5)", // soft blue so it doesn't blend into Groceries
-};
+// Same solid colors as the Spending list, so a slice and its row always match.
+const COLORS: Record<string, string> = CATEGORY_COLORS;
 
 // "Yours to work with" first, then the bills around the ring.
 const SLICES: Slice[] = [
-  { id: "yours", name: "Free to spend", amount: BASE_FREE_TOTAL, color: "rgba(176, 202, 128, 0.82)", Icon: SparklesIcon, hero: true },
+  { id: "yours", name: "Free to spend", amount: BASE_FREE_TOTAL, color: CATEGORY_COLORS.free, Icon: SparklesIcon, hero: true },
   ...["rent", "savings", "loans", "groceries", "bills", "transit"].map((id) => {
     const j = MONTH.jobs.find((x) => x.id === id)!;
     return { id, name: j.name === "Student loans" ? "Loans" : j.name, amount: j.amount, color: COLORS[id], Icon: CATEGORY_ICONS[id as JobId] };
@@ -80,15 +74,14 @@ export function Donut({ onSelect }: { onSelect: (id: JobId | "yours") => void })
       style={{ width: "min(100cqw, 100cqh, 340px)" }}
       aria-label={`${money(total)} came in. ${slices.map((s) => `${s.name} ${money(s.amount)}`).join(", ")}.`}
     >
-      <div className="glass absolute inset-0 rounded-full" aria-hidden />
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="absolute inset-0 h-full w-full" aria-hidden>
         {slices.map((s) => (
           <path
             key={s.id}
             d={arc(s.a0, s.a1)}
             fill={s.color}
-            stroke="rgba(255,255,255,0.4)"
-            strokeWidth={1.2}
+            stroke="#ffffff"
+            strokeWidth={2.5}
             onClick={() => onSelect(s.id as JobId | "yours")}
             className="cursor-pointer transition-opacity active:opacity-70"
           />
@@ -101,7 +94,7 @@ export function Donut({ onSelect }: { onSelect: (id: JobId | "yours") => void })
         return (
           <div
             key={s.id}
-            className="on-photo-shadow pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center leading-tight text-on-photo [&_svg]:h-[clamp(12px,5cqw,17px)] [&_svg]:w-[clamp(12px,5cqw,17px)]"
+            className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center leading-tight text-white [&_svg]:h-[clamp(12px,5cqw,17px)] [&_svg]:w-[clamp(12px,5cqw,17px)]"
             style={{ left: `${r2((x / SIZE) * 100)}%`, top: `${r2((y / SIZE) * 100)}%` }}
             aria-hidden
           >
@@ -118,11 +111,11 @@ export function Donut({ onSelect }: { onSelect: (id: JobId | "yours") => void })
 
       {/* Pearl center */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center shadow-[inset_0_2px_10px_rgba(255,255,255,0.7),0_10px_30px_-10px_rgba(30,18,8,0.45)]"
+        className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center shadow-[0_6px_20px_-10px_rgba(30,18,8,0.35)]"
         style={{
           width: `${r2(((r * 2 + 2) / SIZE) * 100)}%`,
           height: `${r2(((r * 2 + 2) / SIZE) * 100)}%`,
-          background: "radial-gradient(circle at 32% 28%, #fffaf4 0%, #f6e3e2 42%, #e7d9e6 68%, #d9e4d0 100%)",
+          background: "#ffffff",
         }}
         aria-hidden
       >

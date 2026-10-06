@@ -30,8 +30,8 @@ export function AppShell() {
   const screens: Record<Tab, React.ReactNode> = {
     home: <HomeScreen goTo={setTab} resetSignal={homeReset} />,
     free: <SpendingScreen goTo={setTab} />,
-    chat: <ChatScreen active={tab === "chat"} />,
-    goals: <GoalsScreen />,
+    chat: <ChatScreen active={tab === "chat"} onBack={() => setTab("home")} />,
+    goals: <GoalsScreen goTo={setTab} />,
     shelf: <ShelfScreen goTo={setTab} />,
   };
 

@@ -10,7 +10,7 @@ import { useSend } from "@/lib/useSend";
 import { prepareImage } from "@/lib/image";
 import type { CardAction, ChatMessage } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { MicIcon, PlusIcon } from "../ui/Icons";
+import { ArrowLeftIcon, MicIcon, PlusIcon } from "../ui/Icons";
 import { Scene } from "../ui/Screen";
 import { Composer } from "./Composer";
 import { VoiceComposer } from "./VoiceComposer";
@@ -19,7 +19,7 @@ import { ResultCard } from "./ResultCard";
 
 type Mode = "talk" | "text";
 
-export function ChatScreen({ active }: { active: boolean }) {
+export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => void }) {
   const { state, dispatch, open } = useStore();
   const send = useSend();
   const { messages, thinking } = state;
@@ -143,7 +143,17 @@ export function ChatScreen({ active }: { active: boolean }) {
 
       {/* Context, not competition: the page name and the number Penny works from */}
       <header className="absolute inset-x-0 top-0 z-20 px-5 pt-[calc(var(--sat)+10px)]">
-        <h1 className="on-photo-shadow text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Can I afford this?</h1>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to Overview"
+            className="pressable -ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-card text-label shadow-[0_4px_14px_-8px_rgba(30,20,10,0.35)]"
+          >
+            <ArrowLeftIcon size={20} />
+          </button>
+          <h1 className="text-[22px] font-semibold leading-[28px] tracking-[-0.01em] text-on-photo">Talk to Penny</h1>
+        </div>
         <p className="glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo">
           <span className="h-2 w-2 rounded-full" style={{ background: open > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
           <span className="font-semibold">{money(Math.max(open, 0))}</span> free to spend · {MONTH.daysLeft} days left
@@ -154,7 +164,7 @@ export function ChatScreen({ active }: { active: boolean }) {
         ref={scrollRef}
         className="scroll-y absolute inset-0 px-3"
         style={{
-          paddingTop: `calc(var(--sat) + 96px)`,
+          paddingTop: `calc(var(--sat) + 104px)`,
           paddingBottom: `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`, // Penny is small in the bar here
           // Messages fade out under the title instead of colliding with it.
           WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
@@ -200,7 +210,7 @@ export function ChatScreen({ active }: { active: boolean }) {
         <div
           className="pointer-events-none absolute inset-x-0 -top-10 bottom-0 -z-10 backdrop-blur-md"
           style={{
-            background: "linear-gradient(to top, rgba(40,27,17,0.94) 0%, rgba(40,27,17,0.82) 70%, rgba(40,27,17,0) 100%)",
+            background: "linear-gradient(to top, rgba(248,246,241,0.98) 0%, rgba(248,246,241,0.9) 70%, rgba(248,246,241,0) 100%)",
             WebkitMaskImage: "linear-gradient(to top, #000 75%, transparent)",
             maskImage: "linear-gradient(to top, #000 75%, transparent)",
           }}
@@ -304,20 +314,7 @@ function Message({
         </div>
       )}
 
-      {showReplies && m.quickReplies && m.quickReplies.length > 0 && (
-        <div className="flex flex-wrap gap-2 pl-12">
-          {m.quickReplies.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => onReply(q)}
-              className="pressable glass-strong h-11 rounded-full px-4 text-[15px] font-semibold text-on-photo"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Suggestion chips are turned off for now (showReplies / onReply kept for later). */}
     </motion.div>
   );
 }
@@ -377,8 +374,8 @@ function AskChoices({
               aria-label="Talk to Penny"
               className="relative mt-9 flex h-[124px] w-[124px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_18px_40px_-12px_rgba(20,12,4,0.7)] transition-transform active:scale-95"
             >
-              <span className="absolute -inset-3 rounded-full ring-1 ring-white/25" aria-hidden />
-              <span className="absolute -inset-6 rounded-full ring-1 ring-white/12" aria-hidden />
+              <span className="absolute -inset-3 rounded-full ring-1 ring-black/10" aria-hidden />
+              <span className="absolute -inset-6 rounded-full ring-1 ring-black/5" aria-hidden />
               <MicIcon size={52} />
             </button>
             <p className="on-photo-shadow mt-6 text-[17px] font-semibold text-on-photo">Tap to talk to Penny</p>
@@ -395,7 +392,7 @@ function AskChoices({
       </div>
 
       {/* Secondary: quieter ways in, grouped on one row */}
-      <div className="mb-3 mt-6 flex items-center gap-2 rounded-full bg-black/20 py-1.5 pl-1.5 pr-2 backdrop-blur-md">
+      <div className="mb-3 mt-6 flex items-center gap-2 rounded-full bg-[var(--fill)] py-1.5 pl-1.5 pr-2 backdrop-blur-md">
         <button
           type="button"
           onClick={onPhoto}
@@ -408,7 +405,7 @@ function AskChoices({
         </button>
         {canTalk && (
           <>
-            <span className="h-4 w-px bg-white/25" aria-hidden />
+            <span className="h-4 w-px bg-black/15" aria-hidden />
             <button type="button" onClick={onType} className="h-10 px-3 text-[14px] font-medium text-on-photo-2">
               or type it
             </button>

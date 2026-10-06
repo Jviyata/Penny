@@ -5,8 +5,8 @@ import { useStore } from "@/lib/store";
 import { useSend } from "@/lib/useSend";
 import type { ShelfItem } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
-import { Screen } from "../ui/Screen";
-import { XIcon } from "../ui/Icons";
+import { NavButton, Screen } from "../ui/Screen";
+import { ArrowLeftIcon, XIcon } from "../ui/Icons";
 import type { Tab } from "../TabBar";
 
 export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
@@ -24,7 +24,16 @@ export function ShelfScreen({ goTo }: { goTo: (t: Tab) => void }) {
   };
 
   return (
-    <Screen scene="shelf" title="Wishlist" subtitle="Things you want, just not right now.">
+    <Screen
+      scene="shelf"
+      title="Wishlist"
+      subtitle="Things you want, just not right now."
+      leading={
+        <NavButton label="Back to Goals" onClick={() => goTo("goals")}>
+          <ArrowLeftIcon />
+        </NavButton>
+      }
+    >
       {state.shelf.length === 0 ? (
         <section className="mx-3 mt-2 flex flex-col items-center rounded-[30px] bg-card px-8 pb-8 pt-6 text-center">
           <Mascot mood="calm_neutral" size={132} />

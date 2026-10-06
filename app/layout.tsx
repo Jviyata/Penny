@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     capable: true,
     title: "Afford This?",
     // Content runs under the status bar; safe-area insets keep it clear of the Dynamic Island.
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default", // dark status-bar text on the white app
   },
   formatDetection: { telephone: false },
   other: {
@@ -23,8 +23,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2b231c" },
-    { media: "(prefers-color-scheme: dark)", color: "#15110d" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f6f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#f8f6f1" },
   ],
 };
 

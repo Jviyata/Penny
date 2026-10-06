@@ -8,9 +8,11 @@ import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
 import { PencilIcon, PlusIcon, FlagIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
+import type { Tab } from "../TabBar";
+import { ChevronIcon, HeartIcon, goalLook } from "../ui/Icons";
 
 /** Goals: what you're saving toward, how far along each one is, and adding to them. */
-export function GoalsScreen() {
+export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
   const { state, dispatch } = useStore();
   const { goals } = state;
   const [editor, setEditor] = useState<EditorConfig | null>(null);
@@ -61,7 +63,7 @@ export function GoalsScreen() {
             </div>
           </section>
           <div className="glass mt-4 h-3.5 overflow-hidden rounded-full" aria-hidden>
-            <div className="h-full rounded-full bg-[#f1ead9] transition-[width] duration-500" style={{ width: `${share * 100}%` }} />
+            <div className="h-full rounded-full bg-[#8fa66b] transition-[width] duration-500" style={{ width: `${share * 100}%` }} />
           </div>
         </div>
 
@@ -90,9 +92,14 @@ export function GoalsScreen() {
                 return (
                   <li key={g.id} className="px-5 py-3 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)]">
                     <div className="flex items-center gap-3.5">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#dfe6d3] text-[#3b3128]">
-                        <FlagIcon size={22} />
-                      </span>
+                      {(() => {
+                        const { Icon, bg, fg } = goalLook(g.name);
+                        return (
+                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]" style={{ background: bg, color: fg }}>
+                            <Icon size={22} />
+                          </span>
+                        );
+                      })()}
                       <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
                         <span className="flex items-center gap-1.5 text-[17px]">
                           <span className="truncate">{g.name}</span>
@@ -126,6 +133,22 @@ export function GoalsScreen() {
             </ul>
           )}
         </section>
+
+        {/* Wishlist lives here now (it's not a tab) */}
+        <button
+          type="button"
+          onClick={() => goTo("shelf")}
+          className="pressable mx-3 mt-3 flex w-[calc(100%-24px)] items-center gap-3.5 rounded-[24px] bg-card px-5 py-4 text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)]"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#f4e3e3] text-[#9b4a4a]">
+            <HeartIcon size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[17px] font-semibold">Wishlist</span>
+            <span className="block text-[14px] text-label-2">Things you want, just not right now.</span>
+          </span>
+          <ChevronIcon className="text-label-3" />
+        </button>
       </Screen>
       <LineEditorSheet config={editor} onClose={() => setEditor(null)} />
     </>

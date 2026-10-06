@@ -2,12 +2,13 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { MONTH } from "@/lib/demoData";
+import { BASE_FREE_TOTAL, JOBS_TOTAL, MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { SPENDING, type JobId } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { FreeSpendingScreen } from "../free/FreeSpendingScreen";
 import { CategoryScreen } from "../home/CategoryScreen";
+import { Donut } from "../home/Donut";
 import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ORDER } from "../home/categories";
 import { CheckIcon, ChevronIcon, SparklesIcon } from "../ui/Icons";
 import { Screen } from "../ui/Screen";
@@ -60,19 +61,23 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
   return (
     <>
       <Screen scene="free" title="Spending" inlineTitle>
+        {/* Where the paycheck went: tap a slice to open it */}
         <div className="px-5">
-          {/* Spent so far, with one bar split by category */}
-          <p className="on-photo-shadow mt-2 text-[15px] text-on-photo-2">
-            <span className="tabular text-[34px] font-bold tracking-[-0.02em] text-on-photo">{money(totalSpent)}</span>
-            {" "}spent of {money(income)}
-          </p>
-          <div className="mt-2.5 flex h-3 gap-[2px] overflow-hidden rounded-full bg-white/15" aria-hidden>
-            {rows
-              .filter((r) => r.spent > 0)
-              .map((r) => (
-                <span key={r.id} className="h-full" style={{ width: `${(r.spent / income) * 100}%`, background: CATEGORY_COLORS[r.id] }} />
-              ))}
+          <div className="mx-auto mt-2 flex h-[248px] items-center justify-center [container-type:size]">
+            <Donut onSelect={(id) => setDetail(id === "yours" ? "free" : id)} />
           </div>
+          <div className="mt-3 flex items-center justify-center gap-4 text-[14px] text-label-2">
+            <span>
+              <span className="tabular text-[17px] font-semibold text-label">{money(JOBS_TOTAL)}</span> already assigned
+            </span>
+            <span className="h-3 w-px bg-black/15" aria-hidden />
+            <span>
+              <span className="tabular text-[17px] font-semibold text-label">{money(BASE_FREE_TOTAL)}</span> left
+            </span>
+          </div>
+          <p className="mt-1 text-center text-[13px] text-label-3">
+            {money(totalSpent)} spent so far · tap a slice to see it
+          </p>
         </div>
 
         {/* By category */}

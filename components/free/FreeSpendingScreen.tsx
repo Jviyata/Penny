@@ -81,12 +81,12 @@ export function FreeSpendingScreen({ goTo, onBack }: { goTo: (t: Tab) => void; o
           {/* The whole calculation, in one place */}
           <dl
             className="mt-4 rounded-[20px] px-4 py-1 text-[15px] text-on-photo"
-            style={{ background: "rgba(28, 18, 10, 0.4)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}
+            style={{ background: "var(--card)", boxShadow: "0 8px 24px -14px rgba(30,20,10,0.18)" }}
           >
             <MathRow label="Available this month" value={money(freeTotal)} />
             <MathRow label="Planned" value={`− ${money(plannedTotal)}`} muted />
             <MathRow label="Already bought" value={`− ${money(boughtTotal)}`} muted />
-            <div className="flex h-11 items-center justify-between border-t border-white/20 font-semibold">
+            <div className="flex h-11 items-center justify-between border-t border-black/10 font-semibold">
               <dt>Actually free</dt>
               <dd className="tabular flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: over ? "var(--v-not)" : "#a9c27e" }} aria-hidden />
