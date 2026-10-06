@@ -299,11 +299,11 @@ export const WaveIcon = ({ size = 24, className }: P) => (
 );
 
 /** Icon + tint for a goal, from its name. */
-export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string; photo?: string; contain?: boolean } {
+export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string; photo?: string; fit?: string } {
   const n = name.toLowerCase();
-  if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86", photo: "/goals/japan.jpg" };
+  if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#fadadf", fg: "#3d5f86", photo: "/goals/japan.jpg", fit: "100% auto" };
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
-  if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#f4f4f6", fg: "#4a5263", photo: "/goals/laptop.jpg", contain: true };
+  if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
   if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#ede4d8", fg: "#7a5a3a" };
   if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#e3ead2", fg: "#4f6b2c", photo: "/goals/emergency.jpg" };
