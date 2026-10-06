@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { BASE_FREE_TOTAL, USER_NAME } from "@/lib/demoData";
+import { USER_NAME } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
-import { ArrowRightIcon, ChevronIcon, UserIcon, WalletIcon2, WaveIcon, goalLook } from "../ui/Icons";
+import { ArrowRightIcon, ChevronIcon, UserIcon, WaveIcon, goalLook } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Scene } from "../ui/Screen";
 import type { Tab } from "../TabBar";
@@ -17,7 +17,10 @@ import { SettingsSheet } from "./SettingsSheet";
  */
 export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { goals } = useStore().state;
+  const { state, open } = useStore();
+  const { goals, freeTotal } = state;
+  // How much of this month's spending money is already planned or spent.
+  const usedShare = freeTotal > 0 ? Math.min(1, Math.max(0, (freeTotal - open) / freeTotal)) : 0;
 
   return (
     <>
@@ -44,7 +47,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
         </header>
 
         {/* Talk to Penny */}
-        <section className="relative mt-4 glass-tint overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-5 pt-5 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
+        <section className="relative mt-4 glass-tint overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-4 pt-4 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
           <WaveIcon size={22} className="text-[#2f3424]" />
           <h2 className="mt-2 w-[58%] text-[28px] font-bold leading-[31px] tracking-[-0.02em] text-[#151210]">Talk to Penny</h2>
           <p className="mt-1.5 w-[52%] text-[14px] leading-[19px] text-[#151210]/65 [@media(max-height:720px)]:hidden">Let’s check before you buy.</p>
@@ -62,7 +65,7 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
         {/* Your goals */}
         <div className="mt-4 flex items-center justify-between px-1 [@media(max-height:720px)]:mt-2.5">
           <h2 className="text-[19px] font-bold tracking-[-0.01em] text-label">Your goals</h2>
-          <button type="button" onClick={() => goTo("goals")} className="flex h-9 items-center gap-1 text-[14px] text-label-2">
+          <button type="button" onClick={() => goTo("goals")} className="flex h-8 items-center gap-1 text-[14px] text-label-2">
             See all <ChevronIcon size={14} />
           </button>
         </div>
@@ -72,20 +75,31 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
           ))}
         </div>
 
-        {/* Left to spend */}
+        {/* This month: the one number that matters most, so it gets the strongest card */}
+        <div className="mt-4 flex items-center justify-between px-1 [@media(max-height:720px)]:mt-2.5">
+          <h2 className="text-[19px] font-bold tracking-[-0.01em] text-label">This month</h2>
+          <button type="button" onClick={() => goTo("free")} className="flex h-8 items-center gap-1 text-[14px] text-label-2">
+            Details <ChevronIcon size={14} />
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => goTo("free")}
-          className="pressable mt-2.5 flex w-full items-center gap-3.5 rounded-[22px] bg-card px-4 py-3 text-left shadow-[0_8px_24px_-16px_rgba(30,20,10,0.25)]"
+          className="pressable mt-1.5 block w-full rounded-[24px] bg-[#2f3626] px-5 pb-3.5 pt-3 text-left text-white shadow-[0_12px_28px_-18px_rgba(30,35,20,0.6)] [@media(max-height:720px)]:pb-3 [@media(max-height:720px)]:pt-2.5"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#efe8dc] text-[#6b5a44]">
-            <WalletIcon2 size={23} />
+          <span className="flex items-end justify-between gap-3">
+            <span>
+              <span className="block text-[13px] text-white/65">Left to spend</span>
+              <span className="tabular block text-[34px] font-bold leading-[38px] tracking-[-0.02em]">{money(freeTotal)}</span>
+            </span>
+            <span className="pb-1 text-right">
+              <span className="tabular block text-[17px] font-semibold leading-[20px] text-[#d4dd8f]">{money(Math.max(open, 0))}</span>
+              <span className="block text-[12px] text-white/60">not planned yet</span>
+            </span>
           </span>
-          <span className="flex-1">
-            <span className="tabular block text-[24px] font-bold leading-none tracking-[-0.02em] text-label">{money(BASE_FREE_TOTAL)}</span>
-            <span className="mt-1 block text-[14px] text-label-2">left to spend this month</span>
+          <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-white/15" aria-hidden>
+            <span className="block h-full rounded-full bg-[#b9c46f]" style={{ width: `${usedShare * 100}%` }} />
           </span>
-          <ChevronIcon className="text-label-3" />
         </button>
       </div>
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
