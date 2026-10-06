@@ -79,13 +79,12 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     if (thinking) return;
     setGalleryOpen(false);
     setStarted(true);
-    dispatch({ type: "addMessage", message: { id: newId(), role: "user", text: `${item.name} · ${money(item.price)}`, image: item.art } });
     dispatch({ type: "setThinking", on: true });
     const left = state.freeTotal;
     window.setTimeout(() => {
       dispatch({
         type: "addMessage",
-        message: { id: newId(), role: "assistant", text: "", plans: { name: item.name, price: item.price, left } },
+        message: { id: newId(), role: "assistant", text: "", plans: { name: item.name, price: item.price, left, image: item.art } },
       });
       dispatch({ type: "setThinking", on: false });
     }, 1100);

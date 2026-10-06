@@ -36,6 +36,7 @@ export type PlansCard = {
   name: string;
   price: number;
   left: number; // left to spend when asked
+  image?: string; // the item's picture
   chosen?: "now" | "wait2" | "wait3";
   remind?: boolean;
   priceWatch?: boolean;

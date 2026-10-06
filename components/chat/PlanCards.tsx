@@ -4,8 +4,7 @@ import { useState } from "react";
 import { money } from "@/lib/format";
 import { planFor, type Impact, type PlanId, type PlanOption } from "@/lib/planOptions";
 import type { PlansCard } from "@/lib/types";
-import { Mascot } from "../ui/Mascot";
-import { CheckIcon } from "../ui/Icons";
+import { CalendarIcon, CheckIcon, ChevronIcon } from "../ui/Icons";
 
 const IMPACT_STYLE: Record<Impact, { bg: string; fg: string }> = {
   Low: { bg: "#e1ead0", fg: "#4f6b2c" },
@@ -13,9 +12,12 @@ const IMPACT_STYLE: Record<Impact, { bg: string; fg: string }> = {
   High: { bg: "#f4dbd3", fg: "#a2493b" },
 };
 
+const LABEL: Record<PlanId, string> = { now: "Buy", wait2: "Wait 2 months", wait3: "Wait 3 months" };
+
 /**
- * Penny's answer, the way a chat would show it: a short message, then the three options as a
- * pick-one list (like a poll). Tapping an option shows its trade-offs and one button to act on it.
+ * Penny's answer for an item: the item and its price, how much of what's left it would take,
+ * then three ways to go. Penny's pick leads as the dark button; the other two sit under it.
+ * Tapping an option shows what it means; one more tap confirms it.
  */
 export function PlanCards({
   plans,
@@ -26,37 +28,61 @@ export function PlanCards({
   onChoose: (o: PlanOption) => void;
   onToggle: (key: "remind" | "priceWatch") => void;
 }) {
-  const { headline, detail, pick, options } = planFor(plans.name, plans.price, plans.left);
+  const { pick, options } = planFor(plans.name, plans.price, plans.left);
   const [selected, setSelected] = useState<PlanId>(plans.chosen ?? pick);
   const settled = !!plans.chosen;
   const current = options.find((o) => o.id === selected)!;
+  const pct = plans.left > 0 ? Math.round((plans.price / plans.left) * 100) : 100;
+  const ordered = [options.find((o) => o.id === pick)!, ...options.filter((o) => o.id !== pick)];
+  const impact = IMPACT_STYLE[current.impact];
 
   return (
-    <div className="flex w-full flex-col gap-1.5">
-      {/* Penny's take */}
-      <div className="flex items-end gap-1">
-        <Mascot mood={pick === "now" ? "approved" : pick === "wait2" ? "thinking" : "not_right_now"} size={34} className="-mb-1 shrink-0" />
-        <p className="paper-glass max-w-[85%] rounded-[20px] rounded-bl-[6px] px-3.5 py-2 text-[15px] leading-[20px] text-label">
-          <span className="font-semibold">{headline}</span> <span className="text-label-2">{detail}</span>
-        </p>
+    <div className="flex w-full flex-col px-1">
+      {/* The item */}
+      <div className="flex items-center gap-3.5">
+        {plans.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={plans.image}
+            alt=""
+            className="h-[96px] w-[96px] shrink-0 rounded-[22px] [@media(max-height:720px)]:h-[76px] [@media(max-height:720px)]:w-[76px]"
+            draggable={false}
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-[16px] leading-[20px] text-label">{plans.name}</p>
+          <p className="tabular mt-0.5 text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-label">{money(plans.price)}</p>
+        </div>
+        <Ring pct={pct} />
       </div>
 
-      {/* The options, pick one */}
-      <div className="paper-glass ml-[38px] rounded-[20px] p-1.5">
-        {options.map((o) => (
-          <Option
-            key={o.id}
-            option={o}
-            pick={o.id === pick}
-            selected={o.id === selected}
-            chosen={plans.chosen === o.id}
-            disabled={settled}
-            onSelect={() => setSelected(o.id)}
-          />
-        ))}
+      <p className="mt-3 text-[15px] leading-[20px] text-label-2">
+        This is <span className="font-semibold text-label">{pct}%</span> of your{" "}
+        <span className="font-semibold text-label">{money(plans.left)} left</span> to spend.
+      </p>
 
-        {/* Trade-offs for the one you're looking at */}
-        <ul className="mx-2 mt-1.5 flex flex-col gap-1 [@media(max-height:720px)]:gap-0.5 border-t border-[var(--sep)] pt-2">
+      {/* Three ways to go: Penny's pick first and dark, the other two side by side */}
+      <div className="mt-3 flex flex-col gap-2">
+        <OptionButton option={ordered[0]} primary pick selected={selected === ordered[0].id} disabled={settled} onClick={() => setSelected(ordered[0].id)} />
+        <div className="grid grid-cols-2 gap-2">
+          {ordered.slice(1).map((o) => (
+            <OptionButton key={o.id} option={o} selected={selected === o.id} disabled={settled} onClick={() => setSelected(o.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* What the selected option means */}
+      <div className="mt-2.5 rounded-[20px] bg-card px-4 pb-3 pt-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[14px] font-semibold text-label">
+            {LABEL[current.id]}
+            {current.id !== "now" && <span className="font-normal text-label-2"> · {money(current.amount)}/mo</span>}
+          </p>
+          <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: impact.bg, color: impact.fg }}>
+            {current.impact} impact
+          </span>
+        </div>
+        <ul className="mt-1.5 flex flex-col gap-1">
           {current.tradeoffs.slice(0, 3).map((t) => (
             <li key={t.text} className="flex items-center gap-2 text-[13px] leading-[17px] text-label">
               <span
@@ -71,31 +97,29 @@ export function PlanCards({
             </li>
           ))}
         </ul>
-
         <button
           type="button"
           onClick={() => onChoose(current)}
           disabled={settled}
-          className="pressable mt-2 flex h-10 w-full [@media(max-height:720px)]:h-9 items-center justify-center gap-1.5 rounded-full bg-cta text-[15px] font-semibold text-on-cta disabled:opacity-100"
+          className="pressable mt-2.5 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-[#5f7340] text-[15px] font-semibold text-white disabled:opacity-100"
         >
           {settled ? (
             <>
               <CheckIcon size={15} /> {plans.chosen === "now" ? "Bought" : "Saving started"}
             </>
           ) : current.id === "now" ? (
-            `Buy it now · ${money(current.amount)}`
+            `Confirm: buy for ${money(current.amount)}`
           ) : (
-            `Start saving · ${money(current.amount)}/mo`
+            `Confirm: save ${money(current.amount)}/mo`
           )}
         </button>
       </div>
 
-      <p className="ml-[38px] px-1 text-[12px] leading-[16px] text-label-3 [@media(max-height:720px)]:hidden">
+      <p className="mt-2 text-center text-[12px] leading-[16px] text-label-3 [@media(max-height:720px)]:hidden">
         Buying now trades flexibility for immediacy. Waiting gives you more breathing room this month.
       </p>
 
-      {/* Follow-ups, as quick-reply chips */}
-      <div className="ml-[38px] grid grid-cols-2 gap-1.5">
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
         <Chip on={!!plans.remind} onClick={() => onToggle("remind")} label="Remind me when I’m ready to buy" />
         <Chip on={!!plans.priceWatch} onClick={() => onToggle("priceWatch")} label="Tell me if the price drops" />
       </div>
@@ -103,53 +127,76 @@ export function PlanCards({
   );
 }
 
-function Option({
+function OptionButton({
   option: o,
+  primary,
   pick,
   selected,
-  chosen,
   disabled,
-  onSelect,
+  onClick,
 }: {
   option: PlanOption;
-  pick: boolean;
+  primary?: boolean;
+  pick?: boolean;
   selected: boolean;
-  chosen: boolean;
   disabled: boolean;
-  onSelect: () => void;
+  onClick: () => void;
 }) {
-  const impact = IMPACT_STYLE[o.impact];
+  const label = o.id === "now" ? `Buy for ${money(o.amount)}` : LABEL[o.id];
+  // The big button has room for both numbers; the small ones keep to the one that matters.
+  const sub =
+    o.id === "now"
+      ? `leaves ${money(o.left)}`
+      : primary
+        ? `${money(o.amount)}/mo · leaves ${money(o.left)}`
+        : `${money(o.amount)} a month`;
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
-      className={`flex w-full items-center gap-2.5 rounded-[14px] px-2.5 py-[7px] text-left transition-colors [@media(max-height:720px)]:py-[4px] ${
-        selected ? "bg-white shadow-[0_0_0_1.5px_#5f7340]" : ""
-      } ${disabled && !chosen ? "opacity-45" : ""}`}
+      className={`pressable relative flex items-center gap-2.5 rounded-full text-left transition-shadow ${
+        primary ? "h-[58px] bg-cta pl-5 pr-4 text-on-cta [@media(max-height:720px)]:h-[50px]" : "h-[54px] bg-fill pl-3.5 pr-2.5 text-label [@media(max-height:720px)]:h-[48px]"
+      } ${selected ? (primary ? "shadow-[0_0_0_3px_#b9c46f]" : "shadow-[0_0_0_2px_#5f7340]") : ""} ${disabled && !selected ? "opacity-45" : ""}`}
     >
-      <span
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-          selected ? "bg-[#5f7340] text-white" : "border-[1.5px] border-[var(--label-3)]"
-        }`}
-        aria-hidden
-      >
-        {selected && <CheckIcon size={11} />}
-      </span>
+      {o.id === "now" ? (
+        <span className={`shrink-0 text-[19px] font-semibold ${primary ? "" : "text-label-2"}`}>$</span>
+      ) : (
+        <CalendarIcon size={primary ? 20 : 17} className="shrink-0" />
+      )}
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="text-[15px] font-semibold text-label">{o.title}</span>
-          {pick && <span className="rounded-full bg-[#5f7340] px-1.5 py-[1px] text-[10.5px] font-semibold text-white">Penny’s Pick</span>}
-        </span>
-        <span className="tabular block text-[13px] text-label-2">
-          {money(o.amount)} {o.id === "now" ? "today" : "/mo"} · leaves {money(o.left)}
-        </span>
+        <span className={`block truncate font-semibold ${primary ? "text-[16px]" : "text-[14px]"}`}>{label}</span>
+        <span className={`tabular block truncate ${primary ? "text-[12.5px] text-on-cta/70" : "text-[11.5px] text-label-2"}`}>{sub}</span>
       </span>
-      <span className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: impact.bg, color: impact.fg }}>
-        {o.impact}
-      </span>
+      {pick && <span className="shrink-0 rounded-full bg-[#b9c46f] px-2 py-0.5 text-[11px] font-semibold text-[#1d1a17]">Penny’s pick</span>}
+      <ChevronIcon size={14} className={`shrink-0 ${primary ? "text-on-cta/60" : "text-label-3"}`} />
     </button>
+  );
+}
+
+/** How much of what's left this item would take. */
+function Ring({ pct }: { pct: number }) {
+  const R = 38;
+  const C = 2 * Math.PI * R;
+  const shown = Math.min(100, Math.max(0, pct));
+  return (
+    <div className="relative h-[92px] w-[92px] shrink-0 [@media(max-height:720px)]:h-[76px] [@media(max-height:720px)]:w-[76px]">
+      <svg viewBox="0 0 92 92" className="h-full w-full -rotate-90" aria-hidden>
+        <circle cx="46" cy="46" r={R} fill="none" stroke="var(--fill)" strokeWidth="9" />
+        <circle
+          cx="46"
+          cy="46"
+          r={R}
+          fill="none"
+          stroke="#7d9a5c"
+          strokeWidth="9"
+          strokeLinecap="round"
+          strokeDasharray={`${Math.round((shown / 100) * C * 100) / 100} ${Math.round(C * 100) / 100}`}
+        />
+      </svg>
+      <span className="tabular absolute inset-0 flex items-center justify-center text-[19px] font-semibold text-label">{pct}%</span>
+    </div>
   );
 }
 
@@ -160,7 +207,7 @@ function Chip({ on, onClick, label }: { on: boolean; onClick: () => void; label:
       onClick={onClick}
       aria-pressed={on}
       className={`pressable flex min-h-[34px] items-center justify-center gap-1 rounded-[14px] px-2.5 py-1 text-center text-[12px] font-medium leading-[15px] ${
-        on ? "bg-[#e1ead0] text-[#4f6b2c]" : "paper-glass text-label"
+        on ? "bg-[#e1ead0] text-[#4f6b2c]" : "bg-card text-label"
       }`}
     >
       {on && <CheckIcon size={12} />}
