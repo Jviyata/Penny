@@ -66,8 +66,8 @@ html[data-keyboard="open"] {
   --color-on-cta: var(--on-cta);
   --color-on-photo: var(--on-photo);
   --color-on-photo-2: var(--on-photo-2);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, "Helvetica Neue", sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui, sans-serif;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* ---------- Glass and paper surfaces ---------- */

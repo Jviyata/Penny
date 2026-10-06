@@ -204,8 +204,16 @@ function Stack({ count, children }: { count: number; children: React.ReactNode }
   );
 }
 
-/** Height of the folder tab that sticks up on the left of each card. */
-const TAB = 14;
+/** The scoop at the top of each card: an ellipse punched out of the top edge, centered. */
+const NOTCH = "radial-gradient(ellipse 34px 15px at 50% 0, transparent 96%, #000 100%)";
+
+function ChevronUpIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="10" viewBox="0 0 16 10" fill="none" aria-hidden>
+      <path d="M3 7.5 8 3l5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function StackCard({
   index,
@@ -234,20 +242,25 @@ function StackCard({
         filter: "drop-shadow(0 -4px 10px rgba(30, 20, 10, 0.14))",
       }}
     >
-      {/* Folder shape: a tab on the left, a soft step down, then the lower right edge */}
-      <span className="absolute left-0 top-0 h-full w-[62%] rounded-l-[22px]" style={{ background: color }} aria-hidden />
-      <svg className="absolute top-0 left-[calc(62%-1px)]" width="36" height={TAB} viewBox={`0 0 36 ${TAB}`} aria-hidden>
-        <path d={`M0 0 C18 0 18 ${TAB} 36 ${TAB} L0 ${TAB} Z`} fill={color} />
-      </svg>
-      <span className="absolute inset-x-0 bottom-0 rounded-tr-[22px] rounded-b-[22px]" style={{ top: TAB, background: color }} aria-hidden />
+      {/* Rounded card with a scoop cut out of the top middle; the card above peeks through it */}
+      <span
+        className="absolute inset-0 rounded-[24px]"
+        style={{
+          background: color,
+          WebkitMaskImage: index > 0 ? NOTCH : undefined,
+          maskImage: index > 0 ? NOTCH : undefined,
+        }}
+        aria-hidden
+      />
+      {index > 0 && <ChevronUpIcon className="absolute left-1/2 top-[1px] -translate-x-1/2 text-white/80" />}
 
-      <span className="relative flex h-[var(--step)] w-full items-center gap-3 pl-5 pr-4">
+      <span className="relative flex h-[var(--step)] w-full items-center gap-3 pl-5 pr-4 pt-1">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[19px] font-bold leading-[24px] tracking-[-0.01em]">{title}</span>
           <span className="tabular mt-0.5 block truncate text-[14px] leading-[18px] text-white/85">{sub}</span>
         </span>
         <span
-          className="mt-[10px] flex h-[min(42px,calc(var(--step)-22px))] w-[min(42px,calc(var(--step)-22px))] shrink-0 items-center justify-center rounded-full bg-white/20"
+          className="flex h-[min(42px,calc(var(--step)-16px))] w-[min(42px,calc(var(--step)-16px))] shrink-0 items-center justify-center rounded-full bg-white/20"
         >
           <Icon size={19} />
         </span>
