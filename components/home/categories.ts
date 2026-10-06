@@ -15,11 +15,11 @@ export const CATEGORY_ORDER: JobId[] = ["rent", "bills", "loans", "groceries", "
 
 /** One solid color per category, used on the Spending overview (bars, dots, progress). */
 export const CATEGORY_COLORS: Record<JobId | "free", string> = {
-  rent: "#c4946a",
-  bills: "#8e7fc6",
-  loans: "#c77d70",
-  groceries: "#d2a643",
-  transit: "#6b9bc6",
-  savings: "#5f8a9e",
-  free: "#8aab55",
+  rent: "#5f7340", // olive
+  free: "#b9c46f", // chartreuse
+  groceries: "#8faa80", // sage
+  bills: "#c9a560", // mustard (utilities)
+  loans: "#c27565", // terracotta
+  transit: "#7d9bb0", // slate
+  savings: "#bdb2a5", // warm gray
 };

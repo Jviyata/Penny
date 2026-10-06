@@ -38,6 +38,8 @@ export function Screen({
 
       <div className="scroll-y relative h-full pt-[var(--sat)] pb-[calc(var(--tabbar-h)+var(--sab)+20px)]">
         {/* Header buttons sit above the content below them, so menus (Oct ⌄) open over it. */}
+        {/* Only reserve the button row when there's something to put in it. */}
+        {(leading || trailing || inlineTitle) ? (
         <div className={`relative z-[45] flex h-11 items-center justify-between ${inlineTitle ? "mt-1 pl-5 pr-3" : "px-3"}`}>
           <div className="flex min-w-0 items-center">
             {leading}
@@ -47,10 +49,13 @@ export function Screen({
           </div>
           <div className="flex items-center gap-2">{trailing}</div>
         </div>
+        ) : (
+          <div className="h-3" />
+        )}
         {!inlineTitle && (
           <header className="on-photo-shadow px-5 pb-4">
             <h1 className="text-[32px] font-bold leading-[38px] tracking-[-0.01em] text-on-photo">{title}</h1>
-            {subtitle && <div className="mt-1 text-[16px] text-on-photo-2">{subtitle}</div>}
+            {subtitle && <div className="relative z-[45] mt-1 text-[16px] text-on-photo-2">{subtitle}</div>}
           </header>
         )}
         {children}

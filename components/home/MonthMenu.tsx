@@ -13,7 +13,8 @@ const MONTHS = [
 ];
 
 /** Frosted "Oct ⌄" chip that opens an iOS-style month menu. */
-export function MonthMenu() {
+/** `variant="text"`: a plain "October 2026 ⌄" line (Spending header) instead of the glass chip. */
+export function MonthMenu({ variant = "chip" }: { variant?: "chip" | "text" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,10 +46,14 @@ export function MonthMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Month: ${MONTH.name}`}
-        className="pressable glass flex h-11 items-center gap-1.5 rounded-full pl-3.5 pr-3 text-[16px] font-medium text-on-photo"
+        className={
+          variant === "text"
+            ? "pressable -ml-1 flex h-9 items-center gap-1.5 rounded-full px-1 text-[17px] text-label-2"
+            : "pressable glass flex h-11 items-center gap-1.5 rounded-full pl-3.5 pr-3 text-[16px] font-medium text-on-photo"
+        }
       >
-        <CalendarIcon />
-        {MONTH.name.slice(0, 3)}
+        {variant === "chip" && <CalendarIcon />}
+        {variant === "text" ? `${MONTH.name} 2026` : MONTH.name.slice(0, 3)}
         <ChevronDownIcon className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -61,7 +66,7 @@ export function MonthMenu() {
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ type: "spring", damping: 30, stiffness: 420 }}
             style={{ transformOrigin: "top right" }}
-            className="paper-glass absolute right-0 top-[52px] z-50 w-[230px] overflow-hidden rounded-[22px] py-1.5"
+            className={`paper-glass absolute top-[44px] z-50 w-[230px] overflow-hidden rounded-[22px] py-1.5 ${variant === "text" ? "left-0" : "right-0"}`}
           >
             {MONTHS.map((m) => {
               const current = m.available;
