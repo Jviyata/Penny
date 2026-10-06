@@ -122,16 +122,16 @@ export function planFor(name: string, price: number, left: number): PlanSummary 
 
   const headline =
     pick === "now"
-      ? `${name}: ${money(price)}. This one fits comfortably.`
+      ? "This one fits comfortably."
       : pick === "wait2"
-        ? `${name}: ${money(price)}. You can, but it squeezes ${MONTH.name}.`
-        : `${name}: ${money(price)}. That’s a lot for this month.`;
+        ? `You can, but it squeezes ${MONTH.name}.`
+        : "That’s a lot for this month.";
   const detail =
     pick === "now"
-      ? `It’s ${pct}% of your ${money(left)}, leaving ${money(left - price)}.`
+      ? `${money(price)} is ${pct}% of your ${money(left)} left to spend.`
       : pick === "wait2"
-        ? `Buying now uses ${pct}% of your ${money(left)}. Splitting it over 2 months keeps ${MONTH.name} easy.`
-        : `It’s ${pct}% of your ${money(left)}. Saving ${money(per3)} a month gets you there without the stress.`;
+        ? `${money(price)} is ${pct}% of your ${money(left)}.`
+        : `${money(price)} is ${pct}% of your ${money(left)}.`;
 
   return { headline, detail, pick, options };
 }

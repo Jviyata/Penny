@@ -26,6 +26,7 @@ export function VoiceComposer({
   onListening,
   handle,
   onAdd,
+  compact,
 }: {
   onSend: (text: string, image?: PreparedImage) => void;
   busy: boolean;
@@ -35,6 +36,8 @@ export function VoiceComposer({
   handle?: React.RefObject<{ talk: () => void } | null>;
   /** Opens the demo gallery instead of the file picker. */
   onAdd?: () => void;
+  /** Once a conversation is going: one slim row instead of the big mic, so answers get the room. */
+  compact?: boolean;
 }) {
   const [heard, setHeard] = useState("");
   // If the mic can't start, stay in talk mode and say why; the user decides whether to type.
@@ -89,51 +92,93 @@ export function VoiceComposer({
         </p>
       )}
 
+      {compact ? (
+        <div className="flex w-full items-center gap-2">
+          <button
+            type="button"
+            onClick={() => (onAdd ? onAdd() : fileRef.current?.click())}
+            disabled={busy || speech.listening}
+            aria-label="Add a photo, screenshot or file"
+            className="pressable glass flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
+          >
+            <PlusIcon size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={talk}
+            disabled={busy}
+            aria-pressed={speech.listening}
+            className={`flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-cta text-[15px] font-semibold text-on-cta transition-transform active:scale-[0.98] disabled:opacity-50 ${
+              speech.listening ? "mic-live" : ""
+            }`}
+          >
+            {speech.listening ? <StopIcon size={18} /> : <MicIcon size={20} />}
+            {busy ? "Penny’s reading it…" : speech.listening ? "Tap when you’re done" : "Tap to talk"}
+          </button>
+          <button
+            type="button"
+            onClick={onTextInstead}
+            className="pressable glass h-11 shrink-0 rounded-full px-4 text-[15px] font-medium text-on-photo"
+          >
+            Type
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            className="hidden"
+            onChange={(e) => pickPhoto(e.target.files?.[0])}
+          />
+        </div>
+      ) : (
+        <>
       <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center">
-      <div className="flex justify-end pr-6">
+        <div className="flex justify-end pr-6">
+          <button
+            type="button"
+            onClick={() => (onAdd ? onAdd() : fileRef.current?.click())}
+            disabled={busy || speech.listening}
+            aria-label="Add a photo, screenshot or file"
+            className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
+          >
+            <PlusIcon size={22} />
+          </button>
+          {/* No `capture` attribute: iOS offers Take Photo, Photo Library or Choose File. */}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            className="hidden"
+            onChange={(e) => pickPhoto(e.target.files?.[0])}
+          />
+        </div>
         <button
           type="button"
-          onClick={() => (onAdd ? onAdd() : fileRef.current?.click())}
-          disabled={busy || speech.listening}
-          aria-label="Add a photo, screenshot or file"
-          className="pressable glass flex h-12 w-12 items-center justify-center rounded-full text-on-photo disabled:opacity-40"
+          onClick={talk}
+          disabled={busy}
+          aria-label={speech.listening ? "Stop talking and send" : "Talk to Penny"}
+          aria-pressed={speech.listening}
+          className={`flex h-[76px] w-[76px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_14px_30px_-10px_rgba(20,12,4,0.6)] transition-transform active:scale-95 disabled:opacity-50 ${
+            speech.listening ? "mic-live" : ""
+          }`}
         >
-          <PlusIcon size={22} />
+          {speech.listening ? <StopIcon size={26} /> : <MicIcon size={36} />}
         </button>
-        {/* No `capture` attribute: iOS offers Take Photo, Photo Library or Choose File. */}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*,.heic,.heif"
-          className="hidden"
-          onChange={(e) => pickPhoto(e.target.files?.[0])}
-        />
-      </div>
-      <button
-        type="button"
-        onClick={talk}
-        disabled={busy}
-        aria-label={speech.listening ? "Stop talking and send" : "Talk to Penny"}
-        aria-pressed={speech.listening}
-        className={`flex h-[76px] w-[76px] items-center justify-center rounded-full bg-cta text-on-cta shadow-[0_14px_30px_-10px_rgba(20,12,4,0.6)] transition-transform active:scale-95 disabled:opacity-50 ${
-          speech.listening ? "mic-live" : ""
-        }`}
-      >
-        {speech.listening ? <StopIcon size={26} /> : <MicIcon size={36} />}
-      </button>
-      <div />
-      </div>
-      <p className="on-photo-shadow mt-1.5 text-[14px] font-medium text-on-photo">
-        {busy ? "Penny’s reading it…" : speech.listening ? "Tap when you’re done" : "Tap to talk"}
-      </p>
-
-      <button
-        type="button"
-        onClick={onTextInstead}
-        className="on-photo-shadow h-9 px-3 text-[13px] font-medium text-on-photo-2 underline-offset-2 active:underline"
-      >
-        or type it
-      </button>
+        <div />
+        </div>
+        <p className="on-photo-shadow mt-1.5 text-[14px] font-medium text-on-photo">
+          {busy ? "Penny’s reading it…" : speech.listening ? "Tap when you’re done" : "Tap to talk"}
+        </p>
+  
+        <button
+          type="button"
+          onClick={onTextInstead}
+          className="on-photo-shadow h-9 px-3 text-[13px] font-medium text-on-photo-2 underline-offset-2 active:underline"
+        >
+          or type it
+        </button>
+        </>
+      )}
     </div>
   );
 }

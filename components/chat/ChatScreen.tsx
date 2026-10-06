@@ -134,7 +134,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       return;
     }
     const lastMsg = messages[messages.length - 1];
-    if (el && (lastMsg?.card || lastMsg?.plans) && !thinking) {
+    if (el && lastMsg?.card && !thinking) {
       const node = el.querySelector<HTMLElement>(`[data-msg="${lastMsg.id}"]`);
       const top = parseFloat(getComputedStyle(el).paddingTop) || 0;
       if (node) {
@@ -211,7 +211,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             </button>
           )}
         </div>
-        <p className="glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo">
+        <p className={`glass tabular mt-2 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] text-on-photo ${messages.length > 0 ? "[@media(max-height:720px)]:hidden" : ""}`}>
           <span className="h-2 w-2 rounded-full" style={{ background: state.freeTotal > 0 ? "#a9c27e" : "var(--v-not)" }} aria-hidden />
           <span className="font-semibold">{money(Math.max(state.freeTotal, 0))}</span> left to spend · {MONTH.daysLeft} days left
         </p>
@@ -219,9 +219,9 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
 
       <div
         ref={scrollRef}
-        className="scroll-y absolute inset-0 px-3"
+        className={`scroll-y absolute inset-0 px-3 ${messages.length > 0 ? "[@media(max-height:720px)]:[--chat-top:74px]" : ""}`}
         style={{
-          paddingTop: `calc(var(--sat) + 104px)`,
+          paddingTop: `calc(var(--sat) + var(--chat-top, 104px))`,
           paddingBottom: `calc(${composerH + 16}px + var(--tabbar-h) + var(--sab))`, // Penny is small in the bar here
           // Messages fade out under the title instead of colliding with it.
           WebkitMaskImage: `linear-gradient(to bottom, transparent calc(var(--sat) + 70px), #000 ${fadeTop})`,
@@ -240,7 +240,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             <EmptyState />
           )
         ) : (
-          <div className="flex min-h-full flex-col justify-end gap-2.5">
+          <div className="flex min-h-full flex-col justify-end gap-2.5 [@media(max-height:720px)]:gap-1.5">
             {messages.map((m, i) => (
               <Message
                 key={m.id}
@@ -299,6 +299,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             onSend={(text, image) => send({ text, image })}
             onTextInstead={textInstead}
             onAdd={() => setGalleryOpen(true)}
+            compact={messages.length > 0 || thinking}
           />
         ) : (
           <>
@@ -357,6 +358,24 @@ function Message({
   onToggle: (key: "remind" | "priceWatch") => void;
 }) {
   const mine = m.role === "user";
+  // Demo gallery items: the picture rides inside the bubble, like a shared product.
+  if (mine && m.image?.startsWith("data:image/svg")) {
+    return (
+      <motion.div
+        initial={animate ? { opacity: 0, y: 12, scale: 0.98 } : false}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", damping: 28, stiffness: 340 }}
+        className="flex justify-end"
+        data-msg={m.id}
+      >
+        <p className="flex max-w-[80%] items-center gap-2.5 rounded-[20px] rounded-br-[6px] bg-cta py-1.5 pl-1.5 pr-4 text-on-cta">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={m.image} alt="" className="h-11 w-11 shrink-0 rounded-[14px] [@media(max-height:720px)]:h-9 [@media(max-height:720px)]:w-9" draggable={false} />
+          <span className="text-[15px] leading-[19px]">{m.text}</span>
+        </p>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={animate ? { opacity: 0, y: 12, scale: 0.98 } : false}
