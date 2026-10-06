@@ -127,7 +127,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={b.id}
                 index={i}
                 last={i === paidBills.length - 1 && dueBills.length === 0}
-                color={TAB_COLORS[i % TAB_COLORS.length]}
+                color={PAID_COLORS[i % PAID_COLORS.length]}
                 title={b.name}
                 note={`Paid ${b.date}`}
                 amount={money(b.amount)}
@@ -139,7 +139,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
                 key={b.id}
                 index={paidBills.length + i}
                 last={i === dueBills.length - 1}
-                color={TAB_COLORS[(paidBills.length + i) % TAB_COLORS.length]}
+                color={DUE_COLORS[i % DUE_COLORS.length]}
                 title={b.name}
                 note={`Due ${b.date}`}
                 amount={money(b.amount)}
@@ -171,6 +171,10 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
     </>
   );
 }
+
+/** Bills: green when paid, red when still due. Neighboring shades so each card's scoop still shows. */
+const PAID_COLORS = ["#7fb08a", "#6fa37b", "#60966d"];
+const DUE_COLORS = ["#e08a80", "#d6766b", "#c96358"];
 
 /** Card colors, top to bottom of the stack: soft blue through to soft olive. */
 const TAB_COLORS = [
