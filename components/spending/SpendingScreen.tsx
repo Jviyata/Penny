@@ -67,7 +67,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
   const dueBills = BILLS.flatMap((id) => SPENDING[id as Exclude<JobId, "savings">].filter((s) => s.upcoming).map((s) => ({ ...s, cat: id })));
 
   return (
-    <>
+    <div className="theme-dark absolute inset-0">
       <Screen
         scene="free"
         title="Spending"
@@ -165,7 +165,7 @@ export function SpendingScreen({ goTo }: { goTo: (t: Tab) => void }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
 

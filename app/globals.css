@@ -4,6 +4,7 @@
 :root {
   --bg: #f8f6f1; /* warm white page */
   --card: rgba(255, 255, 255, 0.5); /* frosted glass cards */
+  --card-solid: #fcfbf8; /* what a card looks like over the page, for layers that must hide what is under them */
   --fill: #f1eee7; /* rows, fields, tracks */
   --label: #1d1a17; /* ink on paper */
   --label-2: rgba(29, 26, 23, 0.6);
@@ -113,7 +114,45 @@ html[data-keyboard="open"] {
   background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 45%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 255, 255, 0.35) 100%);
 }
 
+/* ---------- Dark screens (Spending): black page, smoky glass cards ---------- */
+.theme-dark {
+  --bg: #000000;
+  --card: rgba(255, 255, 255, 0.07);
+  --card-solid: #141414;
+  --fill: rgba(255, 255, 255, 0.1);
+  --label: #f5f3ef;
+  --label-2: rgba(245, 243, 239, 0.66);
+  --label-3: rgba(245, 243, 239, 0.4);
+  --sep: rgba(255, 255, 255, 0.12);
+  --bar: rgba(22, 22, 22, 0.72);
+  --paper-glass: rgba(28, 28, 28, 0.8);
+  --tint-soft: rgba(255, 255, 255, 0.1);
+  --v-comfortable: #a9c47f;
+  --on-photo: #f5f3ef;
+  --on-photo-2: rgba(245, 243, 239, 0.62);
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --glass-line: rgba(255, 255, 255, 0.14);
+  color: var(--label);
+  color-scheme: dark;
+}
+.theme-dark .bg-card,
+.theme-dark .paper-glass,
+.theme-dark .glass-tint,
+.theme-dark.glass-tint {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 32px -18px rgba(0, 0, 0, 0.9);
+  /* same glass sheen as the light cards, just fainter on black */
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.05) 100%);
+}
+
 /* ---------- Base: behave like an app, not a page ---------- */
+html[data-screen="dark"] {
+  --bg: #000000;
+}
 html,
 body {
   height: 100%;
@@ -268,6 +307,9 @@ html[data-keyboard="open"] .device-screen {
     font-size: 17px;
     font-weight: 600;
     color: #151210;
+  }
+  html[data-screen="dark"] .device-status {
+    color: #f5f3ef;
     z-index: 999;
     pointer-events: none;
   }

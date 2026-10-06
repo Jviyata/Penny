@@ -1,7 +1,7 @@
 "use client";
 
 import { MotionConfig } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { useVisualViewport } from "@/lib/useVisualViewport";
 import { TabBar, type Tab } from "./TabBar";
@@ -26,6 +26,13 @@ export function AppShell() {
     if (t === tab && t === "home") setHomeReset((n) => n + 1);
     setTab(t);
   };
+
+  // Spending is a black screen: switch the status bar and page color with it.
+  useEffect(() => {
+    const dark = tab === "free";
+    document.documentElement.dataset.screen = dark ? "dark" : "light";
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", dark ? "#000000" : "#f8f6f1"));
+  }, [tab]);
 
   const screens: Record<Tab, React.ReactNode> = {
     home: <HomeScreen goTo={setTab} resetSignal={homeReset} />,

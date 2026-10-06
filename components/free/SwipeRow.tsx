@@ -39,7 +39,7 @@ export function SwipeRow({
           const open = info.offset.x < -REVEAL / 2 || info.velocity.x < -400;
           controls.start({ x: open ? -REVEAL : 0, transition: { type: "spring", damping: 32, stiffness: 400 } });
         }}
-        className="relative bg-card"
+        className="relative bg-[var(--card-solid)]"
         style={{ touchAction: "pan-y" }}
       >
         <button type="button" onClick={onTap} className="flex min-h-[72px] w-full items-center gap-3.5 px-5 py-2.5 text-left active:bg-fill">
