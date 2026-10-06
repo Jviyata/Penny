@@ -18,7 +18,6 @@ import { SettingsSheet } from "./SettingsSheet";
 export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: number }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { goals } = useStore().state;
-  const [first, ...others] = goals;
 
   return (
     <>
@@ -67,14 +66,11 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
             See all <ChevronIcon size={14} />
           </button>
         </div>
-        {first && <GoalCard goal={first} big onClick={() => goTo("goals")} />}
-        {others.length > 0 && (
-          <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-            {others.slice(0, 2).map((g) => (
-              <GoalCard key={g.id} goal={g} onClick={() => goTo("goals")} />
-            ))}
-          </div>
-        )}
+        <div className="mt-1.5 grid grid-cols-3 gap-2.5">
+          {goals.slice(0, 3).map((g) => (
+            <GoalCard key={g.id} goal={g} onClick={() => goTo("goals")} />
+          ))}
+        </div>
 
         {/* Left to spend */}
         <button
@@ -97,45 +93,25 @@ export function HomeScreen({ goTo }: { goTo: (t: Tab) => void; resetSignal?: num
   );
 }
 
-function GoalCard({ goal, big, onClick }: { goal: Goal; big?: boolean; onClick: () => void }) {
+/** One goal: its picture, its name, and how far along it is. Amounts live on the Goals tab. */
+function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const { Icon, bg, fg, photo, fit } = goalLook(goal.name);
   const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`pressable flex w-full items-stretch overflow-hidden rounded-[24px] bg-card text-left ${
-        big ? "mt-1.5 h-[104px] [@media(max-height:720px)]:h-[88px]" : "h-[96px] [@media(max-height:720px)]:h-[84px]"
-      }`}
-    >
-      {/* The picture fills the left side of the card, edge to edge, with the percent on top */}
+    <button type="button" onClick={onClick} className="pressable flex flex-col overflow-hidden rounded-[22px] bg-card text-left">
       <span
-        className={`relative flex shrink-0 items-center justify-center ${big ? "w-[120px]" : "w-[64px]"}`}
+        className="flex h-[96px] w-full items-center justify-center [@media(max-height:720px)]:h-[72px]"
         style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
       >
-        {!photo && <Icon size={big ? 36 : 24} />}
-        <span
-          className={`tabular absolute left-1.5 top-1.5 rounded-full bg-white/90 font-bold text-label shadow-[0_1px_3px_rgba(0,0,0,0.08)] ${
-            big ? "px-2 py-0.5 text-[14px]" : "px-1.5 py-[1px] text-[12px]"
-          }`}
-        >
-          {Math.round(pct * 100)}%
-        </span>
+        {!photo && <Icon size={30} />}
       </span>
-      <span className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "px-4" : "pl-3 pr-2.5"}`}>
-        <span className={`block truncate font-semibold text-label ${big ? "text-[17px]" : "text-[14px]"}`}>{goal.name}</span>
-        {big ? (
-          <span className="tabular mt-0.5 block truncate text-[14px] text-label-2">
-            {money(goal.saved)} of {money(goal.target)}
+      <span className="block w-full px-3 pb-3 pt-2.5">
+        <span className="line-clamp-2 block h-[34px] text-[14px] font-semibold leading-[17px] text-label">{goal.name}</span>
+        <span className="mt-1.5 flex items-center gap-2">
+          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fill">
+            <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
           </span>
-        ) : (
-          <span className="tabular mt-0.5 block text-[12px] leading-[15px] text-label-2">
-            <span className="block font-medium text-label">{money(goal.saved)}</span>
-            <span className="block">of {money(goal.target)}</span>
-          </span>
-        )}
-        <span className={`block overflow-hidden rounded-full bg-fill ${big ? "mt-2.5 h-2" : "mt-2 h-1.5"}`}>
-          <span className="block h-full rounded-full bg-[#8fa66b]" style={{ width: `${pct * 100}%` }} />
+          <span className="tabular text-[12px] font-semibold text-label-2">{Math.round(pct * 100)}%</span>
         </span>
       </span>
     </button>
