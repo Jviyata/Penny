@@ -246,7 +246,7 @@ function StackCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex w-full flex-col text-left text-white transition-transform [text-shadow:0_1px_2px_rgba(20,40,40,0.35)] active:scale-[0.99]"
+      className="relative flex w-full flex-col text-left text-white transition-transform active:scale-[0.99]"
       style={{
         height: last ? "var(--step)" : `calc(var(--step) + ${TUCK}px)`,
         marginTop: index === 0 ? 0 : -TUCK,
@@ -254,7 +254,7 @@ function StackCard({
       }}
     >
       <span
-        className="absolute inset-0 rounded-[22px] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),inset_0_10px_18px_-10px_rgba(255,255,255,0.35),inset_0_-14px_20px_-14px_rgba(20,40,40,0.28)]"
+        className="absolute inset-0 rounded-[22px]"
         style={{ background: color, ...(index > 0 ? SCOOP_MASK : {}) }}
         aria-hidden
       />
@@ -264,7 +264,7 @@ function StackCard({
           <span className="block truncate text-[17px] font-semibold leading-[22px]">{title}</span>
           <span className="block truncate text-[13px] leading-[17px] text-white/90">{note}</span>
         </span>
-        <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em] text-[#1d1a17] [text-shadow:0_1px_0_rgba(255,255,255,0.35)]">{amount}</span>
+        <span className="tabular shrink-0 text-[19px] font-semibold tracking-[-0.01em] text-[#1d1a17]">{amount}</span>
       </span>
     </button>
   );
