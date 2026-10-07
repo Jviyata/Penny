@@ -18,13 +18,8 @@ export function monthsUntil(by: string): number | null {
   return null;
 }
 
-export type GoalTip = {
-  title: string; // "Book with a travel rewards card"
-  benefit: string; // "You could earn ~$105 back"
-  cardLabel: string; // text on the little card graphic
-  rate: string; // "3% back"
-  rateNote: string; // "on flights and hotels"
-};
+/** Penny's tip, in her voice. The money in it (e.g. "~$105") is highlighted on screen. */
+export type GoalTip = { text: string };
 
 export type GoalAction = { label: string; href?: string }; // no href → "Add money"
 
@@ -32,82 +27,40 @@ export type GoalAction = { label: string; href?: string }; // no href → "Add m
 export function goalExtras(goal: Goal): { tip: GoalTip; action: GoalAction } {
   const n = goal.name.toLowerCase();
   const search = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+  const pct = (p: number) => money(Math.round(goal.target * p));
 
   if (/trip|travel|japan|flight|vacation/.test(n))
     return {
-      tip: {
-        title: "Book with a travel rewards card",
-        benefit: `You could earn ~${money(Math.round(goal.target * 0.03))} back`,
-        cardLabel: "TRAVEL REWARDS",
-        rate: "3% back",
-        rateNote: "on flights and hotels",
-      },
+      tip: { text: `Book it with one of your cards that earns travel rewards. At 3% back, that’s ~${pct(0.03)}.` },
       action: { label: "Find flights", href: "https://www.google.com/travel/flights?q=flights%20to%20Tokyo" },
     };
   if (/laptop|computer|macbook/.test(n))
     return {
-      tip: {
-        title: "Use student pricing",
-        benefit: `You could save ~${money(100)}`,
-        cardLabel: "STUDENT PRICING",
-        rate: "Up to $100 off",
-        rateNote: "with education discounts",
-      },
+      tip: { text: "Check student pricing before you buy. It’s often ~$100 off." },
       action: { label: "Shop laptops", href: "https://www.apple.com/us-edu/shop/buy-mac" },
     };
   if (/emergency|safety|rainy|fund/.test(n))
     return {
-      tip: {
-        title: "Keep it in high-yield savings",
-        benefit: `It could earn ~${money(Math.round(goal.saved * 0.04))} a year`,
-        cardLabel: "HIGH-YIELD SAVINGS",
-        rate: "~4% APY",
-        rateNote: "vs. almost 0% in checking",
-      },
+      tip: { text: `Keep this in a high-yield savings account. At ~4%, it could earn ~${money(Math.round(goal.saved * 0.04))} a year.` },
       action: { label: "Add money" },
     };
   if (/move|apartment|house|home|rent/.test(n))
     return {
-      tip: {
-        title: "Move in the off-season",
-        benefit: `You could save ~${money(Math.round(goal.target * 0.1))}`,
-        cardLabel: "OFF-SEASON",
-        rate: "~10% less",
-        rateNote: "winter leases and movers",
-      },
+      tip: { text: `Look at moving in the off-season. Winter leases and movers can be ~${pct(0.1)} cheaper.` },
       action: { label: "Find apartments", href: search("apartments for rent near me") },
     };
   if (/\bcar\b|vehicle/.test(n))
     return {
-      tip: {
-        title: "Get pre-approved first",
-        benefit: "Know your rate before you shop",
-        cardLabel: "PRE-APPROVED",
-        rate: "Lower APR",
-        rateNote: "than most dealer financing",
-      },
+      tip: { text: "Get pre-approved with your bank first, so you know your rate before you shop." },
       action: { label: "Browse cars", href: search("used cars near me") },
     };
   if (/furniture|sofa|couch|desk|bed\b/.test(n))
     return {
-      tip: {
-        title: "Wait for end-of-season sales",
-        benefit: `You could save ~${money(Math.round(goal.target * 0.2))}`,
-        cardLabel: "SEASONAL SALE",
-        rate: "~20% off",
-        rateNote: "in January and July",
-      },
+      tip: { text: `Wait for end-of-season sales in January or July. That’s often ~${pct(0.2)} off.` },
       action: { label: "Shop furniture", href: search("sofa sale") },
     };
-  // Anything else (often something saved for from Penny's answer)
   return {
-    tip: {
-      title: "Watch for a price drop",
-      benefit: `Prices like this often dip ~${money(Math.round(goal.target * 0.15))}`,
-      cardLabel: "PRICE WATCH",
-      rate: "~15% off",
-      rateNote: "is common during sales",
-    },
+    tip: { text: `Set a price-drop alert. Things like this often dip ~${pct(0.15)} during sales.` },
     action: { label: `Shop for ${goal.name.toLowerCase()}`, href: search(goal.name) },
   };
 }

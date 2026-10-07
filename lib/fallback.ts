@@ -2,6 +2,8 @@ import { MONTH } from "./demoData";
 import { SHELF_STATUS, defaultActions, openMoney, verdictFor } from "./budget";
 import { money } from "./format";
 import { applyUpdates, sameName } from "./updates";
+import { monthsUntil } from "./goalPlan";
+import type { Goal } from "./monthDetails";
 import type { CheckResult, Item, Line, Outgoing, ShelfItem, Update } from "./types";
 
 export type Snapshot = {
@@ -10,6 +12,7 @@ export type Snapshot = {
   bought: Line[];
   shelf: ShelfItem[];
   currentItem: Item | null;
+  goals?: Goal[];
 };
 
 const NEXT_MONTH = "November";
@@ -23,6 +26,9 @@ export function fallbackCheck(msg: Outgoing, s: Snapshot): CheckResult {
   const open = openMoney(s.freeTotal, s.plans, s.bought);
   const text = msg.text.trim();
   const lower = text.toLowerCase();
+
+  // 0. "Help me rearrange my goals": soonest target first, with what each needs a month.
+  if (/\bgoals?\b/.test(lower) && !msg.action) return goalsReply(s.goals ?? []);
 
   // 1. Card buttons (or the same words typed out)
   const kind =
@@ -78,7 +84,7 @@ export function fallbackCheck(msg: Outgoing, s: Snapshot): CheckResult {
   }
 
   return {
-    reply: `Tell me what you’re thinking of buying and what it costs, or add a photo or screenshot. You have ${money(open)} open right now.`,
+    reply: `Tell me what you’re thinking of buying and what it costs, or add a photo or screenshot. You have ${money(s.freeTotal)} left to spend.`,
     quickReplies: ["Concert tickets for $60", "New sneakers, $95"],
   };
 }
@@ -234,4 +240,30 @@ function capitalize(s: string) {
 }
 function num(s: string) {
   return Number(s.replace(/,/g, ""));
+}
+
+/** Penny's take on the order of the user's goals: the closest deadline first, then the rest. */
+function goalsReply(goals: Goal[]): CheckResult {
+  const open = goals.filter((g) => g.saved < g.target);
+  if (open.length === 0) return { reply: "All your goals are fully saved. Want to add a new one?" };
+  const ranked = open
+    .map((g) => {
+      const left = g.target - g.saved;
+      const months = monthsUntil(g.by);
+      return { g, months, perMonth: months ? Math.ceil(left / months) : g.thisMonth };
+    })
+    .sort((a, b) => (a.months ?? 999) - (b.months ?? 999));
+  const [first, second, third] = ranked;
+  const parts = [
+    `I’d put ${first.g.name} first, since ${whenText(first.g.by)} is closest: ${money(first.perMonth)} a month gets you there.`,
+  ];
+  if (second) parts.push(`Then ${second.g.name} at ${money(second.perMonth)} a month${third ? `, and let ${third.g.name} keep growing` : ""}.`);
+  parts.push("Want me to move money between them?");
+  return { reply: parts.join(" ") };
+}
+
+/** "By January" → "January", "Next spring" → "next spring" */
+function whenText(by: string) {
+  const when = by.replace(/^by /i, "");
+  return /^(next|in )/i.test(when) ? when.toLowerCase() : when;
 }

@@ -32,7 +32,7 @@ export function useSend() {
       const currentItem: Item | null = msg.image
         ? { name: msg.hint?.name ?? "This item", price: msg.hint?.price, image: msg.image.thumb }
         : s.currentItem;
-      const snapshot = { freeTotal: s.freeTotal, plans: s.plans, bought: s.bought, shelf: s.shelf, currentItem };
+      const snapshot = { freeTotal: s.freeTotal, plans: s.plans, bought: s.bought, shelf: s.shelf, currentItem, goals: s.goals };
       dispatch({ type: "setCurrentItem", item: currentItem });
 
       const started = Date.now();

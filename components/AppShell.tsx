@@ -3,6 +3,7 @@
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
+import { useSend } from "@/lib/useSend";
 import { useVisualViewport } from "@/lib/useVisualViewport";
 import { TabBar, type Tab } from "./TabBar";
 import { HomeScreen } from "./home/HomeScreen";
@@ -20,7 +21,8 @@ import { GoalDetail } from "./goals/GoalDetail";
  */
 export function AppShell() {
   useVisualViewport();
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
+  const send = useSend();
   const [tab, setTab] = useState<Tab>("home");
   // Overview's "This month" card opens the Left to spend page inside Spending.
   const [openLeft, setOpenLeft] = useState(0);
@@ -94,7 +96,17 @@ export function AppShell() {
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 34, stiffness: 340 }}
             >
-              <GoalDetail goalId={goalId} onBack={() => setGoalId(null)} />
+              <GoalDetail
+                goalId={goalId}
+                onBack={() => setGoalId(null)}
+                onAskPenny={(question) => {
+                  // A fresh chat with Penny, starting from this question.
+                  setGoalId(null);
+                  dispatch({ type: "clearChat" });
+                  setTab("chat");
+                  send({ text: question });
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>

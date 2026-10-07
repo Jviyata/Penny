@@ -65,6 +65,7 @@ function toRequest(msg: Outgoing, s: Snapshot, messages: ChatMessage[]): CheckRe
       bought: s.bought.map(({ name, amount }) => ({ name, amount })),
       shelf: s.shelf.map(({ name, price, status }) => ({ name, price, status })),
       currentItem: s.currentItem ? { name: s.currentItem.name, price: s.currentItem.price } : null,
+      goals: (s.goals ?? []).map(({ name, target, saved, thisMonth, by }) => ({ name, target, saved, thisMonth, by })),
     },
     // Text-only history; cards are summarized so the model remembers what it showed.
     history: messages.slice(-12).map((m) => ({

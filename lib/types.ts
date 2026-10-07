@@ -90,6 +90,7 @@ export type CheckRequest = {
     bought: { name: string; amount: number }[];
     shelf: { name: string; price: number; status: string }[];
     currentItem: { name: string; price?: number } | null;
+    goals?: { name: string; target: number; saved: number; thisMonth: number; by: string }[];
   };
   history: { role: "user" | "assistant"; text: string }[];
 };

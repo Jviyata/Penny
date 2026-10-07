@@ -13,7 +13,15 @@ import { Mascot } from "../ui/Mascot";
  * One goal up close: its picture, progress, Penny's tip for getting it for less,
  * the next step (shop, book or add money), and what it takes to stay on track.
  */
-export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => void }) {
+export function GoalDetail({
+  goalId,
+  onBack,
+  onAskPenny,
+}: {
+  goalId: string;
+  onBack: () => void;
+  onAskPenny: (question: string) => void;
+}) {
   const { state, dispatch } = useStore();
   const goal = state.goals.find((g) => g.id === goalId);
   const [editor, setEditor] = useState<EditorConfig | null>(null);
@@ -67,8 +75,8 @@ export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => v
         : months !== null
           ? `On pace: ${money(goal.thisMonth)} a month gets you there.`
           : `${money(goal.thisMonth || 50)} a month keeps it growing.`;
-  // "You could earn ~$105 back": the amount in green, like the rest of the money that's good news.
-  const [benefitLead, benefitAmount] = splitAmount(tip.benefit);
+  // The money in Penny's tip ("~$105") is green, like the rest of the good news.
+  const [tipLead, tipAmount, tipRest] = splitAmount(tip.text);
 
   return (
     <div className="scroll-y absolute inset-0 bg-[var(--bg)] px-4 pb-[calc(var(--tabbar-h)+var(--sab)+16px)] pt-[calc(var(--sat)+6px)]">
@@ -76,6 +84,18 @@ export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => v
       <div className="flex h-11 items-center justify-between">
         <button type="button" onClick={onBack} aria-label="Back" className="pressable -ml-1 flex h-11 w-11 items-center justify-center text-label">
           <ChevronIcon size={22} className="rotate-180" />
+        </button>
+        <div className="flex items-center gap-1">
+        {/* Talk the goals through with Penny */}
+        <button
+          type="button"
+          onClick={() => onAskPenny(`Can you help me rearrange my goals? I'm looking at ${goal.name}.`)}
+          className="pressable flex h-9 items-center gap-1.5 rounded-full bg-[#e6ecdf] py-1 pl-1 pr-3 text-[14px] font-semibold text-[#3d5a2c]"
+        >
+          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
+            <Mascot mood="calm_neutral" size={26} />
+          </span>
+          Rearrange goals
         </button>
         <button
           type="button"
@@ -85,6 +105,7 @@ export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => v
         >
           ···
         </button>
+        </div>
       </div>
 
       {/* The goal */}
@@ -125,30 +146,17 @@ export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => v
         </div>
       </section>
 
-      {/* Penny's tip */}
-      <section className="mt-3 rounded-[22px] border border-[#dfe8d6] bg-[#f2f6ee] px-4 pb-3.5 pt-3.5">
-        <div className="flex items-start gap-3">
-          <Mascot mood="approved" size={48} className="-mt-1 shrink-0" />
+      {/* Penny: a tip for this goal, and a way to talk the goals through with her */}
+      <section className="mt-3 overflow-hidden rounded-[22px] border border-[#dfe8d6] bg-[#f2f6ee]">
+        <div className="flex items-start gap-3 px-4 pb-3.5 pt-3.5">
+          <Mascot mood="approved" size={52} className="-mt-1 shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] text-label-2">Penny’s tip</p>
-            <p className="text-[17px] font-semibold leading-[22px] text-label">{tip.title}</p>
-            <p className="mt-0.5 text-[15px] text-label-2">
-              {benefitLead}
-              {benefitAmount && <span className="font-semibold text-[#3f7f3f]">{benefitAmount}</span>}
+            <p className="text-[13px] font-medium text-[#4f6b2c]">Penny’s tip</p>
+            <p className="mt-0.5 text-[16px] leading-[22px] text-label">
+              {tipLead}
+              {tipAmount && <span className="font-semibold text-[#3f7f3f]">{tipAmount}</span>}
+              {tipRest}
             </p>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center gap-4 rounded-[16px] bg-white/70 p-2 [@media(max-height:720px)]:hidden">
-          {/* A generic card graphic: no real bank branding */}
-          <div className="relative h-[68px] w-[108px] shrink-0 overflow-hidden rounded-[10px] bg-[linear-gradient(135deg,#1f2b4a,#2f4a7a_60%,#1c2640)] p-2 text-white shadow-[0_6px_14px_-8px_rgba(20,30,60,0.6)]">
-            <span className="block text-[7px] font-semibold tracking-[0.12em] opacity-85">{tip.cardLabel}</span>
-            <span className="absolute bottom-2.5 left-2 h-3.5 w-5 rounded-[3px] bg-[#d9c27a]/90" />
-            <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full border border-white/15" />
-            <span className="absolute -right-2 top-4 h-16 w-16 rounded-full border border-white/10" />
-          </div>
-          <div>
-            <p className="text-[17px] font-semibold text-label">{tip.rate}</p>
-            <p className="text-[13px] text-label-2">{tip.rateNote}</p>
           </div>
         </div>
       </section>
@@ -193,10 +201,11 @@ export function GoalDetail({ goalId, onBack }: { goalId: string; onBack: () => v
   );
 }
 
-/** "You could earn ~$105 back" → ["You could earn ", "~$105 back"] */
-function splitAmount(text: string): [string, string] {
-  const i = text.search(/~?\$\d/);
-  return i < 0 ? [text, ""] : [text.slice(0, i), text.slice(i)];
+/** "…that's ~$105." → ["…that's ", "~$105", "."] */
+function splitAmount(text: string): [string, string, string] {
+  const m = text.match(/~?\$[\d,]+/);
+  if (!m || m.index === undefined) return [text, "", ""];
+  return [text.slice(0, m.index), m[0], text.slice(m.index + m[0].length)];
 }
 
 function ExternalIcon() {
