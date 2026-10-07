@@ -47,9 +47,9 @@ export const SPENDING: Record<Exclude<JobId, "savings">, Spend[]> = {
 };
 
 export const GOALS: Goal[] = [
-  { id: "emergency", name: "Emergency fund", target: 5000, saved: 2400, thisMonth: 400, by: "Ongoing" },
   { id: "japan", name: "Japan trip", target: 3500, saved: 1750, thisMonth: 350, by: "Next spring" },
   { id: "laptop", name: "New laptop", target: 1400, saved: 900, thisMonth: 250, by: "By January" },
+  { id: "move", name: "Move out", target: 3000, saved: 900, thisMonth: 300, by: "Next summer" },
 ];
 
 export const CATEGORY_NOTE: Record<JobId, string> = {

@@ -247,6 +247,14 @@ export const SofaIcon = ({ size = 22, className }: P) => (
   </svg>
 );
 
+export const HeelIcon = ({ size = 22, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M3.5 17.5c0-1 .6-1.6 1.6-1.8 2.9-.5 5.2-2.2 6.9-5.2l1.5-2.8c.4-.7 1.3-.9 1.9-.4 1.6 1.2 2.6 3.2 2.6 5.3V20" />
+    <path d="M3.5 17.5V19a1 1 0 0 0 1 1H11c1.8 0 3-1.4 3.6-3" />
+    <path d="M18 13v7" />
+  </svg>
+);
+
 export const KeyboardIcon = ({ size = 22, className }: P) => (
   <svg {...base(size)} className={className} strokeWidth={1.8}>
     <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
@@ -339,6 +347,7 @@ export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg
   if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#fbdbde", fg: "#8a6a48", photo: "/goals/moveout.jpg", fit: "100% auto" };
   if (/car\b|\bcar|vehicle/.test(n)) return { Icon: CarIcon, bg: "#fcdadb", fg: "#4d6a80", photo: "/goals/car.jpg", fit: "100% auto" };
   if (/furniture|sofa|couch|desk|bed\b/.test(n)) return { Icon: SofaIcon, bg: "#fcd8da", fg: "#8a6342", photo: "/goals/furniture.jpg", fit: "100% auto" };
+  if (/heel|shoe|boot|sneaker/.test(n)) return { Icon: HeelIcon, bg: "#fbdcdd", fg: "#9b4a52" };
   if (/loan|student|debt/.test(n)) return { Icon: CapIcon, bg: "#ece4f1", fg: "#6c5684" };
   if (/emergency|safety|fund|rainy/.test(n)) return { Icon: ShieldIcon, bg: "#f6dcdd", fg: "#4f6b2c", photo: "/goals/emergency.jpg", fit: "100% auto" };
   return { Icon: FlagIcon, bg: "#efe8dc", fg: "#6b5a44" };

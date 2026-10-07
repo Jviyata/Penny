@@ -17,10 +17,10 @@ const GREEN = "#2d4a35";
 const GOAL_CHOICES: Goal[] = [
   GOALS.find((g) => g.id === "japan")!,
   GOALS.find((g) => g.id === "laptop")!,
-  GOALS.find((g) => g.id === "emergency")!,
-  { id: "move", name: "Move out", target: 3000, saved: 0, thisMonth: 0, by: "Next summer" },
-  { id: "car", name: "Car", target: 8000, saved: 0, thisMonth: 0, by: "In 2 years" },
-  { id: "furniture", name: "New furniture", target: 1200, saved: 0, thisMonth: 0, by: "By spring" },
+  GOALS.find((g) => g.id === "move")!,
+  { id: "heels", name: "Designer heels", target: 650, saved: 260, thisMonth: 130, by: "By December" },
+  { id: "car", name: "Car", target: 8000, saved: 1200, thisMonth: 200, by: "In 2 years" },
+  { id: "furniture", name: "New furniture", target: 1200, saved: 150, thisMonth: 75, by: "By spring" },
 ];
 
 const STEPS = 5; // after the welcome screen
@@ -34,7 +34,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0); // 0 = welcome, 1..5 = steps
   const [dir, setDir] = useState(1);
   const [name, setName] = useState(state.userName);
-  const [picked, setPicked] = useState<string[]>(["japan", "laptop", "emergency"]);
+  const [picked, setPicked] = useState<string[]>(["japan", "laptop", "move"]);
 
   const go = (to: number) => {
     setDir(to > step ? 1 : -1);
