@@ -53,7 +53,7 @@ export function HomeScreen({
         </header>
 
         {/* Talk to Penny */}
-        <section className="frost-tint relative mt-4 overflow-hidden rounded-[26px] px-5 pb-4 pt-4 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
+        <section className="relative mt-4 glass-tint overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-4 pt-4 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
           <WaveIcon size={22} className="text-[#2f3424]" />
           <h2 className="mt-2 w-[58%] text-[28px] font-bold leading-[31px] tracking-[-0.02em] text-[#151210]">Talk to Penny</h2>
           <p className="mt-1.5 w-[52%] text-[14px] leading-[19px] text-[#151210]/65 [@media(max-height:720px)]:hidden">Let’s check before you buy.</p>
@@ -91,7 +91,7 @@ export function HomeScreen({
         <button
           type="button"
           onClick={openLeftToSpend}
-          className="frost-dark pressable mt-1.5 block w-full rounded-[24px] px-5 pb-3.5 pt-3 text-left text-white [@media(max-height:720px)]:pb-3 [@media(max-height:720px)]:pt-2.5"
+          className="pressable mt-1.5 block w-full rounded-[24px] bg-[#2f3626] px-5 pb-3.5 pt-3 text-left text-white shadow-[0_12px_28px_-18px_rgba(30,35,20,0.6)] [@media(max-height:720px)]:pb-3 [@media(max-height:720px)]:pt-2.5"
         >
           <span className="flex items-end justify-between gap-3">
             <span>
@@ -122,7 +122,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const fit = goal.image ? "cover" : look.fit;
   const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
   return (
-    <button type="button" onClick={onClick} className="frost pressable flex flex-col overflow-hidden rounded-[22px] text-left">
+    <button type="button" onClick={onClick} className="pressable flex flex-col overflow-hidden rounded-[22px] bg-card text-left">
       <span
         className="flex h-[136px] w-full items-center justify-center [@media(max-height:720px)]:h-[72px]"
         style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
