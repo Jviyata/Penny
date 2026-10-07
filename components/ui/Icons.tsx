@@ -295,6 +295,15 @@ export const FlagIcon = ({ size = 26, filled, className }: P) => (
   </svg>
 );
 
+/** Goals tab: a round target. Filled when the tab is selected. */
+export const GoalTabIcon = ({ size = 26, filled, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="8.75" fill={filled ? "currentColor" : "none"} />
+    <circle cx="12" cy="12" r="5" stroke={filled ? "var(--bar)" : "currentColor"} />
+    <circle cx="12" cy="12" r="1.6" fill={filled ? "var(--bar)" : "currentColor"} stroke="none" />
+  </svg>
+);
+
 export const HeartIcon = ({ size = 26, filled, className }: P) => (
   <svg {...base(size)} className={className}>
     <path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" fill={filled ? "currentColor" : "none"} />

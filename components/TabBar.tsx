@@ -1,13 +1,13 @@
 "use client";
 
-import { ChartIcon, FlagIcon, HomeIcon } from "./ui/Icons";
+import { ChartIcon, GoalTabIcon, HomeIcon } from "./ui/Icons";
 
 /** Screens. "chat" (Talk to Penny) and "shelf" (Wishlist) are opened from Home and Goals, not tabs. */
 export type Tab = "home" | "free" | "chat" | "goals" | "shelf";
 
 const TABS: { id: Tab; label: string; Icon: typeof HomeIcon }[] = [
   { id: "home", label: "Overview", Icon: HomeIcon },
-  { id: "goals", label: "Goals", Icon: FlagIcon },
+  { id: "goals", label: "Goals", Icon: GoalTabIcon },
   { id: "free", label: "Spending", Icon: ChartIcon },
 ];
 
