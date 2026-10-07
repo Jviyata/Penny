@@ -49,7 +49,7 @@ export function goalExtras(goal: Goal): { tip: GoalTip; action: GoalAction } {
       tip: { text: `Look at moving in the off-season. Winter leases and movers can be ~${pct(0.1)} cheaper.` },
       action: { label: "Find apartments", href: search("apartments for rent near me") },
     };
-  if (/\bcar\b|vehicle/.test(n))
+  if (/\bcar\b|vehicle|jimny|suzuki/.test(n))
     return {
       tip: { text: "Get pre-approved with your bank first, so you know your rate before you shop." },
       action: { label: "Browse cars", href: search("used cars near me") },
@@ -61,7 +61,7 @@ export function goalExtras(goal: Goal): { tip: GoalTip; action: GoalAction } {
     };
   return {
     tip: { text: `Set a price-drop alert. Things like this often dip ~${pct(0.15)} during sales.` },
-    action: { label: `Shop for ${goal.name.toLowerCase()}`, href: search(goal.name) },
+    action: { label: `Shop for ${goal.name}`, href: search(goal.name) },
   };
 }
 
