@@ -349,7 +349,7 @@ export const WaveIcon = ({ size = 24, className }: P) => (
 /** Icon + tint for a goal, from its name. */
 export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg: string; photo?: string; fit?: string } {
   const n = name.toLowerCase();
-  if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#fadadf", fg: "#3d5f86", photo: "/goals/japan.jpg", fit: "100% auto" };
+  if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#c9b9d6", fg: "#3d5f86", photo: "/goals/japan.jpg" }; // real photo: fills the tile
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
   if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
