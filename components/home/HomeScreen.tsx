@@ -124,7 +124,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="pressable flex flex-col overflow-hidden rounded-[22px] bg-card text-left">
       <span
-        className="flex h-[96px] w-full items-center justify-center [@media(max-height:720px)]:h-[72px]"
+        className="flex h-[136px] w-full items-center justify-center [@media(max-height:720px)]:h-[72px]"
         style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
       >
         {!photo && <Icon size={30} />}
