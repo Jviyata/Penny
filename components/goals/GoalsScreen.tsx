@@ -109,9 +109,9 @@ export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGo
                 const photo = g.image ?? look.photo;
                 const fit = g.image ? "cover" : look.fit;
                 return (
-                  <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${denser ? "py-[5px]" : dense ? "py-2" : "py-3 [@media(max-height:720px)]:py-2"}`}>
+                  <li key={g.id} className={`flex items-center gap-3 px-4 [&:not(:last-child)]:shadow-[0_1px_0_var(--sep)] ${denser ? "py-[5px]" : dense ? "py-2" : "py-4 [@media(max-height:720px)]:py-2"}`}>
                     <span
-                      className={`relative flex shrink-0 items-center justify-center overflow-hidden ${denser ? "h-[42px] w-[42px] rounded-[12px]" : dense ? "h-[52px] w-[52px] rounded-[14px]" : "h-[72px] w-[72px] rounded-[18px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"}`}
+                      className={`relative flex shrink-0 items-center justify-center overflow-hidden ${denser ? "h-[42px] w-[42px] rounded-[12px]" : dense ? "h-[52px] w-[52px] rounded-[14px]" : "h-[84px] w-[84px] rounded-[20px] [@media(max-height:720px)]:h-[56px] [@media(max-height:720px)]:w-[56px]"}`}
                       style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
                     >
                       {!photo && <Icon size={24} />}

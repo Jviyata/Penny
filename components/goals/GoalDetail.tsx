@@ -83,7 +83,7 @@ export function GoalDetail({
     <div className="scroll-y absolute inset-0 pb-[calc(var(--tabbar-h)+var(--sab)+16px)]">
       {/* The goal's picture, full width, with its name and target on it */}
       <div
-        className="relative h-[290px] w-full [@media(max-height:720px)]:h-[198px]"
+        className="relative h-[312px] w-full [@media(max-height:720px)]:h-[198px]"
         style={photo ? { background: `${look.bg} center / cover no-repeat url(${photo})` } : { background: look.bg, color: look.fg }}
       >
         {!photo && (
@@ -94,7 +94,7 @@ export function GoalDetail({
         {/* Shade so the white text and buttons always read */}
         <span
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.62) 100%)" }}
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.72) 100%)" }}
           aria-hidden
         />
 
@@ -118,18 +118,18 @@ export function GoalDetail({
           </button>
         </div>
 
-        {/* Name and target, in white on a soft frosted panel so they read on any photo */}
-        <div className="absolute bottom-9 left-4 right-4">
-          <div className="inline-block max-w-full rounded-[18px] bg-black/25 px-3.5 py-2.5 backdrop-blur-md">
-            <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2 text-left">
-              <span className="line-clamp-2 text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-white">{goal.name}</span>
-              <PencilIcon size={16} className="shrink-0 text-white/75" />
-            </button>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[14px] font-medium text-white/90">
-              <CalendarIcon size={15} />
-              {months !== null ? `Target: ${goal.by.replace(/^by\s+/i, "")}` : goal.by}
-            </p>
-          </div>
+        {/* Name and target, centered in white over the photo's darker bottom */}
+        <div className="absolute inset-x-0 bottom-10 flex flex-col items-center px-6 text-center">
+          <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2">
+            <span className="line-clamp-2 text-[36px] font-bold leading-[40px] tracking-[-0.025em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.45)]">
+              {goal.name}
+            </span>
+            <PencilIcon size={17} className="shrink-0 text-white/75" />
+          </button>
+          <p className="mt-1.5 flex items-center gap-1.5 text-[15px] font-medium text-white/90 [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">
+            <CalendarIcon size={15} />
+            {months !== null ? `Target: ${goal.by.replace(/^by\s+/i, "")}` : goal.by}
+          </p>
         </div>
       </div>
 
