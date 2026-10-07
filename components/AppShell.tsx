@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { useSend } from "@/lib/useSend";
 import { useVisualViewport } from "@/lib/useVisualViewport";
@@ -31,6 +31,10 @@ export function AppShell() {
 
   // This is a demo app: every visit starts with onboarding.
   const [onboarding, setOnboarding] = useState(true);
+  // For recording a demo: ?skip=onboarding opens straight to Overview.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("skip") === "onboarding") setOnboarding(false);
+  }, []);
   const finishOnboarding = () => {
     setTab("home");
     setOnboarding(false);
