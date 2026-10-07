@@ -16,9 +16,11 @@ import { SettingsSheet } from "./SettingsSheet";
  */
 export function HomeScreen({
   goTo,
+  openGoal,
   openLeftToSpend,
 }: {
   goTo: (t: Tab) => void;
+  openGoal: (id: string) => void;
   resetSignal?: number;
   openLeftToSpend: () => void;
 }) {
@@ -75,7 +77,7 @@ export function HomeScreen({
         </div>
         <div className="mt-1.5 grid grid-cols-3 gap-2.5">
           {goals.slice(0, 3).map((g) => (
-            <GoalCard key={g.id} goal={g} onClick={() => goTo("goals")} />
+            <GoalCard key={g.id} goal={g} onClick={() => openGoal(g.id)} />
           ))}
         </div>
 

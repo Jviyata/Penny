@@ -5,14 +5,14 @@ import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
-import { PencilIcon, PlusIcon } from "../ui/Icons";
+import { PlusIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
 import type { Tab } from "../TabBar";
 import { ChevronIcon, HeartIcon, goalLook } from "../ui/Icons";
 
 /** Goals: what you're saving toward, how far along each one is, and adding to them. */
-export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
+export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGoal: (id: string) => void }) {
   const { state, dispatch } = useStore();
   const { goals } = state;
   const [editor, setEditor] = useState<EditorConfig | null>(null);
@@ -32,17 +32,6 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
       namePlaceholder: "Like “Concert fund”",
       note: "Enter how much you want to save in total.",
       onSave: (name, amount) => dispatch({ type: "addGoal", name, target: amount }),
-    });
-
-  const editGoal = (g: Goal) =>
-    setEditor({
-      title: "Edit goal",
-      withName: true,
-      name: g.name,
-      amount: g.target,
-      note: "The amount is your target.",
-      onSave: (name, amount) => dispatch({ type: "editGoal", id: g.id, name, target: amount }),
-      extra: { label: "Remove goal", onClick: () => dispatch({ type: "removeGoal", id: g.id }) },
     });
 
   const addMoney = (g: Goal) =>
@@ -127,11 +116,10 @@ export function GoalsScreen({ goTo }: { goTo: (t: Tab) => void }) {
                     >
                       {!photo && <Icon size={24} />}
                     </span>
-                    <button type="button" onClick={() => editGoal(g)} className="min-w-0 flex-1 text-left">
+                    <button type="button" onClick={() => openGoal(g.id)} className="min-w-0 flex-1 text-left">
                       <span className="flex items-baseline gap-2">
                         <span className={`flex min-w-0 flex-1 items-center gap-1.5 font-medium ${denser ? "text-[15px] leading-[19px]" : "text-[16px]"}`}>
                           <span className="truncate">{g.name}</span>
-                          <PencilIcon size={12} className="shrink-0 text-label-3" />
                         </span>
                         <span className="tabular shrink-0 text-[15px] font-semibold">{Math.round(p * 100)}%</span>
                       </span>
