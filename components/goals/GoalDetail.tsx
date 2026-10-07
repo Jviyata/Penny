@@ -80,44 +80,63 @@ export function GoalDetail({
 
   return (
     <div className="absolute inset-0 bg-[var(--bg)]">
-    <div className="scroll-y absolute inset-0 px-4 pb-[calc(var(--tabbar-h)+var(--sab)+16px)] pt-[calc(var(--sat)+6px)]">
-      {/* Top bar */}
-      <div className="flex h-11 items-center justify-between">
-        <button type="button" onClick={onBack} aria-label="Back" className="pressable -ml-1 flex h-11 w-11 items-center justify-center text-label">
-          <ChevronIcon size={22} className="rotate-180" />
-        </button>
-        <button
-          type="button"
-          onClick={() => edit(goal)}
-          aria-label="Edit or remove goal"
-          className="pressable -mr-1 flex h-11 w-11 items-center justify-center text-[22px] font-bold leading-none tracking-[2px] text-label"
-        >
-          ···
-        </button>
-      </div>
-
-      {/* The goal */}
-      <div className="mt-1 flex items-center gap-4">
+    <div className="scroll-y absolute inset-0 pb-[calc(var(--tabbar-h)+var(--sab)+16px)]">
+      {/* The goal's picture, full width, with its name and target on it */}
+      <div
+        className="relative h-[250px] w-full [@media(max-height:720px)]:h-[200px]"
+        style={photo ? { background: `${look.bg} center / cover no-repeat url(${photo})` } : { background: look.bg, color: look.fg }}
+      >
+        {!photo && (
+          <span className="absolute inset-0 flex items-center justify-center pb-10 opacity-60">
+            <Icon size={96} />
+          </span>
+        )}
+        {/* Shade so the white text and buttons always read */}
         <span
-          className="flex h-[104px] w-[104px] shrink-0 items-center justify-center overflow-hidden rounded-[24px] [@media(max-height:720px)]:h-[80px] [@media(max-height:720px)]:w-[80px]"
-          style={photo ? { background: `${look.bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: look.bg, color: look.fg }}
-        >
-          {!photo && <Icon size={40} />}
-        </span>
-        <div className="min-w-0">
-          <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2 text-left">
-            <span className="line-clamp-2 text-[28px] font-bold leading-[32px] tracking-[-0.02em] text-label">{goal.name}</span>
-            <PencilIcon size={16} className="shrink-0 text-label-3" />
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.62) 100%)" }}
+          aria-hidden
+        />
+
+        {/* Top bar */}
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-[calc(var(--sat)+6px)]">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back"
+            className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-md"
+          >
+            <ChevronIcon size={20} className="rotate-180" />
           </button>
-          <p className="mt-1.5 flex items-center gap-1.5 text-[15px] text-label-2">
+          <button
+            type="button"
+            onClick={() => edit(goal)}
+            aria-label="Edit or remove goal"
+            className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-[20px] font-bold leading-none tracking-[1px] text-white backdrop-blur-md"
+          >
+            ···
+          </button>
+        </div>
+
+        {/* Name and target, in white */}
+        <div className="absolute inset-x-0 bottom-9 px-5">
+          <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2 text-left">
+            <span className="line-clamp-2 text-[32px] font-bold leading-[36px] tracking-[-0.02em] text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.25)]">
+              {goal.name}
+            </span>
+            <PencilIcon size={17} className="shrink-0 text-white/80" />
+          </button>
+          <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-white/90">
             <CalendarIcon size={16} />
             {months !== null ? `Target: ${goal.by.replace(/^by\s+/i, "")}` : goal.by}
           </p>
         </div>
       </div>
 
+      {/* Everything else sits on a card over the bottom of the picture */}
+      <div className="relative -mt-6 rounded-t-[28px] bg-[var(--bg)] px-4 pt-4">
       {/* Progress */}
-      <section className="mt-4 rounded-[22px] bg-card px-5 py-4 [@media(max-height:720px)]:py-3">
+      <section className="rounded-[22px] bg-card px-5 py-4 [@media(max-height:720px)]:py-3">
         <div className="flex items-baseline justify-between">
           <p className="tabular">
             <span className="text-[32px] font-bold tracking-[-0.02em] text-label">{money(goal.saved)}</span>
@@ -184,6 +203,7 @@ export function GoalDetail({
         <ChevronIcon size={16} className="shrink-0 text-label-3 [@media(max-height:720px)]:hidden" />
       </button>
 
+      </div>
     </div>
 
       {/* Penny in the corner, offering to help with the goals */}
