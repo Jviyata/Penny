@@ -351,7 +351,7 @@ export function goalLook(name: string): { Icon: typeof PlaneIcon; bg: string; fg
   const n = name.toLowerCase();
   if (/japan/.test(n)) return { Icon: PlaneIcon, bg: "#c9b9d6", fg: "#3d5f86", photo: "/goals/japan.jpg" }; // real photo: fills the tile
   if (/trip|travel|japan|california|vacation|flight/.test(n)) return { Icon: PlaneIcon, bg: "#dfeaf2", fg: "#3d5f86" };
-  if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#fcdcdd", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
+  if (/laptop|computer|macbook/.test(n)) return { Icon: LaptopIcon, bg: "#f6f6f8", fg: "#4a5263", photo: "/goals/laptop.jpg", fit: "100% auto" };
   if (/phone|tablet/.test(n)) return { Icon: LaptopIcon, bg: "#e6e8ee", fg: "#4a5263" };
   if (/apartment|home|house|rent|move/.test(n)) return { Icon: HouseIcon, bg: "#fbdbde", fg: "#8a6a48", photo: "/goals/moveout.jpg", fit: "100% auto" };
   if (/car\b|\bcar|vehicle/.test(n)) return { Icon: CarIcon, bg: "#fcdadb", fg: "#4d6a80", photo: "/goals/car.jpg", fit: "100% auto" };
