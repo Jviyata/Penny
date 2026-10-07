@@ -37,7 +37,7 @@ export function HomeScreen({
         {/* Greeting */}
         <header className="flex items-start justify-between px-1">
           <div>
-            <h1 className="text-[26px] font-bold leading-[31px] tracking-[-0.01em] text-label">Hi, {state.userName}</h1>
+            <h1 className="text-[26px] font-bold leading-[31px] tracking-[-0.01em] text-label">{state.userName ? `Hi, ${state.userName}` : "Hi there"}</h1>
             <p className="mt-0.5 text-[15px] leading-[20px] text-label-2 [@media(max-height:720px)]:hidden">
               Spend on purpose.
             </p>

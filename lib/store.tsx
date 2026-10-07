@@ -136,7 +136,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         ...startingBudget(),
-        userName: action.name || USER_NAME,
+        userName: action.name, // blank is fine: Overview then just says "Hi there"
         goals: action.goals.length ? action.goals : startingBudget().goals,
       };
   }

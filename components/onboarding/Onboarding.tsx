@@ -30,10 +30,10 @@ const STEPS = 5; // after the welcome screen
  * then a quick demo setup (your name and your goals).
  */
 export function Onboarding({ onDone }: { onDone: () => void }) {
-  const { state, dispatch } = useStore();
+  const { dispatch } = useStore();
   const [step, setStep] = useState(0); // 0 = welcome, 1..5 = steps
   const [dir, setDir] = useState(1);
-  const [name, setName] = useState(state.userName);
+  const [name, setName] = useState("");
   const [picked, setPicked] = useState<string[]>(["japan", "laptop", "move"]);
 
   const go = (to: number) => {
@@ -193,17 +193,21 @@ function Intention() {
         }
         sub="Decide before you buy."
       />
-      <div className="relative flex flex-1 items-start justify-end pr-2 pt-8 [@media(max-height:720px)]:pt-3">
-        <div className="relative w-[58%] rotate-[3deg] [@media(max-height:720px)]:w-[46%] rounded-[26px] bg-white p-3 shadow-[0_18px_40px_-20px_rgba(30,40,30,0.4)]">
+      <div className="relative flex flex-1 items-start justify-end pt-6 [@media(max-height:720px)]:pt-3">
+        <div className="relative w-[80%] rotate-[3deg] rounded-[28px] bg-white p-3.5 shadow-[0_22px_48px_-22px_rgba(30,40,30,0.45)] [@media(max-height:720px)]:w-[56%]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={boots.art} alt="" className="aspect-square w-full rounded-[18px]" draggable={false} />
-          <HeartIcon size={22} className="absolute right-6 top-6 text-label" />
-          <p className="mt-2.5 px-1 text-[17px] font-semibold text-label">Zara Boots</p>
-          <p className="px-1 pb-1 text-[15px] text-label-2">{money(boots.price)}</p>
+          <span className="absolute right-6 top-6 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-label">
+            <HeartIcon size={20} />
+          </span>
+          <div className="mt-3 flex items-baseline justify-between px-1 pb-1">
+            <p className="text-[19px] font-semibold text-label">Zara Boots</p>
+            <p className="tabular text-[17px] font-semibold text-label">{money(boots.price)}</p>
+          </div>
         </div>
         <div className="absolute bottom-0 left-0 flex items-end">
-          <Mascot mood="thinking" size={130} className="[@media(max-height:720px)]:!h-[96px] [@media(max-height:720px)]:!w-[96px]" />
-          <span className="mb-16 -ml-2 rounded-[18px] rounded-bl-[6px] bg-white px-3.5 py-2 text-[15px] leading-[19px] text-label shadow-[0_6px_20px_-10px_rgba(30,40,30,0.35)] [@media(max-height:720px)]:mb-10">
+          <Mascot mood="thinking" size={112} className="[@media(max-height:720px)]:!h-[88px] [@media(max-height:720px)]:!w-[88px]" />
+          <span className="mb-14 -ml-2 rounded-[18px] rounded-bl-[6px] bg-white px-3.5 py-2 text-[15px] leading-[19px] text-label shadow-[0_6px_20px_-10px_rgba(30,40,30,0.35)] [@media(max-height:720px)]:mb-10">
             Buy now
             <br />
             or wait?
@@ -214,13 +218,44 @@ function Intention() {
   );
 }
 
-/** 2. Know what fits: the three answers Penny gives. */
+/** 2. Know what fits: tap an answer and Penny shows what it means for the boots. */
+const FIT_CHOICES = [
+  {
+    id: "now",
+    Icon: BagIcon,
+    label: "Buy now",
+    tint: "#e3ecd8",
+    ink: "#2d4a35",
+    mood: "approved" as const,
+    say: "It’s yours today, and you still have $871 for the month.",
+    chip: "Yours today",
+  },
+  {
+    id: "wait",
+    Icon: ClockIcon,
+    label: "Wait",
+    tint: "#f6ecd6",
+    ink: "#8a5d12",
+    mood: "thinking" as const,
+    say: "Set aside $95 a month and they’re yours in December.",
+    chip: "$95 a month",
+  },
+  {
+    id: "later",
+    Icon: HeartIcon,
+    label: "Save for later",
+    tint: "#f8e1dd",
+    ink: "#a8423a",
+    mood: "listening" as const,
+    say: "I’ll keep them on your Wishlist and remind you when it fits.",
+    chip: "On your Wishlist",
+  },
+];
+
 function Fits() {
-  const rows = [
-    { Icon: BagIcon, label: "Buy now", bg: "#e8eedf", fg: GREEN },
-    { Icon: ClockIcon, label: "Wait", bg: "#f3efe3", fg: "#1d1a17" },
-    { Icon: HeartIcon, label: "Save for later", bg: "#f8e4e0", fg: "#a8423a" },
-  ];
+  const boots = DEMO_ITEMS.find((i) => i.id === "boots")!;
+  const [pick, setPick] = useState("wait");
+  const choice = FIT_CHOICES.find((c) => c.id === pick)!;
   return (
     <div className="flex h-full flex-col">
       <Heading
@@ -231,25 +266,73 @@ function Fits() {
             fits.
           </>
         }
-        sub="Buy now, wait, or save it."
+        sub="Buy now, wait, or save it. Try one."
       />
-      <div className="mt-7 flex flex-col gap-3 [@media(max-height:720px)]:mt-4">
-        {rows.map(({ Icon, label, bg, fg }) => (
-          <div key={label} className="flex h-[84px] items-center gap-5 rounded-[20px] px-6 [@media(max-height:720px)]:h-[68px]" style={{ background: bg }}>
-            <span className="shrink-0" style={{ color: fg }}>
-              <Icon size={36} />
-            </span>
-            <span className="text-[19px] font-semibold text-label">{label}</span>
-          </div>
-        ))}
+
+      {/* The item we're deciding on */}
+      <div className="mt-5 flex items-center gap-3 rounded-[18px] bg-white p-2 pr-4 shadow-[0_8px_20px_-14px_rgba(30,40,30,0.35)] [@media(max-height:720px)]:mt-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={boots.art} alt="" className="h-12 w-12 rounded-[12px] object-cover" draggable={false} />
+        <span className="flex-1 text-[16px] font-semibold text-label">Zara Boots</span>
+        <span className="tabular text-[16px] font-semibold text-label">{money(boots.price)}</span>
       </div>
-      <div className="flex flex-1 items-end justify-end">
-        <div className="flex items-end">
-          <span className="mb-12 -mr-1 rounded-[18px] rounded-br-[6px] bg-white px-3.5 py-2 text-[15px] leading-[19px] text-label shadow-[0_6px_20px_-10px_rgba(30,40,30,0.35)]">
-            I’ll show you which.
-          </span>
-          <Mascot mood="approved" size={110} className="[@media(max-height:720px)]:!h-[80px] [@media(max-height:720px)]:!w-[80px]" />
-        </div>
+
+      {/* The three answers: tap one */}
+      <div className="mt-3 grid grid-cols-3 gap-2.5">
+        {FIT_CHOICES.map((c) => {
+          const on = c.id === pick;
+          return (
+            <motion.button
+              key={c.id}
+              type="button"
+              onClick={() => setPick(c.id)}
+              aria-pressed={on}
+              animate={{ scale: on ? 1.04 : 1, y: on ? -4 : 0 }}
+              transition={{ type: "spring", damping: 18, stiffness: 320 }}
+              className="relative flex h-[168px] flex-col items-center justify-center gap-3 rounded-[24px] text-center [@media(max-height:720px)]:h-[104px]"
+              style={{
+                background: on ? c.ink : c.tint,
+                color: on ? "#fff" : c.ink,
+                boxShadow: on ? "0 16px 30px -16px rgba(30,40,30,0.55)" : "none",
+              }}
+            >
+              <span
+                className="flex h-16 w-16 items-center justify-center rounded-full [@media(max-height:720px)]:h-11 [@media(max-height:720px)]:w-11"
+                style={{ background: on ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.7)" }}
+              >
+                <c.Icon size={28} />
+              </span>
+              <span className="px-1 text-[16px] font-semibold leading-[19px]">{c.label}</span>
+              {on && (
+                <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white" style={{ color: c.ink }}>
+                  <CheckIcon size={12} />
+                </span>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* What that choice means, from Penny */}
+      <div className="flex flex-1 items-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={choice.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="flex w-full items-end gap-2"
+          >
+            <Mascot mood={choice.mood} size={112} className="shrink-0 [@media(max-height:720px)]:!h-[72px] [@media(max-height:720px)]:!w-[72px]" />
+            <div className="mb-6 flex-1 rounded-[20px] rounded-bl-[6px] bg-white px-4 py-3.5 shadow-[0_8px_24px_-12px_rgba(30,40,30,0.35)] [@media(max-height:720px)]:mb-3">
+              <span className="inline-block rounded-full px-2.5 py-0.5 text-[12px] font-semibold text-white" style={{ background: choice.ink }}>
+                {choice.chip}
+              </span>
+              <p className="mt-1.5 text-[15px] leading-[20px] text-label">{choice.say}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -272,12 +355,12 @@ function GoalsInView() {
       />
       <div className="mt-6 flex flex-col gap-3 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:gap-2">
         {goals.map((g) => {
-          const { Icon, bg, photo, fit } = goalLook(g.name);
+          const { Icon, bg, photo } = goalLook(g.name);
           return (
             <div key={g.id} className="overflow-hidden rounded-[20px] bg-white shadow-[0_10px_30px_-20px_rgba(30,40,30,0.4)]">
               <div
                 className="h-[96px] w-full [@media(max-height:720px)]:h-[64px]"
-                style={{ background: photo ? `${bg} center / ${fit === "100% auto" ? "50% auto" : "cover"} no-repeat url(${photo})` : bg }}
+                style={{ background: photo ? `${bg} center / cover no-repeat url(${photo})` : bg }}
               />
               <div className="flex items-center gap-3 px-4 py-3 [@media(max-height:720px)]:py-2">
                 <Icon size={20} className="text-label-2" />
@@ -342,7 +425,7 @@ function PickGoals({ picked, onToggle }: { picked: string[]; onToggle: (id: stri
       <div className="mt-5 grid grid-cols-2 gap-2.5 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:gap-2">
         {GOAL_CHOICES.map((g) => {
           const on = picked.includes(g.id);
-          const { Icon, bg, fg, photo, fit } = goalLook(g.name);
+          const { Icon, bg, fg, photo } = goalLook(g.name);
           return (
             <button
               key={g.id}
@@ -355,7 +438,7 @@ function PickGoals({ picked, onToggle }: { picked: string[]; onToggle: (id: stri
             >
               <span
                 className="flex h-[78px] w-full items-center justify-center [@media(max-height:720px)]:h-[56px]"
-                style={photo ? { background: `${bg} center / ${fit === "100% auto" ? "62% auto" : "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
+                style={photo ? { background: `${bg} center / cover no-repeat url(${photo})` } : { background: bg, color: fg }}
               >
                 {!photo && <Icon size={34} />}
               </span>
