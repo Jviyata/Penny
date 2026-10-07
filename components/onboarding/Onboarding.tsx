@@ -19,7 +19,7 @@ const GOAL_CHOICES: Goal[] = [
   GOALS.find((g) => g.id === "laptop")!,
   GOALS.find((g) => g.id === "move")!,
   { id: "heels", name: "Dior heels", target: 1100, saved: 440, thisMonth: 220, by: "By December" },
-  { id: "car", name: "Suzuki Jimny", target: 8000, saved: 1200, thisMonth: 200, by: "In 2 years" },
+  { id: "car", name: "Green SUV", target: 8000, saved: 1200, thisMonth: 200, by: "In 2 years" },
   { id: "furniture", name: "Sectional sofa", target: 1200, saved: 150, thisMonth: 75, by: "By spring" },
 ];
 
