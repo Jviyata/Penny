@@ -83,7 +83,7 @@ export function GoalDetail({
     <div className="scroll-y absolute inset-0 pb-[calc(var(--tabbar-h)+var(--sab)+16px)]">
       {/* The goal's picture, full width, with its name and target on it */}
       <div
-        className="relative h-[250px] w-full [@media(max-height:720px)]:h-[200px]"
+        className="relative h-[290px] w-full [@media(max-height:720px)]:h-[198px]"
         style={photo ? { background: `${look.bg} center / cover no-repeat url(${photo})` } : { background: look.bg, color: look.fg }}
       >
         {!photo && (
@@ -118,33 +118,34 @@ export function GoalDetail({
           </button>
         </div>
 
-        {/* Name and target, in white */}
-        <div className="absolute inset-x-0 bottom-9 px-5">
-          <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2 text-left">
-            <span className="line-clamp-2 text-[32px] font-bold leading-[36px] tracking-[-0.02em] text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.25)]">
-              {goal.name}
-            </span>
-            <PencilIcon size={17} className="shrink-0 text-white/80" />
-          </button>
-          <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-white/90">
-            <CalendarIcon size={16} />
-            {months !== null ? `Target: ${goal.by.replace(/^by\s+/i, "")}` : goal.by}
-          </p>
+        {/* Name and target, in white on a soft frosted panel so they read on any photo */}
+        <div className="absolute bottom-9 left-4 right-4">
+          <div className="inline-block max-w-full rounded-[18px] bg-black/25 px-3.5 py-2.5 backdrop-blur-md">
+            <button type="button" onClick={() => edit(goal)} className="flex items-center gap-2 text-left">
+              <span className="line-clamp-2 text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-white">{goal.name}</span>
+              <PencilIcon size={16} className="shrink-0 text-white/75" />
+            </button>
+            <p className="mt-0.5 flex items-center gap-1.5 text-[14px] font-medium text-white/90">
+              <CalendarIcon size={15} />
+              {months !== null ? `Target: ${goal.by.replace(/^by\s+/i, "")}` : goal.by}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Everything else sits on a card over the bottom of the picture */}
       <div className="relative -mt-6 rounded-t-[28px] bg-[var(--bg)] px-4 pt-4">
-      {/* Progress */}
-      <section className="rounded-[22px] bg-card px-5 py-4 [@media(max-height:720px)]:py-3">
-        <div className="flex items-baseline justify-between">
+      {/* 1. Progress: the most important thing on the page */}
+      <section className="rounded-[22px] bg-card px-5 pb-4 pt-3.5 [@media(max-height:720px)]:pb-3 [@media(max-height:720px)]:pt-3">
+        <p className="text-[13px] font-medium text-label-2">Saved so far</p>
+        <div className="mt-0.5 flex items-baseline justify-between">
           <p className="tabular">
-            <span className="text-[32px] font-bold tracking-[-0.02em] text-label">{money(goal.saved)}</span>
+            <span className="text-[36px] font-bold leading-[40px] tracking-[-0.025em] text-label">{money(goal.saved)}</span>
             <span className="ml-1.5 text-[17px] text-label-2">of {money(goal.target)}</span>
           </p>
-          <span className="tabular text-[19px] font-bold text-label">{Math.round(pct * 100)}%</span>
+          <span className="tabular rounded-full bg-[#e1ead0] px-2.5 py-0.5 text-[15px] font-bold text-[#3f6b2c]">{Math.round(pct * 100)}%</span>
         </div>
-        <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-fill">
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-fill">
           <div className="h-full rounded-full bg-[#4f8a4f] transition-[width] duration-500" style={{ width: `${pct * 100}%` }} />
         </div>
         <div className="mt-2 flex justify-between text-[13px] text-label-2">
@@ -153,28 +154,13 @@ export function GoalDetail({
         </div>
       </section>
 
-      {/* Penny: a tip for this goal, and a way to talk the goals through with her */}
-      <section className="mt-3 overflow-hidden rounded-[22px] border border-[#dfe8d6] bg-[#f2f6ee]">
-        <div className="flex items-start gap-3 px-4 pb-3.5 pt-3.5">
-          <Mascot mood="approved" size={52} className="-mt-1 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-[#4f6b2c]">Penny’s tip</p>
-            <p className="mt-0.5 text-[16px] leading-[22px] text-label">
-              {tipLead}
-              {tipAmount && <span className="font-semibold text-[#3f7f3f]">{tipAmount}</span>}
-              {tipRest}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* The next step */}
+      {/* 2. The next step */}
       {action.href ? (
         <a
           href={action.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="pressable mt-3 flex h-14 items-center justify-center gap-2 rounded-full bg-cta text-[17px] font-semibold text-on-cta"
+          className="pressable mt-3 flex h-[52px] items-center justify-center gap-2 rounded-full bg-cta text-[17px] font-semibold text-on-cta"
         >
           {action.label}
           <ExternalIcon />
@@ -183,25 +169,39 @@ export function GoalDetail({
         <button
           type="button"
           onClick={() => addMoney(goal)}
-          className="pressable mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-cta text-[17px] font-semibold text-on-cta"
+          className="pressable mt-3 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-cta text-[17px] font-semibold text-on-cta"
         >
           <PlusIcon size={18} />
           {action.label}
         </button>
       )}
 
-      {/* Staying on track */}
-      <button type="button" onClick={() => addMoney(goal)} className="pressable mt-3 flex w-full items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left [@media(max-height:720px)]:pr-[68px]">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#fbe6dc] text-[#c4613a]">
-          <TargetIcon size={24} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[13px] text-label-2">Staying on track</span>
-          <span className="block text-[17px] font-semibold text-label">Keep saving</span>
-          <span className="block text-[13px] leading-[17px] text-label-2">{trackLine}</span>
-        </span>
-        <ChevronIcon size={16} className="shrink-0 text-label-3 [@media(max-height:720px)]:hidden" />
-      </button>
+      {/* 3. Supporting details, quieter and grouped */}
+      <section className="mt-3 overflow-hidden rounded-[22px] bg-card">
+        <button
+          type="button"
+          onClick={() => addMoney(goal)}
+          className="pressable flex w-full items-center gap-3 px-4 py-3 text-left [@media(max-height:720px)]:pr-[68px]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fbe6dc] text-[#c4613a]">
+            <TargetIcon size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold text-label">Keep saving</span>
+            <span className="block text-[13px] leading-[17px] text-label-2">{trackLine}</span>
+          </span>
+          <ChevronIcon size={15} className="shrink-0 text-label-3 [@media(max-height:720px)]:hidden" />
+        </button>
+        <div className="flex items-start gap-3 border-t border-[var(--sep)] px-4 py-3 [@media(max-height:720px)]:pr-[68px]">
+          <Mascot mood="approved" size={40} className="-mt-0.5 shrink-0" />
+          <p className="min-w-0 flex-1 text-[14px] leading-[19px] text-label">
+            <span className="block text-[13px] font-medium text-[#4f6b2c]">Penny’s tip</span>
+            {tipLead}
+            {tipAmount && <span className="font-semibold text-[#3f7f3f]">{tipAmount}</span>}
+            {tipRest}
+          </p>
+        </div>
+      </section>
 
       </div>
     </div>
