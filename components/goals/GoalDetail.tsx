@@ -79,23 +79,12 @@ export function GoalDetail({
   const [tipLead, tipAmount, tipRest] = splitAmount(tip.text);
 
   return (
-    <div className="scroll-y absolute inset-0 bg-[var(--bg)] px-4 pb-[calc(var(--tabbar-h)+var(--sab)+16px)] pt-[calc(var(--sat)+6px)]">
+    <div className="absolute inset-0 bg-[var(--bg)]">
+    <div className="scroll-y absolute inset-0 px-4 pb-[calc(var(--tabbar-h)+var(--sab)+16px)] pt-[calc(var(--sat)+6px)]">
       {/* Top bar */}
       <div className="flex h-11 items-center justify-between">
         <button type="button" onClick={onBack} aria-label="Back" className="pressable -ml-1 flex h-11 w-11 items-center justify-center text-label">
           <ChevronIcon size={22} className="rotate-180" />
-        </button>
-        <div className="flex items-center gap-1">
-        {/* Talk the goals through with Penny */}
-        <button
-          type="button"
-          onClick={() => onAskPenny(`Can you help me rearrange my goals? I'm looking at ${goal.name}.`)}
-          className="pressable flex h-9 items-center gap-1.5 rounded-full bg-[#e6ecdf] py-1 pl-1 pr-3 text-[14px] font-semibold text-[#3d5a2c]"
-        >
-          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
-            <Mascot mood="calm_neutral" size={26} />
-          </span>
-          Rearrange goals
         </button>
         <button
           type="button"
@@ -105,7 +94,6 @@ export function GoalDetail({
         >
           ···
         </button>
-        </div>
       </div>
 
       {/* The goal */}
@@ -184,7 +172,7 @@ export function GoalDetail({
       )}
 
       {/* Staying on track */}
-      <button type="button" onClick={() => addMoney(goal)} className="pressable mt-3 flex w-full items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left">
+      <button type="button" onClick={() => addMoney(goal)} className="pressable mt-3 flex w-full items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left [@media(max-height:720px)]:pr-[68px]">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#fbe6dc] text-[#c4613a]">
           <TargetIcon size={24} />
         </span>
@@ -193,7 +181,24 @@ export function GoalDetail({
           <span className="block text-[17px] font-semibold text-label">Keep saving</span>
           <span className="block text-[13px] leading-[17px] text-label-2">{trackLine}</span>
         </span>
-        <ChevronIcon size={16} className="shrink-0 text-label-3" />
+        <ChevronIcon size={16} className="shrink-0 text-label-3 [@media(max-height:720px)]:hidden" />
+      </button>
+
+    </div>
+
+      {/* Penny in the corner, offering to help with the goals */}
+      <button
+        type="button"
+        onClick={() => onAskPenny(`Can you help me with my goals? I'm looking at ${goal.name}.`)}
+        aria-label="Ask Penny for help with your goals"
+        className="pressable absolute bottom-[calc(var(--tabbar-h)+var(--sab)+10px)] right-3 z-10 flex items-end gap-1"
+      >
+        <span className="relative mb-7 rounded-[18px] rounded-br-[6px] bg-white px-3.5 py-2 text-[14px] font-medium leading-[18px] text-label shadow-[0_8px_24px_-10px_rgba(30,40,30,0.4)] [@media(max-height:720px)]:hidden">
+          Want help with your goals?
+        </span>
+        <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#e6ecdf] shadow-[0_10px_24px_-10px_rgba(30,40,30,0.5)] [@media(max-height:720px)]:h-[52px] [@media(max-height:720px)]:w-[52px]">
+          <Mascot mood="listening" size={52} className="[@media(max-height:720px)]:!h-[42px] [@media(max-height:720px)]:!w-[42px]" />
+        </span>
       </button>
 
       <LineEditorSheet config={editor} onClose={() => setEditor(null)} />
