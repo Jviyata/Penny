@@ -324,60 +324,35 @@ html[data-keyboard="open"] .device-screen {
   display: none;
 }
 
-/* ---------- Frosted glass cards (Overview first) ----------
-   Glass that reads on a plain background: a light-to-clear gradient, a diagonal shine,
-   a bright rim, a little depth at the bottom, and a fine grain. All of it sits behind the content. */
+/* ---------- Frosted cards (trying it on Overview first) ----------
+   A little frosted glass: see-through, a bright rim on top, a faint grain, and a soft shadow.
+   No colored background behind it; the cards carry the effect themselves. */
 .frost,
 .frost-tint,
 .frost-dark {
   position: relative;
   isolation: isolate;
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 10px 28px -16px rgba(40, 30, 15, 0.3);
 }
 .frost {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.62) 42%, rgba(246, 243, 236, 0.55) 70%, rgba(255, 255, 255, 0.85) 100%);
-  box-shadow:
-    inset 0 1px 0 #fff,
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 -10px 18px -12px rgba(60, 45, 25, 0.12),
-    0 0 0 1px rgba(60, 45, 25, 0.06),
-    0 12px 30px -16px rgba(40, 30, 15, 0.32);
+  background-color: rgba(255, 255, 255, 0.6);
 }
 .frost-tint {
-  background: linear-gradient(150deg, rgba(232, 240, 216, 0.98) 0%, rgba(214, 226, 190, 0.7) 45%, rgba(200, 216, 172, 0.62) 72%, rgba(226, 236, 206, 0.9) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
-    inset 0 -12px 20px -14px rgba(50, 70, 30, 0.2),
-    0 0 0 1px rgba(60, 80, 40, 0.08),
-    0 14px 32px -18px rgba(50, 70, 30, 0.4);
+  background-color: rgba(214, 226, 190, 0.6);
 }
 .frost-dark {
-  background: linear-gradient(150deg, rgba(74, 84, 62, 0.97) 0%, rgba(44, 51, 36, 0.96) 48%, rgba(34, 40, 28, 0.97) 100%);
+  background-color: rgba(44, 51, 36, 0.92);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 -12px 20px -14px rgba(0, 0, 0, 0.5),
-    0 14px 30px -16px rgba(30, 35, 20, 0.65);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 12px 28px -16px rgba(30, 35, 20, 0.6);
 }
-/* The shine: a soft diagonal band of light. */
-.frost::before,
-.frost-tint::before,
-.frost-dark::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(118deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, 0.75) 38%, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, 0) 68%, rgba(255, 255, 255, 0.35) 78%, rgba(255, 255, 255, 0) 88%);
-  opacity: 0.7;
-}
-.frost-dark::before {
-  opacity: 0.12;
-}
-/* The grain. */
+/* The grain: a very light noise layer over the card, under its content. */
 .frost::after,
 .frost-tint::after,
 .frost-dark::after {
@@ -387,11 +362,16 @@ html[data-keyboard="open"] .device-screen {
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: 0.1;
+  opacity: 0.08;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .frost-dark::after {
-  opacity: 0.35;
+  opacity: 0.3;
   mix-blend-mode: soft-light;
+}
+/* A gentle light-to-clear wash, like light catching the top of frosted glass. */
+.frost,
+.frost-tint {
+  background-image: linear-gradient(170deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0) 100%);
 }

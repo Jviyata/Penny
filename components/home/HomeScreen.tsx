@@ -122,14 +122,14 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const fit = goal.image ? "cover" : look.fit;
   const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
   return (
-    <button type="button" onClick={onClick} className="frost pressable flex flex-col overflow-hidden rounded-[22px] p-1.5 text-left">
+    <button type="button" onClick={onClick} className="frost pressable flex flex-col overflow-hidden rounded-[22px] text-left">
       <span
-        className="flex h-[128px] w-full items-center justify-center rounded-[17px] [@media(max-height:720px)]:h-[68px]"
+        className="flex h-[136px] w-full items-center justify-center [@media(max-height:720px)]:h-[72px]"
         style={photo ? { background: `${bg} center / ${fit ?? "cover"} no-repeat url(${photo})` } : { background: bg, color: fg }}
       >
         {!photo && <Icon size={30} />}
       </span>
-      <span className="block w-full px-2 pb-1.5 pt-2">
+      <span className="block w-full px-3 pb-3 pt-2.5">
         <span className="block truncate text-[14px] font-semibold text-label">{shortName(goal.name)}</span>
         <span className="mt-1.5 flex items-center gap-2">
           <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fill">
