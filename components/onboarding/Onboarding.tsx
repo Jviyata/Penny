@@ -144,7 +144,12 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       {intro ? (
         // The slideshow's dots, then Log in, always in reach
         <div className="flex flex-col items-center gap-3 px-6 pt-3">
-          {dots(SLIDES, slide, goSlide)}
+          {/* Arrows on either side of the dots, for anyone who doesn't swipe */}
+          <div className="flex items-center gap-4">
+            <SlideArrow dir={-1} disabled={slide === 0} onClick={() => goSlide(slide - 1)} />
+            {dots(SLIDES, slide, goSlide)}
+            <SlideArrow dir={1} disabled={slide === SLIDES - 1} onClick={() => goSlide(slide + 1)} />
+          </div>
           <span className="rounded-full bg-[#e6ecdf] px-3 py-1 text-[12px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
           <button type="button" onClick={logIn} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
             Log in
@@ -174,6 +179,22 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         </div>
       )}
     </div>
+  );
+}
+
+function SlideArrow({ dir, disabled, onClick }: { dir: 1 | -1; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir > 0 ? "Next slide" : "Previous slide"}
+      className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-white text-label shadow-[inset_0_0_0_1px_#dfe2db] transition-opacity disabled:opacity-0"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d={dir > 0 ? "M9 5l7 7-7 7" : "M15 5l-7 7 7 7"} />
+      </svg>
+    </button>
   );
 }
 
