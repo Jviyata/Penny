@@ -3,16 +3,17 @@
 import { Reorder } from "motion/react";
 
 /**
- * Goals in a list you drag to reorder. The first three are tagged "Overview" (shown on the dashboard),
- * the rest "More goals". Used in setup and on the Goals tab, so the order is the same everywhere.
+ * Goals in a list you drag to reorder, each tagged "Overview" (shown on the dashboard) or "More goals".
  */
 export function GoalOrderList({
   ids,
   name,
+  onOverview,
   onOrder,
 }: {
   ids: string[];
   name: (id: string) => string;
+  onOverview: (id: string) => boolean; // shown on Overview, or under More goals
   onOrder: (ids: string[]) => void;
 }) {
   return (
@@ -28,10 +29,10 @@ export function GoalOrderList({
           <span className="min-w-0 flex-1 truncate text-[16px] font-medium text-label">{name(id)}</span>
           <span
             className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${
-              i < 3 ? "bg-[#e6ecdf] text-[#3d5a44]" : "bg-fill text-label-2"
+              onOverview(id) ? "bg-[#e6ecdf] text-[#3d5a44]" : "bg-fill text-label-2"
             }`}
           >
-            {i < 3 ? "Overview" : "More goals"}
+            {onOverview(id) ? "Overview" : "More goals"}
           </span>
           <GripIcon />
         </Reorder.Item>

@@ -7,7 +7,6 @@ import { money } from "@/lib/format";
 import { GOALS, type Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
 import { BagIcon, CheckIcon, ClockIcon, HeartIcon, PlusIcon, goalLook } from "../ui/Icons";
-import { GoalOrderList } from "../goals/GoalOrderList";
 import { Mascot } from "../ui/Mascot";
 
 /** The app's name on the welcome screen. */
@@ -25,15 +24,17 @@ const GOAL_CHOICES: Goal[] = [
 ];
 
 const SLIDES = 4; // the welcome, then three slides on what the app does
-const SETUP = 3; // after Log in: your name, your goals, your Overview
+const SETUP = 2; // after Log in: your name, then your goals
+/** Always chosen, and always first: they're the demo's goals with photos and progress. */
+const CORE = ["japan", "laptop", "move"];
 
 /** Goals added during setup start with a $1,000 target, which can be changed on the goal's page. */
 const customGoal = (name: string): Goal => ({ id: `custom-${Date.now()}`, name, target: 1000, saved: 0, thisMonth: 0, by: "No date yet" });
 
 /**
  * First run. Before Log in: a swipeable slideshow (the welcome, then what the app does) with the
- * Log in button always underneath. After it: your name, your goals (pick or add your own),
- * and the order they show in (the top three are on Overview, the rest under More goals).
+ * Log in button always underneath. After it: your name, then your goals (the three core goals
+ * are always in; pick more or add your own). Goals with photos come first, so Overview shows them.
  */
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const { dispatch } = useStore();
@@ -66,14 +67,19 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     setDir(to > step ? 1 : -1);
     setStep(Math.min(SETUP, to));
   };
-  const toggle = (id: string) => setOrder((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
+  const toggle = (id: string) => {
+    if (CORE.includes(id)) return;
+    setOrder((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
+  };
   const addCustom = (label: string) => {
     const g = customGoal(label);
     setCustom((c) => [...c, g]);
     setOrder((o) => [...o, g.id]); // new goals go last, so they start under More goals
   };
   const finish = () => {
-    const goals = order.map((id) => all.find((g) => g.id === id)).filter((g): g is Goal => !!g).map((g) => ({ ...g }));
+    // Core goals first, then other goals with photos, then your own (they're under More goals).
+    const ids = [...CORE, ...GOAL_CHOICES.map((g) => g.id).filter((id) => !CORE.includes(id) && order.includes(id)), ...custom.map((g) => g.id).filter((id) => order.includes(id))];
+    const goals = ids.map((id) => all.find((g) => g.id === id)).filter((g): g is Goal => !!g).map((g) => ({ ...g }));
     dispatch({ type: "finishOnboarding", name: name.trim(), goals });
     onDone();
   };
@@ -136,7 +142,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             {intro && slide === 3 && <GoalsInView />}
             {!intro && step === 1 && <Name name={name} onName={setName} onNext={() => goStep(2)} />}
             {!intro && step === 2 && <PickGoals all={all} picked={order} onToggle={toggle} onAdd={addCustom} />}
-            {!intro && step === 3 && <Arrange goals={all} order={order} onOrder={setOrder} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -495,18 +500,20 @@ function PickGoals({
             saving for?
           </>
         }
-        sub="Pick a few, or add your own."
+        sub="Your first three are set. Pick more, or add your own."
       />
       <div className="scroll-y -mx-1 mt-6 min-h-0 flex-1 px-1 pb-2 [@media(max-height:720px)]:mt-4">
         <div className="flex flex-wrap gap-2.5">
           {all.map((g) => {
             const on = picked.includes(g.id);
+            const locked = CORE.includes(g.id);
             return (
               <button
                 key={g.id}
                 type="button"
                 onClick={() => onToggle(g.id)}
                 aria-pressed={on}
+                aria-disabled={locked}
                 className={`pressable flex h-12 items-center gap-2 rounded-full px-5 text-[16px] font-medium transition-colors ${
                   on ? "text-white" : "bg-white text-label shadow-[inset_0_0_0_1px_#dfe2db]"
                 }`}
@@ -554,19 +561,6 @@ function PickGoals({
             </button>
           </form>
         )}
-      </div>
-    </div>
-  );
-}
-
-/** Setup 3: put your goals in order. The top three show on Overview; the rest go under More goals. */
-function Arrange({ goals, order, onOrder }: { goals: Goal[]; order: string[]; onOrder: (ids: string[]) => void }) {
-  const name = (id: string) => goals.find((g) => g.id === id)?.name ?? "";
-  return (
-    <div className="flex h-full flex-col">
-      <Heading title="Make it yours." sub="Drag to reorder. Your top three show on Overview." />
-      <div className="scroll-y -mx-1 mt-5 min-h-0 flex-1 px-1 pb-2 [@media(max-height:720px)]:mt-3">
-        <GoalOrderList ids={order} name={name} onOrder={onOrder} />
       </div>
     </div>
   );

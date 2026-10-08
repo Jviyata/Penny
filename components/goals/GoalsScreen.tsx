@@ -10,6 +10,7 @@ import { PlusIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
 import { GoalOrderList } from "./GoalOrderList";
+import { overviewGoals } from "./overviewGoals";
 import type { Tab } from "../TabBar";
 import { ChevronIcon, HeartIcon, goalLook } from "../ui/Icons";
 
@@ -112,10 +113,11 @@ export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGo
 
           {reordering ? (
             <div className="px-3 pb-3 pt-1">
-              <p className="px-1 pb-2 text-[13px] text-label-2">Drag to reorder. Your top three show on Overview.</p>
+              <p className="px-1 pb-2 text-[13px] text-label-2">Drag to reorder. Overview shows your top three with photos.</p>
               <GoalOrderList
                 ids={goals.map((g) => g.id)}
                 name={(id) => goals.find((g) => g.id === id)?.name ?? ""}
+                onOverview={(id) => overviewGoals(goals).some((g) => g.id === id)}
                 onOrder={(ids) => dispatch({ type: "reorderGoals", ids })}
               />
             </div>

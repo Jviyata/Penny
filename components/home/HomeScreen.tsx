@@ -10,6 +10,7 @@ import { Mascot } from "../ui/Mascot";
 import { Scene } from "../ui/Screen";
 import type { Tab } from "../TabBar";
 import { SettingsSheet } from "./SettingsSheet";
+import { overviewGoals } from "../goals/overviewGoals";
 
 /**
  * Overview: greeting, the Talk to Penny card, your goals, and what's left to spend.
@@ -40,6 +41,8 @@ export function HomeScreen({
     window.setTimeout(() => setCheer(null), 4000);
   };
   const { goals, freeTotal } = state;
+  // Overview shows goals with photos (in your order); the rest are under More goals.
+  const shown = overviewGoals(goals);
   // How much of this month's spending money is already planned or spent.
   const usedShare = freeTotal > 0 ? Math.min(1, Math.max(0, (freeTotal - open) / freeTotal)) : 0;
 
@@ -127,7 +130,7 @@ export function HomeScreen({
           </button>
         </div>
         <div className="mt-1.5 grid grid-cols-3 gap-2.5">
-          {goals.slice(0, 3).map((g) => (
+          {shown.map((g) => (
             <GoalCard key={g.id} goal={g} onClick={() => openGoal(g.id)} />
           ))}
         </div>
