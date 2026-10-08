@@ -9,6 +9,7 @@ import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
 import { PlusIcon } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
 import { Screen } from "../ui/Screen";
+import { GoalOrderList } from "./GoalOrderList";
 import type { Tab } from "../TabBar";
 import { ChevronIcon, HeartIcon, goalLook } from "../ui/Icons";
 
@@ -17,6 +18,8 @@ export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGo
   const { state, dispatch } = useStore();
   const { goals } = state;
   const [editor, setEditor] = useState<EditorConfig | null>(null);
+  // Reorder mode: drag goals into the order you want. The top three show on Overview.
+  const [reordering, setReordering] = useState(false);
 
   const saved = goals.reduce((t, g) => t + g.saved, 0);
   const target = goals.reduce((t, g) => t + g.target, 0);
@@ -85,16 +88,38 @@ export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGo
         <section className="mx-3 mt-3 overflow-hidden rounded-[26px] bg-card pb-1">
           <div className="flex items-center justify-between px-4 pt-2">
             <h2 className="text-[18px] font-semibold">Your goals</h2>
-            <button
-              type="button"
-              onClick={addGoal}
-              className="pressable -mr-2 flex h-10 items-center gap-1 px-2 text-[15px] font-medium text-label-2"
-            >
-              <PlusIcon size={16} /> Add
-            </button>
+            <div className="-mr-2 flex items-center">
+              {goals.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setReordering((r) => !r)}
+                  className={`pressable flex h-10 items-center px-2 text-[15px] font-medium ${reordering ? "font-semibold text-[#3d5a44]" : "text-label-2"}`}
+                >
+                  {reordering ? "Done" : "Reorder"}
+                </button>
+              )}
+              {!reordering && (
+                <button
+                  type="button"
+                  onClick={addGoal}
+                  className="pressable flex h-10 items-center gap-1 px-2 text-[15px] font-medium text-label-2"
+                >
+                  <PlusIcon size={16} /> Add
+                </button>
+              )}
+            </div>
           </div>
 
-          {goals.length === 0 ? (
+          {reordering ? (
+            <div className="px-3 pb-3 pt-1">
+              <p className="px-1 pb-2 text-[13px] text-label-2">Drag to reorder. Your top three show on Overview.</p>
+              <GoalOrderList
+                ids={goals.map((g) => g.id)}
+                name={(id) => goals.find((g) => g.id === id)?.name ?? ""}
+                onOrder={(ids) => dispatch({ type: "reorderGoals", ids })}
+              />
+            </div>
+          ) : goals.length === 0 ? (
             <div className="flex flex-col items-center px-8 pb-5 pt-1 text-center">
               <Mascot mood="calm_neutral" size={80} />
               <p className="mt-1 text-[15px] leading-[20px] text-label-2">No goals yet. Add one to start tracking it.</p>

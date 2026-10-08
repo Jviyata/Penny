@@ -54,7 +54,8 @@ export type Action =
   | { type: "startSavingGoal"; goal: Goal }
   | { type: "saveStep"; id: string }
   | { type: "snooze"; id: string }
-  | { type: "setNov"; on: boolean };
+  | { type: "setNov"; on: boolean }
+  | { type: "reorderGoals"; ids: string[] };
 
 const startingBudget = () => ({
   freeTotal: BASE_FREE_TOTAL,
@@ -161,6 +162,12 @@ function reducer(state: State, action: Action): State {
     }
     case "snooze":
       return { ...state, snoozed: [...state.snoozed.filter((id) => id !== action.id), action.id] };
+    case "reorderGoals": {
+      // Overview shows the first three; the rest are under More goals.
+      const byId = new Map(state.goals.map((g) => [g.id, g]));
+      const ordered = action.ids.map((id) => byId.get(id)).filter((g): g is Goal => !!g);
+      return { ...state, goals: [...ordered, ...state.goals.filter((g) => !action.ids.includes(g.id))] };
+    }
     case "setNov":
       return { ...state, nov: action.on, snoozed: [] };
     case "startSavingGoal":

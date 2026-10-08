@@ -6,7 +6,8 @@ import { DEMO_ITEMS } from "@/lib/demoItems";
 import { money } from "@/lib/format";
 import { GOALS, type Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
-import { BagIcon, CheckIcon, ClockIcon, HeartIcon, goalLook } from "../ui/Icons";
+import { BagIcon, CheckIcon, ClockIcon, HeartIcon, PlusIcon, goalLook } from "../ui/Icons";
+import { GoalOrderList } from "../goals/GoalOrderList";
 import { Mascot } from "../ui/Mascot";
 
 /** The app's name on the welcome screen. */
@@ -23,41 +24,87 @@ const GOAL_CHOICES: Goal[] = [
   { id: "furniture", name: "Sectional sofa", target: 1200, saved: 150, thisMonth: 75, by: "By spring" },
 ];
 
-const STEPS = 5; // after the welcome screen
+const SLIDES = 4; // the welcome, then three slides on what the app does
+const SETUP = 3; // after Log in: your name, your goals, your Overview
+
+/** Goals added during setup start with a $1,000 target, which can be changed on the goal's page. */
+const customGoal = (name: string): Goal => ({ id: `custom-${Date.now()}`, name, target: 1000, saved: 0, thisMonth: 0, by: "No date yet" });
 
 /**
- * First-run onboarding: a welcome screen, three screens on what the app does (with Penny),
- * then a quick demo setup (your name and your goals).
+ * First run. Before Log in: a swipeable slideshow (the welcome, then what the app does) with the
+ * Log in button always underneath. After it: your name, your goals (pick or add your own),
+ * and the order they show in (the top three are on Overview, the rest under More goals).
  */
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const { dispatch } = useStore();
-  const [step, setStep] = useState(0); // 0 = welcome, 1..5 = steps
+  const [phase, setPhase] = useState<"intro" | "setup">("intro");
+  const [slide, setSlide] = useState(0);
+  const [step, setStep] = useState(1);
   const [dir, setDir] = useState(1);
   const [name, setName] = useState("");
-  const [picked, setPicked] = useState<string[]>(["japan", "laptop", "move"]);
+  const [custom, setCustom] = useState<Goal[]>([]);
+  // The goals you picked, in the order they'll show.
+  const [order, setOrder] = useState<string[]>(["japan", "laptop", "move"]);
+  const all = [...GOAL_CHOICES, ...custom];
 
-  const go = (to: number) => {
+  const goSlide = (to: number) => {
+    if (to < 0 || to >= SLIDES) return;
+    setDir(to > slide ? 1 : -1);
+    setSlide(to);
+  };
+  const logIn = () => {
+    setDir(1);
+    setStep(1);
+    setPhase("setup");
+  };
+  const goStep = (to: number) => {
+    if (to < 1) {
+      setDir(-1);
+      setPhase("intro");
+      return;
+    }
     setDir(to > step ? 1 : -1);
-    setStep(Math.max(0, Math.min(STEPS, to)));
+    setStep(Math.min(SETUP, to));
+  };
+  const toggle = (id: string) => setOrder((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
+  const addCustom = (label: string) => {
+    const g = customGoal(label);
+    setCustom((c) => [...c, g]);
+    setOrder((o) => [...o, g.id]); // new goals go last, so they start under More goals
   };
   const finish = () => {
-    const goals = GOAL_CHOICES.filter((g) => picked.includes(g.id)).map((g) => ({ ...g }));
+    const goals = order.map((id) => all.find((g) => g.id === id)).filter((g): g is Goal => !!g).map((g) => ({ ...g }));
     dispatch({ type: "finishOnboarding", name: name.trim(), goals });
     onDone();
   };
   const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (step === 0) return;
-    if (info.offset.x < -60 && step < STEPS) go(step + 1);
-    else if (info.offset.x > 60 && step > 1) go(step - 1);
+    if (info.offset.x < -50) goSlide(slide + 1);
+    else if (info.offset.x > 50) goSlide(slide - 1);
   };
+
+  const intro = phase === "intro";
+  const dots = (count: number, at: number, onPick?: (i: number) => void) => (
+    <div className="flex gap-2" aria-label={`${at + 1} of ${count}`}>
+      {Array.from({ length: count }, (_, i) => (
+        <button
+          key={i}
+          type="button"
+          tabIndex={onPick ? 0 : -1}
+          onClick={() => onPick?.(i)}
+          aria-label={onPick ? `Slide ${i + 1}` : undefined}
+          className={`h-2 rounded-full transition-all ${i === at ? "w-5" : "w-2 bg-[#d9dcd5]"}`}
+          style={i === at ? { background: GREEN } : undefined}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div className="absolute inset-0 z-[60] flex flex-col overflow-hidden bg-[#fbfaf7] pb-[calc(var(--sab)+16px)] pt-[calc(var(--sat)+12px)]">
-      {/* Demo setup tag on the setup screens */}
       <div className="flex h-8 justify-end px-5">
-        {step >= 4 && (
+        {!intro && (
           <span className="flex items-center rounded-full bg-[#e6ecdf] px-3 text-[12px] font-semibold tracking-[0.04em] text-[#3d5a44]">
-            {step === 4 ? "DEMO SETUP" : "DEMO"}
+            DEMO SETUP
           </span>
         )}
       </div>
@@ -65,7 +112,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       <div className="relative min-h-0 flex-1">
         <AnimatePresence initial={false} custom={dir} mode="popLayout">
           <motion.div
-            key={step}
+            key={intro ? `slide-${slide}` : `step-${step}`}
             custom={dir}
             variants={{
               enter: (d: number) => ({ x: d * 60, opacity: 0 }),
@@ -76,53 +123,52 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             animate="center"
             exit="exit"
             transition={{ type: "spring", damping: 30, stiffness: 320 }}
-            drag={step === 0 ? false : "x"}
+            // Only the slideshow swipes; setup steps use the buttons (and the goal list drags up and down).
+            drag={intro ? "x" : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.15}
             onDragEnd={onDragEnd}
             className="absolute inset-0 flex flex-col px-6"
           >
-            {step === 0 && <Welcome onStart={() => go(1)} />}
-            {step === 1 && <Intention />}
-            {step === 2 && <Fits />}
-            {step === 3 && <GoalsInView />}
-            {step === 4 && <Name name={name} onName={setName} onNext={() => go(5)} />}
-            {step === 5 && (
-              <PickGoals picked={picked} onToggle={(id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))} />
-            )}
+            {intro && slide === 0 && <Welcome />}
+            {intro && slide === 1 && <Intention />}
+            {intro && slide === 2 && <Fits />}
+            {intro && slide === 3 && <GoalsInView />}
+            {!intro && step === 1 && <Name name={name} onName={setName} onNext={() => goStep(2)} />}
+            {!intro && step === 2 && <PickGoals all={all} picked={order} onToggle={toggle} onAdd={addCustom} />}
+            {!intro && step === 3 && <Arrange goals={all} order={order} onOrder={setOrder} />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {step > 0 && (
+      {intro ? (
+        // The slideshow's dots, then Log in, always in reach
+        <div className="flex flex-col items-center gap-3 px-6 pt-3">
+          {dots(SLIDES, slide, goSlide)}
+          <span className="rounded-full bg-[#e6ecdf] px-3 py-1 text-[12px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
+          <button type="button" onClick={logIn} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
+            Log in
+          </button>
+        </div>
+      ) : (
         <div className="flex flex-col items-center gap-4 px-6 pt-3">
-          <div className="flex gap-2" aria-label={`Step ${step} of ${STEPS}`}>
-            {Array.from({ length: STEPS }, (_, i) => (
-              <span
-                key={i}
-                className={`h-2 rounded-full transition-all ${i + 1 === step ? "w-5" : "w-2 bg-[#d9dcd5]"}`}
-                style={i + 1 === step ? { background: GREEN } : undefined}
-              />
-            ))}
-          </div>
+          {dots(SETUP, step - 1)}
           <div className="flex w-full gap-2">
-            {step > 1 && (
-              <button
-                type="button"
-                onClick={() => go(step - 1)}
-                className="pressable h-[52px] rounded-full border border-[#cfd5cb] px-6 text-[16px] font-medium text-label"
-              >
-                Back
-              </button>
-            )}
             <button
               type="button"
-              onClick={() => (step === STEPS ? finish() : go(step + 1))}
-              disabled={step === STEPS && picked.length === 0}
+              onClick={() => goStep(step - 1)}
+              className="pressable h-[52px] rounded-full border border-[#cfd5cb] px-6 text-[16px] font-medium text-label"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => (step === SETUP ? finish() : goStep(step + 1))}
+              disabled={step >= 2 && order.length === 0}
               className="pressable h-[52px] flex-1 rounded-full text-[17px] font-semibold text-white disabled:opacity-40"
               style={{ background: GREEN }}
             >
-              {step === STEPS ? "Start with Penny" : "Continue"}
+              {step === SETUP ? "Start with Penny" : "Continue"}
             </button>
           </div>
         </div>
@@ -146,34 +192,24 @@ function Heading({ title, sub }: { title: React.ReactNode; sub?: string }) {
  * 0. Welcome. One clear order: Penny says hi (speech bubble right above her), then the name,
  * then the promise, then the one button.
  */
-function Welcome({ onStart }: { onStart: () => void }) {
+function Welcome() {
   return (
-    <div className="flex h-full flex-col items-center text-center">
-      <div className="flex flex-1 flex-col items-center justify-center">
-        {/* Penny, with her greeting as a speech bubble pointing down at her */}
-        <div className="relative rounded-[20px] bg-white px-5 py-2.5 text-[18px] font-semibold text-label shadow-[0_8px_24px_-12px_rgba(30,40,30,0.35)]">
-          Hi, I’m Penny!
-          <span className="absolute -bottom-[7px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-white" aria-hidden />
-        </div>
-        <div className="relative mt-4 flex items-center justify-center">
-          <span className="absolute h-[230px] w-[230px] rounded-full bg-[#e9efe2] [@media(max-height:720px)]:h-[170px] [@media(max-height:720px)]:w-[170px]" aria-hidden />
-          <Mascot mood="go_for_it" size={230} className="relative [@media(max-height:720px)]:!h-[170px] [@media(max-height:720px)]:!w-[170px]" />
-        </div>
-
-        <p className="mt-8 text-[52px] font-bold leading-[56px] tracking-[-0.04em] [@media(max-height:720px)]:mt-5 [@media(max-height:720px)]:text-[44px]" style={{ color: GREEN }}>
-          {BRAND}
-        </p>
-        <p className="mt-2 text-[19px] leading-[24px] text-label-2">Know what to spend on.</p>
+    <div className="flex h-full flex-col items-center justify-center text-center">
+      {/* Penny, with her greeting as a speech bubble pointing down at her */}
+      <div className="relative rounded-[20px] bg-white px-5 py-2.5 text-[18px] font-semibold text-label shadow-[0_8px_24px_-12px_rgba(30,40,30,0.35)]">
+        Hi, I’m Penny!
+        <span className="absolute -bottom-[7px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-white" aria-hidden />
+      </div>
+      <div className="relative mt-4 flex items-center justify-center">
+        <span className="absolute h-[230px] w-[230px] rounded-full bg-[#e9efe2] [@media(max-height:720px)]:h-[150px] [@media(max-height:720px)]:w-[150px]" aria-hidden />
+        <Mascot mood="go_for_it" size={230} className="relative [@media(max-height:720px)]:!h-[150px] [@media(max-height:720px)]:!w-[150px]" />
       </div>
 
-      <div className="w-full pb-1">
-        <p className="mb-3 flex justify-center">
-          <span className="rounded-full bg-[#e6ecdf] px-3 py-1 text-[12px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
-        </p>
-        <button type="button" onClick={onStart} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
-          Get started
-        </button>
-      </div>
+      <p className="mt-8 text-[52px] font-bold leading-[56px] tracking-[-0.04em] [@media(max-height:720px)]:mt-5 [@media(max-height:720px)]:text-[44px]" style={{ color: GREEN }}>
+        {BRAND}
+      </p>
+      <p className="mt-2 text-[19px] leading-[24px] text-label-2">Know what to spend on.</p>
+      <p className="mt-6 text-[14px] text-label-3 [@media(max-height:720px)]:hidden">Swipe to see how it works</p>
     </div>
   );
 }
@@ -408,8 +444,26 @@ function Name({ name, onName, onNext }: { name: string; onName: (n: string) => v
   );
 }
 
-/** 5. Demo setup: pick a few goals. */
-function PickGoals({ picked, onToggle }: { picked: string[]; onToggle: (id: string) => void }) {
+/** Setup 2: pick goals as simple labels, or add your own. */
+function PickGoals({
+  all,
+  picked,
+  onToggle,
+  onAdd,
+}: {
+  all: Goal[];
+  picked: string[];
+  onToggle: (id: string) => void;
+  onAdd: (name: string) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const save = () => {
+    const label = draft.trim();
+    if (label) onAdd(label);
+    setDraft("");
+    setAdding(false);
+  };
   return (
     <div className="flex h-full flex-col">
       <Heading
@@ -420,37 +474,78 @@ function PickGoals({ picked, onToggle }: { picked: string[]; onToggle: (id: stri
             saving for?
           </>
         }
-        sub="Pick a few goals."
+        sub="Pick a few, or add your own."
       />
-      <div className="mt-5 grid grid-cols-2 gap-2.5 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:gap-2">
-        {GOAL_CHOICES.map((g) => {
-          const on = picked.includes(g.id);
-          const { Icon, bg, fg, photo } = goalLook(g.name);
-          return (
-            <button
-              key={g.id}
-              type="button"
-              onClick={() => onToggle(g.id)}
-              aria-pressed={on}
-              className={`pressable relative overflow-hidden rounded-[18px] bg-white text-left ${
-                on ? "shadow-[0_0_0_2px_#2d4a35]" : "shadow-[0_0_0_1px_#e3e5df]"
-              }`}
-            >
-              <span
-                className="flex h-[78px] w-full items-center justify-center [@media(max-height:720px)]:h-[56px]"
-                style={photo ? { background: `${bg} center / cover no-repeat url(${photo})` } : { background: bg, color: fg }}
+      <div className="scroll-y -mx-1 mt-6 min-h-0 flex-1 px-1 pb-2 [@media(max-height:720px)]:mt-4">
+        <div className="flex flex-wrap gap-2.5">
+          {all.map((g) => {
+            const on = picked.includes(g.id);
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => onToggle(g.id)}
+                aria-pressed={on}
+                className={`pressable flex h-12 items-center gap-2 rounded-full px-5 text-[16px] font-medium transition-colors ${
+                  on ? "text-white" : "bg-white text-label shadow-[inset_0_0_0_1px_#dfe2db]"
+                }`}
+                style={on ? { background: GREEN } : undefined}
               >
-                {!photo && <Icon size={34} />}
-              </span>
-              <span className="block px-3 py-2.5 text-[15px] font-medium text-label [@media(max-height:720px)]:py-1.5">{g.name}</span>
-              {on && (
-                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white" style={{ background: GREEN }}>
-                  <CheckIcon size={14} />
-                </span>
-              )}
+                {on && <CheckIcon size={15} />}
+                {g.name}
+              </button>
+            );
+          })}
+          {!adding && (
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              className="pressable flex h-12 items-center gap-1.5 rounded-full px-5 text-[16px] font-medium text-[#3d5a44] shadow-[inset_0_0_0_1.5px_#b9c7b3]"
+              style={{ borderStyle: "dashed" }}
+            >
+              <PlusIcon size={16} /> Add a goal
             </button>
-          );
-        })}
+          )}
+        </div>
+        {adding && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              save();
+            }}
+            className="mt-3 flex gap-2"
+          >
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value.slice(0, 32))}
+              placeholder="Name your goal"
+              enterKeyHint="done"
+              className="h-12 min-w-0 flex-1 rounded-full border border-[#d8dbd4] bg-white px-5 text-[16px] text-label outline-none focus:border-[#2d4a35]"
+            />
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              className="pressable h-12 rounded-full px-5 text-[16px] font-semibold text-white disabled:opacity-40"
+              style={{ background: GREEN }}
+            >
+              Add
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Setup 3: put your goals in order. The top three show on Overview; the rest go under More goals. */
+function Arrange({ goals, order, onOrder }: { goals: Goal[]; order: string[]; onOrder: (ids: string[]) => void }) {
+  const name = (id: string) => goals.find((g) => g.id === id)?.name ?? "";
+  return (
+    <div className="flex h-full flex-col">
+      <Heading title="Make it yours." sub="Drag to reorder. Your top three show on Overview." />
+      <div className="scroll-y -mx-1 mt-5 min-h-0 flex-1 px-1 pb-2 [@media(max-height:720px)]:mt-3">
+        <GoalOrderList ids={order} name={name} onOrder={onOrder} />
       </div>
     </div>
   );

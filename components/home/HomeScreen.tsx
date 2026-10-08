@@ -122,7 +122,8 @@ export function HomeScreen({
         <div className="mt-4 flex items-center justify-between px-1 [@media(max-height:720px)]:mt-2.5">
           <h2 className="text-[19px] font-bold tracking-[-0.01em] text-label">Your goals</h2>
           <button type="button" onClick={() => goTo("goals")} className="flex h-8 items-center gap-1 text-[14px] text-label-2">
-            See all <ChevronIcon size={14} />
+            {/* Overview shows the top three; the rest are a tap away */}
+            {goals.length > 3 ? `More goals (${goals.length - 3})` : "See all"} <ChevronIcon size={14} />
           </button>
         </div>
         <div className="mt-1.5 grid grid-cols-3 gap-2.5">
