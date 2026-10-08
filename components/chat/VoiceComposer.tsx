@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { prepareImage, type PreparedImage } from "@/lib/image";
 import { useSpeech } from "@/lib/useSpeech";
+import { stopSpeaking } from "@/lib/pennyVoice";
 import { KeyboardIcon, MicIcon, PlusIcon, StopIcon } from "../ui/Icons";
 
 const PROBLEMS: Record<string, string> = {
@@ -33,7 +34,7 @@ export function VoiceComposer({
   onTextInstead: () => void;
   onListening?: (on: boolean) => void;
   /** Lets the "Talk" option on the Ask Penny screen start listening within the same tap. */
-  handle?: React.RefObject<{ talk: () => void } | null>;
+  handle?: React.RefObject<{ talk: () => void; listen: () => void } | null>;
   /** Opens the demo gallery instead of the file picker. */
   onAdd?: () => void;
   /** Once a conversation is going: one slim row instead of the big mic, so answers get the room. */
@@ -61,8 +62,17 @@ export function VoiceComposer({
       if (finalText) onSend(finalText);
       setHeard("");
     },
-    (code) => setProblem(PROBLEMS[code] ?? PROBLEMS.default),
+    (code) => {
+      // If the mic opened on its own (after Penny asked something) and the phone said no, stay quiet:
+      // the Tap to talk button is right there.
+      if (auto.current) {
+        auto.current = false;
+        return;
+      }
+      setProblem(PROBLEMS[code] ?? PROBLEMS.default);
+    },
   );
+  const auto = useRef(false);
 
   useEffect(() => onListening?.(speech.listening), [speech.listening, onListening]);
 
@@ -70,12 +80,23 @@ export function VoiceComposer({
     if (busy) return;
     if (speech.listening) speech.stop();
     else {
+      // Penny stops talking first, so the mic hears you and not her.
+      stopSpeaking();
+      auto.current = false;
       setHeard("");
       setProblem(null);
       speech.start("");
     }
   };
-  if (handle) handle.current = { talk };
+  // Opens the mic after Penny asks something (she has finished speaking by then).
+  const listen = () => {
+    if (busy || speech.listening) return;
+    auto.current = true;
+    setHeard("");
+    setProblem(null);
+    speech.start("");
+  };
+  if (handle) handle.current = { talk, listen };
 
   return (
     <div className="flex flex-col items-center px-4 pb-2 pt-1">

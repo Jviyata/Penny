@@ -11,9 +11,16 @@
 const MUTE_KEY = "ciat:penny-muted";
 const PREFERRED = ["Samantha", "Ava", "Allison", "Susan", "Zoe", "Karen", "Google US English", "Microsoft Aria", "Microsoft Jenny"];
 
+// Penny speaks at a gentle, medium level rather than full volume.
+const VOLUME = 0.6;
+
 let player: HTMLAudioElement | null = null;
+// iPhone ignores an audio element's volume, so her voice goes through a Web Audio gain instead.
+let audioCtx: AudioContext | null = null;
+let routed = false;
 let unlocked = false;
 let pending: AbortController | null = null;
+let current: AbortController | null = null; // the line she's saying now, so stopping cancels its onEnd
 const cache = new Map<string, string>(); // text → audio URL, so a repeated line doesn't cost twice
 
 export function voiceAvailable(): boolean {
@@ -65,6 +72,19 @@ export function unlockVoice() {
   if (unlocked || typeof window === "undefined") return;
   unlocked = true;
   player = new Audio();
+  player.volume = VOLUME;
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioCtx = new Ctx();
+    const gain = audioCtx.createGain();
+    gain.gain.value = VOLUME;
+    audioCtx.createMediaElementSource(player).connect(gain).connect(audioCtx.destination);
+    player.volume = 1; // the gain does the softening now
+    routed = true;
+    audioCtx.resume().catch(() => {});
+  } catch {
+    routed = false;
+  }
   player.src = silentWav();
   player.play().catch(() => {});
   if ("speechSynthesis" in window) {
@@ -76,6 +96,8 @@ export function unlockVoice() {
 
 export function stopSpeaking() {
   pending?.abort();
+  current?.abort();
+  current = null;
   pending = null;
   if (player) player.pause();
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -84,13 +106,18 @@ export function stopSpeaking() {
 /**
  * Say something as Penny. Replaces anything she was still saying.
  * Resolves once she starts making sound (or right away if she can't), so the text can follow her voice.
+ * `onEnd` runs when she finishes (not if she's interrupted), e.g. to start listening for the answer.
  */
-export async function speak(text: string): Promise<void> {
+export async function speak(text: string, onEnd?: () => void): Promise<void> {
   const line = text.replace(/~/g, "about ").trim();
-  if (!line || isMuted() || typeof window === "undefined") return;
+  if (!line || isMuted() || typeof window === "undefined") {
+    onEnd?.();
+    return;
+  }
   stopSpeaking();
   const ctrl = new AbortController();
   pending = ctrl;
+  current = ctrl;
 
   try {
     let url = cache.get(line);
@@ -106,21 +133,35 @@ export async function speak(text: string): Promise<void> {
       cache.set(line, url);
     }
     if (ctrl.signal.aborted) return;
-    player ??= new Audio();
+    if (!player) {
+      player = new Audio();
+      player.volume = VOLUME;
+    }
+    if (routed && audioCtx?.state !== "running") await audioCtx?.resume().catch(() => {});
+    const p = player;
+    p.onended = () => {
+      p.onended = null;
+      if (!ctrl.signal.aborted) onEnd?.();
+    };
     player.src = url;
     await player.play();
   } catch (err) {
     if (ctrl.signal.aborted) return;
     console.info("[penny-voice] using the built-in voice:", err instanceof Error ? err.message : err);
-    await speakBuiltIn(line);
+    await speakBuiltIn(line, () => {
+      if (!ctrl.signal.aborted) onEnd?.();
+    });
   } finally {
     if (pending === ctrl) pending = null;
   }
 }
 
 /** The phone's own voice, used when ElevenLabs isn't available. */
-function speakBuiltIn(text: string): Promise<void> {
-  if (!("speechSynthesis" in window)) return Promise.resolve();
+function speakBuiltIn(text: string, onEnd?: () => void): Promise<void> {
+  if (!("speechSynthesis" in window)) {
+    onEnd?.();
+    return Promise.resolve();
+  }
   const s = window.speechSynthesis;
   const voices = s.getVoices().filter((v) => v.lang.toLowerCase().startsWith("en"));
   let voice: SpeechSynthesisVoice | undefined;
@@ -131,10 +172,13 @@ function speakBuiltIn(text: string): Promise<void> {
   const u = new SpeechSynthesisUtterance(text);
   if (voice) u.voice = voice;
   u.lang = voice?.lang ?? "en-US";
-  u.rate = 1.03;
-  u.pitch = 1.08;
+  // Soft and medium-toned: normal pace, a touch brighter than flat, and not full volume.
+  u.rate = 0.98;
+  u.pitch = 1.05;
+  u.volume = VOLUME;
   return new Promise((resolve) => {
     u.onstart = () => resolve();
+    u.onend = () => onEnd?.();
     u.onerror = () => resolve();
     setTimeout(resolve, 1500); // some browsers never fire onstart
     s.cancel();

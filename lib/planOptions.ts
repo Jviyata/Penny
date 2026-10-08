@@ -181,7 +181,7 @@ export function spokenAnswer(plans: PlansCard): string {
   const { headline, pick, reason, options } = planFor(plans.name, plans.price, plans.left, plans.answers);
   const o = options.find((x) => x.id === pick)!;
   const why = reason ? ` ${reason}` : "";
-  const ask = plans.answers ? " Want to go with that?" : "";
+  const ask = plans.answers ? " Does that sound good?" : "";
   if (pick === "now") return `${headline}${why} You'd still have ${money(o.left)} left this month.${ask}`;
   const per = `${money(o.amount)} a month, and it's ${o.getIt}`;
   if (why) return `${headline}${why} That's ${per}.${ask}`;

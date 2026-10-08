@@ -35,7 +35,7 @@ import {
   useQuestion,
 } from "@/lib/interview";
 import type { Goal } from "@/lib/monthDetails";
-import { calendarLink, dueReminder, isAre, needs, nextStep, scheduleFor, stepDate, stepMonth } from "@/lib/savings";
+import { calendarLink, dueReminder, isAre, needs, nextStep, pronounFor, scheduleFor, stepDate, stepMonth } from "@/lib/savings";
 
 type Mode = "talk" | "text";
 
@@ -78,7 +78,9 @@ export function ChatScreen({
     });
     composerRef.current?.querySelector("textarea")?.focus();
   };
-  const voice = useRef<{ talk: () => void } | null>(null);
+  const voice = useRef<{ talk: () => void; listen: () => void } | null>(null);
+  const modeRef = useRef<Mode>("text");
+  modeRef.current = mode;
   const talkNow = () => {
     flushSync(() => {
       setStarted(true);
@@ -121,7 +123,7 @@ export function ChatScreen({
         message: {
           id: newId(),
           role: "assistant",
-          text: `Done! ${isAre(name)} yours. You still have ${money(o.left)} left for ${MONTH.name}.`,
+          text: `Yay, enjoy ${pronounFor(name)}! You still have ${money(o.left)} left for ${MONTH.name}.`,
           mood: "celebrating",
         },
       });
@@ -141,7 +143,7 @@ export function ChatScreen({
         message: {
           id: newId(),
           role: "assistant",
-          text: `Done! I made a goal for your ${name}. I set aside ${money(o.amount)} today, and I'll remind you on ${stepDate(next.month)} for the next ${money(next.amount)}. ${isAre(name)} yours in ${getIt}.`,
+          text: `Yay, it's a plan! I made a goal for your ${name} and set aside ${money(o.amount)} today. I'll remind you on ${stepDate(next.month)} for the next ${money(next.amount)}, and ${isAre(name).toLowerCase()} yours in ${getIt}!`,
           mood: "celebrating",
           tracking: { goalId },
         },
@@ -199,8 +201,8 @@ export function ChatScreen({
     const reminder = due ? ` Quick reminder: your ${due.goal.name} ${needs(due.goal.name)} ${money(due.step.amount)} this month.` : "";
     speak(
       first
-        ? `Hi${name}! I'm Penny.${reminder} What are you thinking of buying?`
-        : `${reminder ? `Hi again!${reminder}` : "What's next?"} Tell me what you're thinking of buying.`,
+        ? `Hi${name}! I'm Penny.${reminder} What are you thinking of buying? I'd love to help.`
+        : `${reminder ? `Hi again!${reminder}` : "Hi again!"} What are you thinking of buying?`,
     );
     if (!first) setGreeted(true);
   }, [active, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -231,7 +233,13 @@ export function ChatScreen({
       setHoldId((h) => (h === m.id ? null : h));
     };
     const cap = setTimeout(reveal, 5000); // never keep the answer waiting on a slow connection
-    speak(m.plans ? spokenAnswer(m.plans) : m.text).then(() => {
+    // After a question (hers, or "Does that sound good?"), the mic opens on its own in talk mode,
+    // so you can just answer out loud like a conversation.
+    const asks = !!m.ask || (!!m.plans && !!m.plans.answers && !m.plans.chosen);
+    const listen = () => {
+      if (asks && modeRef.current === "talk") voice.current?.listen();
+    };
+    speak(m.plans ? spokenAnswer(m.plans) : m.text, listen).then(() => {
       clearTimeout(cap);
       setTimeout(reveal, 650); // a beat of her talking, then the words appear
     });
@@ -244,8 +252,12 @@ export function ChatScreen({
     const t = text.toLowerCase();
     if (!image && t.trim() && lastMsg?.plans && !lastMsg.plans.chosen) {
       const remind = /remind|wishlist|later|not now/.test(t);
+      // "Yes" / "sounds good" answers her "Does that sound good?": go with her pick.
+      const agree = /^(yes|yeah|yep|yup|sure|ok|okay|sounds (good|great|perfect)|let'?s do (it|that)|do it|perfect|deal)\b/.test(t.trim());
       const id: PlanId | null = remind
         ? null
+        : agree
+          ? planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left, lastMsg.plans.answers).pick
         : /three|3 month/.test(t)
           ? "wait3"
           : /wait|two|2 month|save up|saving/.test(t)
@@ -260,7 +272,7 @@ export function ChatScreen({
           choosePlan(lastMsg, planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left).options.find((x) => x.id === id)!);
         } else {
           if (!lastMsg.plans.remind) togglePlans(lastMsg, "remind");
-          const reply = "Got it. I saved it to your Wishlist, and I'll remind you when it fits.";
+          const reply = "Of course! It's on your Wishlist, and I'll let you know as soon as it fits.";
           dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: reply, mood: "celebrating" } });
         }
         return;
@@ -649,7 +661,7 @@ function Message({
                 </div>
               )}
               {/* The item is shown above, so only the question is written out (Penny says the whole line) */}
-              <p className="text-[17px] leading-[22px] text-label">{m.ask.step === "when" ? m.text.replace(/^.*?\.\s+/, "") : m.text}</p>
+              <p className="text-[17px] leading-[22px] text-label">{m.ask.step === "when" ? m.text.split(/(?<=[.!?])\s+/).pop() : m.text}</p>
             </div>
           </div>
           {showReplies && (

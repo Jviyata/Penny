@@ -27,16 +27,19 @@ export const USE_CHIPS: { label: string; value: Use }[] = [
   { label: "Just once", value: "once" },
 ];
 
+/** Free answers count too: "honestly no rush", "for a wedding on Saturday", "just browsing". */
 export function parseWhen(t: string): When | undefined {
-  if (/look|brows|curious|just seeing/.test(t)) return "looking";
-  if (/wait|no rush|later|not urgent|whenever|next month/.test(t)) return "wait";
-  if (/week|today|tomorrow|\bnow\b|asap|soon|right away|weekend|need (it|them)/.test(t)) return "now";
+  if (/look|brows|curious|just seeing|window shop|not sure|maybe/.test(t)) return "looking";
+  if (/wait|no rush|not in a rush|later|not urgent|whenever|next month|can hold|no hurry|eventually|someday/.test(t)) return "wait";
+  if (/week|today|tonight|tomorrow|\bnow\b|asap|soon|right away|weekend|saturday|sunday|friday|need (it|them)|urgent|event|wedding|party|trip|birthday/.test(t))
+    return "now";
   return undefined;
 }
 export function parseUse(t: string): Use | undefined {
-  if (/every ?day|daily|all the time|a lot|constantly/.test(t)) return "daily";
-  if (/once|one time|one-time|special|single/.test(t)) return "once";
-  if (/sometimes|often|week|occasion|now and then|few times|here and there/.test(t)) return "sometimes";
+  if (/every ?day|daily|all the time|a lot|constantly|always|non ?stop|every single|most days|all week/.test(t)) return "daily";
+  if (/\bonce\b|one time|one-time|special|single|just for|only for|one event|wedding|party/.test(t)) return "once";
+  if (/sometimes|week|weekend|occasion|now and then|few times|here and there|a couple|twice|month|often|kind of|sort of/.test(t))
+    return "sometimes";
   return undefined;
 }
 export const isSkip = (t: string) => /\bskip\b|just tell me|whatever/.test(t);
@@ -46,24 +49,34 @@ export function firstQuestion(item: PlansCard): ChatMessage {
   return {
     id: newId(),
     role: "assistant",
-    text: `Ooh, ${item.name} for ${money(item.price)}. When do you need ${pronoun(item.name)}?`,
+    // Penny says all of it; the bubble shows only the question (the item is shown above it).
+    text: `Ooh, ${item.name} for ${money(item.price)}! Love that pick. When do you need ${pronoun(item.name)}?`,
     mood: "listening",
     ask: { step: "when", item },
   };
 }
 
+/** Penny reacts to what you said before asking more, so it feels like a conversation. */
+const whenReaction = (w?: When) =>
+  w === "now" ? "Ooh, soon! Got it." : w === "wait" ? "No rush, I love that." : w === "looking" ? "Just browsing is totally fine!" : "Got it!";
+const useReaction = (u?: Use) =>
+  u === "daily" ? "Every day? That's a great sign!" : u === "once" ? "A special-occasion piece, how fun!" : u === "sometimes" ? "Sounds good!" : "Got it!";
+
 export function useQuestion(item: PlansCard): ChatMessage {
   return {
     id: newId(),
     role: "assistant",
-    text: `Got it. How often will you ${verb(item.name)} ${pronoun(item.name)}?`,
+    text: `${whenReaction(item.answers?.when)} How often do you think you'll ${verb(item.name)} ${pronoun(item.name)}?`,
     mood: "listening",
     ask: { step: "use", item },
   };
 }
 
 export function checkingMessage(item: PlansCard): ChatMessage {
-  return { id: newId(), role: "assistant", text: "Let me check your month.", mood: "thinking", checks: { item } };
+  const a = item.answers ?? {};
+  // React to the last thing you told her (for a ticket or dinner, that's "when").
+  const reaction = a.use && !isExperience(item.name) ? useReaction(a.use) : a.when ? whenReaction(a.when) : "Okay!";
+  return { id: newId(), role: "assistant", text: `${reaction} Let me take a quick look at your month.`, mood: "thinking", checks: { item } };
 }
 
 /** What Penny looks at, from the app's real numbers. */

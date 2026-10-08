@@ -39,7 +39,9 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         text,
         model_id: process.env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL,
-        voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.25, use_speaker_boost: true },
+        // Penny's voice: soft and medium-toned, a little excited. Steadier (less loud swings),
+        // a touch of expression, slightly unhurried, and no speaker boost so she isn't loud.
+        voice_settings: { stability: 0.6, similarity_boost: 0.75, style: 0.3, use_speaker_boost: false, speed: 0.95 },
       }),
     },
   ).catch((err: unknown) => {

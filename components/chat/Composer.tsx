@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { prepareImage, type PreparedImage } from "@/lib/image";
 import { useSpeech } from "@/lib/useSpeech";
+import { stopSpeaking } from "@/lib/pennyVoice";
 import { ArrowUpIcon, MicIcon, PhotoIcon, StopIcon, XIcon } from "../ui/Icons";
 
 /**
@@ -27,7 +28,14 @@ export function Composer({
   const [note, setNote] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const speech = useSpeech(setText);
+  // Talking into the box sends when you stop, like answering Penny out loud (no photo attached).
+  const imageRef = useRef<PreparedImage | null>(null);
+  imageRef.current = image;
+  const speech = useSpeech(setText, (finalText) => {
+    if (!finalText || imageRef.current || busy) return;
+    onSend(finalText);
+    setText("");
+  });
   useEffect(() => onListening?.(speech.listening), [speech.listening, onListening]);
 
   // Grow with the text, up to ~5 lines.
@@ -156,7 +164,11 @@ export function Composer({
                 aria-label={speech.listening ? "Stop listening" : "Talk instead of typing"}
                 aria-pressed={speech.listening}
                 onPointerDown={keepFocus}
-                onClick={() => (speech.listening ? speech.stop() : speech.start(text))}
+                onClick={() => {
+                  if (speech.listening) return speech.stop();
+                  stopSpeaking(); // so the mic hears you, not Penny
+                  speech.start(text);
+                }}
                 className="flex h-12 w-12 shrink-0 items-center justify-center text-label-2"
               >
                 {speech.listening ? (
