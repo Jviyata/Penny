@@ -137,17 +137,35 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     setCanSpeak(voiceAvailable());
   }, []);
   const spokenUpTo = useRef<number | null>(null);
-  useEffect(() => {
+  // Her newest reply stays hidden until her voice starts, so she's heard first and the text follows.
+  const [holdId, setHoldId] = useState<string | null>(null);
+  useLayoutEffect(() => {
     if (!state.hydrated) return;
     if (spokenUpTo.current === null || messages.length < spokenUpTo.current) {
       spokenUpTo.current = messages.length; // don't read out old messages
+      setHoldId(null);
       return;
     }
     if (messages.length === spokenUpTo.current) return;
     spokenUpTo.current = messages.length;
     const m = messages[messages.length - 1];
     if (m.role !== "assistant") return;
-    speak(m.plans ? spokenAnswer(m.plans.name, m.plans.price, m.plans.left) : m.text);
+    if (!canSpeak || isMuted()) {
+      setHoldId(null);
+      return;
+    }
+    setHoldId(m.id);
+    let done = false;
+    const reveal = () => {
+      if (done) return;
+      done = true;
+      setHoldId((h) => (h === m.id ? null : h));
+    };
+    const cap = setTimeout(reveal, 5000); // never keep the answer waiting on a slow connection
+    speak(m.plans ? spokenAnswer(m.plans.name, m.plans.price, m.plans.left) : m.text).then(() => {
+      clearTimeout(cap);
+      setTimeout(reveal, 650); // a beat of her talking, then the words appear
+    });
   }, [messages.length, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Answering Penny's answer by voice (or typing): "let's wait", "buy it", "remind me later".
@@ -223,7 +241,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       }
     }
     scrollToEnd(true);
-  }, [messages.length, thinking]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [messages.length, thinking, holdId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -342,12 +360,12 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
           <div className="flex min-h-full flex-col justify-end gap-2.5 [@media(max-height:720px)]:gap-1.5">
             {messages.map((m, i) =>
               // Penny's full answer starts with the item itself, so the question right before it would repeat it.
-              m.role === "user" && messages[i + 1]?.plans ? null : (
+              m.id === holdId || (m.role === "user" && messages[i + 1]?.plans) ? null : (
               <Message
                 key={m.id}
                 m={m}
                 animate={restored.current !== null && i >= restored.current}
-                showReplies={m === last && !thinking}
+                showReplies={m === last && !thinking && !holdId}
                 busy={thinking}
                 onAction={(a) => onAction(m, a)}
                 onChoose={(o) => choosePlan(m, o)}
@@ -356,7 +374,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
               />
               ),
             )}
-            {thinking && <Thinking />}
+            {(thinking || holdId) && <Thinking />}
           </div>
         )}
       </div>

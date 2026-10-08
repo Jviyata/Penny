@@ -81,8 +81,11 @@ export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
-/** Say something as Penny. Replaces anything she was still saying. */
-export async function speak(text: string) {
+/**
+ * Say something as Penny. Replaces anything she was still saying.
+ * Resolves once she starts making sound (or right away if she can't), so the text can follow her voice.
+ */
+export async function speak(text: string): Promise<void> {
   const line = text.replace(/~/g, "about ").trim();
   if (!line || isMuted() || typeof window === "undefined") return;
   stopSpeaking();
@@ -109,15 +112,15 @@ export async function speak(text: string) {
   } catch (err) {
     if (ctrl.signal.aborted) return;
     console.info("[penny-voice] using the built-in voice:", err instanceof Error ? err.message : err);
-    speakBuiltIn(line);
+    await speakBuiltIn(line);
   } finally {
     if (pending === ctrl) pending = null;
   }
 }
 
 /** The phone's own voice, used when ElevenLabs isn't available. */
-function speakBuiltIn(text: string) {
-  if (!("speechSynthesis" in window)) return;
+function speakBuiltIn(text: string): Promise<void> {
+  if (!("speechSynthesis" in window)) return Promise.resolve();
   const s = window.speechSynthesis;
   const voices = s.getVoices().filter((v) => v.lang.toLowerCase().startsWith("en"));
   let voice: SpeechSynthesisVoice | undefined;
@@ -130,6 +133,11 @@ function speakBuiltIn(text: string) {
   u.lang = voice?.lang ?? "en-US";
   u.rate = 1.03;
   u.pitch = 1.08;
-  s.cancel();
-  s.speak(u);
+  return new Promise((resolve) => {
+    u.onstart = () => resolve();
+    u.onerror = () => resolve();
+    setTimeout(resolve, 1500); // some browsers never fire onstart
+    s.cancel();
+    s.speak(u);
+  });
 }
