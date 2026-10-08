@@ -10,7 +10,7 @@ import type { ChatMessage, PlansCard, Use, When } from "./types";
  */
 
 /** "them" for boots, AirPods, sunglasses; "it" for a bag or a ticket. */
-export const pronoun = (name: string) => (/s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
+export const pronoun = (name: string) => (/[^s]s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
 /** Things you wear vs. things you use. */
 export const verb = (name: string) => (/boot|heel|shoe|sneaker|bag|sunglass|jacket|coat|dress|watch|jean/i.test(name) ? "wear" : "use");
 /** A one-time thing (a ticket, a dinner) doesn't need "how often". */

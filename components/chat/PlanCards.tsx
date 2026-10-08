@@ -150,7 +150,7 @@ export function PlanCards({
 
       {/* Follow-ups */}
       <div className="grid grid-cols-2 gap-2">
-        <Chip on={!!plans.remind} onClick={() => onToggle("remind")} label="Remind me when I’m ready" done="On your Wishlist" />
+        <Chip on={!!plans.remind} onClick={() => onToggle("remind")} label="Save to Wishlist" done="On your Wishlist" />
         <Chip on={!!plans.priceWatch} onClick={() => onToggle("priceWatch")} label="Tell me if the price drops" done="Watching the price" />
       </div>
     </div>

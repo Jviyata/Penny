@@ -10,7 +10,7 @@ import { moodFor } from "./mood";
 import { applyUpdates, sameName } from "./updates";
 import type { CheckResult, Item, Outgoing, PlansCard } from "./types";
 import { DEMO_ITEMS } from "./demoItems";
-import { firstQuestion } from "./interview";
+import { nextStep } from "./intake";
 
 /** A demo gallery item mentioned by name ("can I afford the Zara boots?"), so voice works without a photo. */
 function demoItemIn(text: string) {
@@ -99,8 +99,21 @@ export function useSend() {
         type: "addMessage",
         // Before her answer, Penny asks a couple of quick questions (see interview.ts).
         message: plans
-          ? { ...firstQuestion(plans), failed: offline }
-          : { id: newId(), role: "assistant", text: result.reply, quickReplies: result.quickReplies, failed: offline, mood },
+          ? { ...nextStep({ ...plans, answers: {} }), failed: offline }
+          : result.needsPrice && currentItem
+            ? // Penny keeps the item and waits for its price (her own words from the AI).
+              {
+                id: newId(),
+                role: "assistant",
+                text: result.reply,
+                failed: offline,
+                mood,
+                ask: {
+                  step: "price",
+                  item: { name: currentItem.name === "This item" ? "item" : currentItem.name, image: currentItem.image, left: next.freeTotal, answers: {} },
+                },
+              }
+            : { id: newId(), role: "assistant", text: result.reply, quickReplies: result.quickReplies, failed: offline, mood },
       });
 
       if (plans) dispatch({ type: "setCurrentItem", item: { name: plans.name, price: plans.price, image: plans.image } });

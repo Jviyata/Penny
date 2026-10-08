@@ -119,11 +119,13 @@ export function planFor(name: string, price: number, left: number, answers?: Ans
 
   // Cheap enough → just buy it. A real squeeze → spread it out the most.
   const base: PlanId = nowImpact === "Low" ? "now" : nowImpact === "Medium" ? "wait2" : "wait3";
-  const pick = pickWithAnswers(base, nowImpact, answers);
+  const pick = pickWithAnswers(base, nowImpact, answers, price > left);
   const pct = Math.round((price / left) * 100);
 
   const headline =
-    base === "now"
+    price > left
+      ? "It’s a little more than your budget comfortably allows right now."
+      : base === "now"
       ? "This one fits comfortably."
       : base === "wait2"
         ? `You can, but it squeezes ${MONTH.name}.`
@@ -146,17 +148,22 @@ const shift = (p: PlanId, by: number) => ORDER[Math.min(2, Math.max(0, ORDER.ind
  * makes her more careful, needing it this week means buying now (unless it's a real squeeze),
  * and "it can wait" or "just looking" means saving up.
  */
-function pickWithAnswers(base: PlanId, impact: Impact, a?: Answers): PlanId {
+function pickWithAnswers(base: PlanId, impact: Impact, a: Answers | undefined, overBudget: boolean): PlanId {
   if (!a) return base;
   let pick = base;
   if (a.use === "daily" && impact !== "High") pick = shift(pick, -1);
   if (a.use === "once" && impact !== "Low") pick = shift(pick, 1);
   if (a.when === "now" && impact !== "High") pick = "now";
   if ((a.when === "wait" || a.when === "looking") && pick === "now") pick = "wait2";
+  // A deadline ("by December") caps how long she'd spread it: Wait 2 is yours in 2 months, Wait 3 in 3.
+  if (a.months !== undefined) {
+    const by = (p: PlanId) => (p === "now" ? 0 : p === "wait2" ? 2 : 3);
+    if (by(pick) > a.months) pick = a.months >= 2 ? "wait2" : overBudget ? "wait2" : "now";
+  }
   return pick;
 }
 
-const themOrIt = (name: string) => (/s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
+const themOrIt = (name: string) => (/[^s]s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
 
 /** "It can wait, and you'd wear them every day, so I'd save for 2 months." */
 function reasonFor(name: string, pick: PlanId, a?: Answers): string | undefined {
@@ -164,8 +171,9 @@ function reasonFor(name: string, pick: PlanId, a?: Answers): string | undefined 
   const it = themOrIt(name);
   const wear = /boot|heel|shoe|sneaker|bag|sunglass|jacket|coat|dress|watch|jean/i.test(name) ? "wear" : "use";
   const parts: string[] = [];
-  if (a.when === "now") parts.push("You need it soon");
-  if (a.when === "wait") parts.push("It can wait");
+  if (a.label && a.when !== "looking") parts.push(`You want ${it} by ${a.label}`);
+  else if (a.when === "now") parts.push("You need it soon");
+  if (a.when === "wait" && !a.label) parts.push("It can wait");
   if (a.when === "looking") parts.push("You’re just looking");
   if (a.use === "daily") parts.push(`you’d ${wear} ${it} every day`);
   if (a.use === "sometimes") parts.push(`you’d ${wear} ${it} sometimes`);
@@ -181,7 +189,8 @@ export function spokenAnswer(plans: PlansCard): string {
   const { headline, pick, reason, options } = planFor(plans.name, plans.price, plans.left, plans.answers);
   const o = options.find((x) => x.id === pick)!;
   const why = reason ? ` ${reason}` : "";
-  const ask = plans.answers ? " Does that sound good?" : "";
+  const ask =
+    plans.price > plans.left ? " Want to see what saving for it could look like? Just say yes." : plans.answers ? " Does that sound good?" : "";
   if (pick === "now") return `${headline}${why} You'd still have ${money(o.left)} left this month.${ask}`;
   const per = `${money(o.amount)} a month, and it's ${o.getIt}`;
   if (why) return `${headline}${why} That's ${per}.${ask}`;

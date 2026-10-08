@@ -59,7 +59,10 @@ export function VoiceComposer({
   const speech = useSpeech(
     setHeard,
     (finalText) => {
-      if (finalText) onSend(finalText);
+      if (finalText) {
+        lastCode.current = null;
+        onSend(finalText);
+      }
       setHeard("");
     },
     (code) => {
@@ -69,10 +72,14 @@ export function VoiceComposer({
         auto.current = false;
         return;
       }
-      setProblem(PROBLEMS[code] ?? PROBLEMS.default);
+      // The same problem twice gets a different, more useful message (never the same error on loop).
+      const repeat = lastCode.current === code;
+      lastCode.current = code;
+      setProblem(repeat ? "Still having trouble hearing you. You can type it instead with the keyboard button." : (PROBLEMS[code] ?? PROBLEMS.default));
     },
   );
   const auto = useRef(false);
+  const lastCode = useRef<string | null>(null);
 
   useEffect(() => onListening?.(speech.listening), [speech.listening, onListening]);
 

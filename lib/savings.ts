@@ -58,7 +58,7 @@ export function nextLine(g: Goal): string | undefined {
   return s ? `Next: ${money(s.amount)} on ${stepDate(s.month)}` : "Ready to buy";
 }
 
-export const pronounFor = (name: string) => (/s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
+export const pronounFor = (name: string) => (/[^s]s$/i.test(name.trim().split(/\s+/).pop() ?? "") ? "them" : "it");
 export const needs = (name: string) => (pronounFor(name) === "them" ? "need" : "needs");
 export const isAre = (name: string) => (pronounFor(name) === "them" ? "They're" : "It's");
 

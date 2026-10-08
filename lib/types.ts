@@ -29,7 +29,10 @@ export type ChatMessage = {
   failed?: boolean; // reply came from the offline fallback
   mood?: Mood; // the mascot's expression for this reply
   plans?: PlansCard; // the Buy Now / Wait 2 / Wait 3 cards for a demo gallery item
-  ask?: { step: "when" | "use"; item: PlansCard }; // one of Penny's questions before her answer
+  /** One of Penny's questions. `item` holds everything collected so far, so nothing is lost. */
+  ask?: { step: AskStep; item: Draft; tries?: number; plan?: "now" | "wait2" | "wait3"; ref?: string };
+  /** A save that didn't go through: the button retries exactly this (safely, no duplicates). */
+  retry?: { messageId: string; action: "now" | "wait2" | "wait3" | "remind" };
   checks?: { item: PlansCard }; // "Checking your month…": what Penny looks at before answering
   tracking?: { goalId: string }; // after "Start saving": the goal Penny made and her reminders
 };
@@ -37,7 +40,23 @@ export type ChatMessage = {
 /** What you told Penny before her answer. */
 export type When = "now" | "wait" | "looking";
 export type Use = "daily" | "sometimes" | "once";
-export type Answers = { when?: When; use?: Use };
+export type Answers = { when?: When; use?: Use; months?: number; label?: string };
+
+/** What Penny is waiting to hear. */
+export type AskStep =
+  | "item" // what is it?
+  | "price" // about how much?
+  | "confirm-price" // "did you mean $250?"
+  | "when" // when were you hoping to get it?
+  | "fix-when" // a date that can't be right
+  | "use" // how often will you use it?
+  | "finance" // budget or just a savings timeline?
+  | "decide" // save for it or keep it on the Wishlist?
+  | "dup" // you already have a goal for this, update it?
+  | "wishlist-offer"; // can't watch prices, save to the Wishlist instead?
+
+/** A purchase Penny is still learning about. Name and price fill in as the user tells her. */
+export type Draft = { name?: string; price?: number; left: number; image?: string; answers?: Answers };
 
 /** Penny's pricing-plan style answer. The options are recomputed from these numbers when shown. */
 export type PlansCard = {

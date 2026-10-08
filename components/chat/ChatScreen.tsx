@@ -21,21 +21,13 @@ import { DemoGallery } from "./DemoGallery";
 import { PlanCards } from "./PlanCards";
 import { newId } from "@/lib/format";
 import type { DemoItem } from "@/lib/demoItems";
-import { monthAfter, planFor, spokenAnswer, type PlanId, type PlanOption } from "@/lib/planOptions";
-import {
-  USE_CHIPS,
-  WHEN_CHIPS,
-  checkLines,
-  checkingMessage,
-  firstQuestion,
-  isExperience,
-  isSkip,
-  parseUse,
-  parseWhen,
-  useQuestion,
-} from "@/lib/interview";
+import { spokenAnswer, type PlanOption } from "@/lib/planOptions";
+import { USE_CHIPS, WHEN_CHIPS, checkLines } from "@/lib/interview";
+import { isComplete } from "@/lib/intake";
+import type { AskStep } from "@/lib/types";
+import { useConversation } from "./useConversation";
 import type { Goal } from "@/lib/monthDetails";
-import { calendarLink, dueReminder, isAre, needs, nextStep, pronounFor, scheduleFor, stepDate, stepMonth } from "@/lib/savings";
+import { calendarLink, dueReminder, needs, nextStep, stepDate, stepMonth } from "@/lib/savings";
 
 type Mode = "talk" | "text";
 
@@ -107,65 +99,13 @@ export function ChatScreen({
     dispatch({ type: "setThinking", on: true });
     const left = state.freeTotal;
     window.setTimeout(() => {
-      dispatch({ type: "addMessage", message: firstQuestion({ name: item.name, price: item.price, left, image: item.art }) });
+      convo.startWith({ name: item.name, price: item.price, left, image: item.art, answers: {} });
       dispatch({ type: "setThinking", on: false });
     }, 1100);
   };
-  // Penny's three choices change the real numbers:
-  // Buy now spends the price; waiting sets this month's share aside into a new goal for the item.
-  const choosePlan = (m: ChatMessage, o: PlanOption) => {
-    if (!m.plans || m.plans.chosen) return;
-    const { name, price, image } = m.plans;
-    dispatch({ type: "setTotal", amount: state.freeTotal - o.amount });
-    if (o.id === "now") {
-      dispatch({
-        type: "addMessage",
-        message: {
-          id: newId(),
-          role: "assistant",
-          text: `Yay, enjoy ${pronounFor(name)}! You still have ${money(o.left)} left for ${MONTH.name}.`,
-          mood: "celebrating",
-        },
-      });
-    } else {
-      // Waiting makes a goal with a savings plan: this month's share now, the rest on the 1st of each month.
-      const months = o.id === "wait2" ? 2 : 3;
-      const schedule = scheduleFor(price, months);
-      const goalId = newId();
-      const getIt = monthAfter(months);
-      dispatch({
-        type: "startSavingGoal",
-        goal: { id: goalId, name, target: price, saved: o.amount, thisMonth: o.amount, by: `By ${getIt}`, image, schedule, getIt },
-      });
-      const next = schedule[1];
-      dispatch({
-        type: "addMessage",
-        message: {
-          id: newId(),
-          role: "assistant",
-          text: `Yay, it's a plan! I made a goal for your ${name} and set aside ${money(o.amount)} today. I'll remind you on ${stepDate(next.month)} for the next ${money(next.amount)}, and ${isAre(name).toLowerCase()} yours in ${getIt}!`,
-          mood: "celebrating",
-          tracking: { goalId },
-        },
-      });
-    }
-    dispatch({ type: "updatePlans", messageId: m.id, patch: { chosen: o.id } });
-  };
-  // "Remind me when I'm ready to buy" keeps the item on the Wishlist; tapping again takes it off.
-  const togglePlans = (m: ChatMessage, key: "remind" | "priceWatch") => {
-    if (!m.plans) return;
-    const on = !m.plans[key];
-    if (key === "remind") {
-      const { name, price, image } = m.plans;
-      dispatch({
-        type: "applyUpdates",
-        updates: on
-          ? [{ type: "save_to_shelf", name, price, image, status: "Penny will remind you" }]
-          : [{ type: "remove_from_shelf", name }],
-      });
-    }
-    dispatch({ type: "updatePlans", messageId: m.id, patch: { [key]: on } as Partial<PlansCard> });
-  };
+  // Saving, Wishlist, retries and the whole back-and-forth live in useConversation.
+  const convo = useConversation(send);
+  const { choosePlan, togglePlans } = convo;
 
   // Penny talks: each new reply is read aloud (her answer card gets a short spoken version).
   const [muted, setMutedState] = useState(false);
@@ -239,73 +179,48 @@ export function ChatScreen({
     const listen = () => {
       if (asks && modeRef.current === "talk") voice.current?.listen();
     };
-    speak(m.plans ? spokenAnswer(m.plans) : m.text, listen).then(() => {
+    speak(m.plans ? `${m.text ? `${m.text} ` : ""}${spokenAnswer(m.plans)}` : m.text, listen).then(() => {
       clearTimeout(cap);
       setTimeout(reveal, 650); // a beat of her talking, then the words appear
     });
   }, [messages.length, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Answering Penny's answer by voice (or typing): "let's wait", "buy it", "remind me later".
-  const handleSend = (text: string, image?: PreparedImage) => {
-    if (!image && text.trim() && answerAsk(text)) return;
-    const lastMsg = messages[messages.length - 1];
-    const t = text.toLowerCase();
-    if (!image && t.trim() && lastMsg?.plans && !lastMsg.plans.chosen) {
-      const remind = /remind|wishlist|later|not now/.test(t);
-      // "Yes" / "sounds good" answers her "Does that sound good?": go with her pick.
-      const agree = /^(yes|yeah|yep|yup|sure|ok|okay|sounds (good|great|perfect)|let'?s do (it|that)|do it|perfect|deal)\b/.test(t.trim());
-      const id: PlanId | null = remind
-        ? null
-        : agree
-          ? planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left, lastMsg.plans.answers).pick
-        : /three|3 month/.test(t)
-          ? "wait3"
-          : /wait|two|2 month|save up|saving/.test(t)
-            ? "wait2"
-            : /\bbuy\b|get (it|them)|go (for it|ahead)|purchase/.test(t)
-              ? "now"
-              : null;
-      if (remind || id) {
-        dispatch({ type: "addMessage", message: { id: newId(), role: "user", text } });
-        if (id) {
-          // Penny's confirmation comes from choosePlan, same as tapping.
-          choosePlan(lastMsg, planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left).options.find((x) => x.id === id)!);
-        } else {
-          if (!lastMsg.plans.remind) togglePlans(lastMsg, "remind");
-          const reply = "Of course! It's on your Wishlist, and I'll let you know as soon as it fits.";
-          dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: reply, mood: "celebrating" } });
-        }
-        return;
-      }
-    }
-    send({ text, image });
+  // Coming back to an unfinished decision: Penny offers to pick up where you left off.
+  // Nothing is saved for you; you continue, or start fresh.
+  const [resume, setResume] = useState<string | null>(null);
+  const wasActive = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!state.hydrated) return;
+    const prev = wasActive.current;
+    wasActive.current = active;
+    if (!active || prev === true) return;
+    const last = messages[messages.length - 1];
+    const item = last?.ask?.item ?? (last?.plans && !last.plans.chosen ? last.plans : undefined) ?? last?.checks?.item ?? (last?.retry ? { name: "your plan" } : undefined);
+    if (!item) return;
+    const what = item.name ? (item.name === "your plan" ? "your plan" : `the ${/^[A-Z][a-z]/.test(item.name) && !/^(Zara|Dior|Taylor|AirPods|MacBook|Musaafer)/.test(item.name) ? item.name[0].toLowerCase() + item.name.slice(1) : item.name}`) : "what you were thinking of getting";
+    const line = `Want to pick up where we left off with ${what}?`;
+    setResume(line);
+    speak(line);
+  }, [active, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pickUp = () => {
+    setResume(null);
+    const last = messages[messages.length - 1];
+    // Say her last question again, so you know what she's waiting for.
+    if (last?.ask) speak(last.text, () => modeRef.current === "talk" && voice.current?.listen());
+  };
+  const startFresh = () => {
+    setResume(null);
+    stopSpeaking();
+    dispatch({ type: "clearChat" });
+    setStarted(false);
   };
 
-  // Answering Penny's questions (a chip, or said out loud). Anything unclear gets a sensible default,
-  // so the conversation always moves forward.
-  const answerAsk = (text: string): boolean => {
-    const m = messages[messages.length - 1];
-    if (!m?.ask || thinking) return false;
-    const t = text.toLowerCase();
-    const skip = isSkip(t);
-    const answers = { ...m.ask.item.answers };
-    if (m.ask.step === "when" && !skip) answers.when = parseWhen(t) ?? "wait";
-    if (m.ask.step === "use" && !skip) answers.use = parseUse(t) ?? "sometimes";
-    if (m.ask.step === "when" && isExperience(m.ask.item.name)) answers.use = "once";
-    const item = { ...m.ask.item, answers };
-    dispatch({ type: "addMessage", message: { id: newId(), role: "user", text } });
-    dispatch({
-      type: "addMessage",
-      message: m.ask.step === "when" && !skip && !answers.use ? useQuestion(item) : checkingMessage(item),
-    });
-    return true;
+  const handleSend = (text: string, image?: PreparedImage) => {
+    setResume(null);
+    convo.handleSend(text, image);
   };
-  // When the checklist finishes (or is tapped), Penny's answer follows.
-  const finishChecks = (m: ChatMessage) => {
-    const lastMsg = messages[messages.length - 1];
-    if (!m.checks || lastMsg?.id !== m.id) return;
-    dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: "", plans: m.checks.item } });
-  };
+  const answerAsk = (text: string) => handleSend(text);
+  const finishChecks = convo.finishChecks;
 
   const empty = messages.length === 0 && !thinking;
   const showChoices = empty && !started && !listening;
@@ -476,13 +391,30 @@ export function ChatScreen({
                 onAnswer={answerAsk}
                 onChecksDone={() => finishChecks(m)}
                 onAction={(a) => onAction(m, a)}
-                onChoose={(o) => choosePlan(m, o)}
+                onChoose={(o) => choosePlan(m, o.id)}
+                onRetry={() => convo.retry(m)}
                 onToggle={(k) => togglePlans(m, k)}
                 onReply={(t) => send({ text: t })}
               />
               ),
             )}
             {(thinking || holdId) && <Thinking />}
+            {resume && !thinking && (
+              <div className="flex flex-col items-start gap-2">
+                <div className="flex max-w-[88%] items-end gap-1">
+                  <Mascot mood="listening" size={48} className="-mb-1 shrink-0" />
+                  <p className="paper-glass rounded-[22px] px-4 py-2.5 text-[17px] leading-[22px] text-label">{resume}</p>
+                </div>
+                <div className="flex gap-2 pl-[52px]">
+                  <button type="button" onClick={pickUp} className="pressable h-10 rounded-full bg-cta px-4 text-[15px] font-medium text-on-cta">
+                    Pick up
+                  </button>
+                  <button type="button" onClick={startFresh} className="pressable h-10 rounded-full bg-white/80 px-4 text-[15px] font-medium text-label shadow-[inset_0_0_0_1px_#dfe2db]">
+                    Start fresh
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -580,6 +512,7 @@ function Message({
   onReply,
   onChoose,
   onToggle,
+  onRetry,
 }: {
   m: ChatMessage;
   animate: boolean;
@@ -593,8 +526,10 @@ function Message({
   onReply: (t: string) => void;
   onChoose: (o: PlanOption) => void;
   onToggle: (key: "remind" | "priceWatch") => void;
+  onRetry: () => void;
 }) {
   const mine = m.role === "user";
+  const showItem = !!m.ask && m.ask.step === "when" && !!m.ask.item.image && isComplete(m.ask.item);
   // Demo gallery items: the picture rides inside the bubble, like a shared product.
   if (mine && m.image?.startsWith("data:image/svg")) {
     return (
@@ -648,7 +583,8 @@ function Message({
           <div className="flex max-w-[92%] items-end gap-1">
             <Mascot mood={m.mood ?? "listening"} size={48} className="-mb-1 shrink-0" />
             <div className="paper-glass rounded-[22px] px-4 py-2.5">
-              {m.ask.step === "when" && (
+              {/* Gallery items show their photo and price with the first question */}
+              {showItem && (
                 <div className="mb-2 flex items-center gap-2.5">
                   {m.ask.item.image && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -656,34 +592,57 @@ function Message({
                   )}
                   <span className="min-w-0">
                     <span className="block truncate text-[14px] text-label-2">{m.ask.item.name}</span>
-                    <span className="tabular block text-[19px] font-bold leading-[22px] text-label">{money(m.ask.item.price)}</span>
+                    <span className="tabular block text-[19px] font-bold leading-[22px] text-label">{money(m.ask.item.price ?? 0)}</span>
                   </span>
                 </div>
               )}
               {/* The item is shown above, so only the question is written out (Penny says the whole line) */}
-              <p className="text-[17px] leading-[22px] text-label">{m.ask.step === "when" ? m.text.split(/(?<=[.!?])\s+/).pop() : m.text}</p>
+              <p className="text-[17px] leading-[22px] text-label">{showItem ? m.text.split(/(?<=[.!?])\s+/).pop() : m.text}</p>
             </div>
           </div>
-          {showReplies && (
+          {showReplies && CHIPS[m.ask.step] && (
             <div className="flex flex-wrap gap-2 pl-[52px]">
-              {(m.ask.step === "when" ? WHEN_CHIPS : USE_CHIPS).map((c) => (
+              {CHIPS[m.ask.step]!.map((label) => (
                 <button
-                  key={c.value}
+                  key={label}
                   type="button"
-                  onClick={() => onAnswer(c.label)}
+                  onClick={() => onAnswer(label)}
                   className="pressable h-10 rounded-full bg-cta px-4 text-[15px] font-medium text-on-cta"
                 >
-                  {c.label}
+                  {label}
                 </button>
               ))}
-              <button type="button" onClick={() => onAnswer("Skip")} className="pressable h-10 px-2 text-[14px] font-medium text-label-2 underline-offset-2 hover:underline">
-                Skip
-              </button>
+              {(m.ask.step === "when" || m.ask.step === "use") && (
+                <button type="button" onClick={() => onAnswer("Skip")} className="pressable h-10 px-2 text-[14px] font-medium text-label-2 underline-offset-2 hover:underline">
+                  Skip
+                </button>
+              )}
             </div>
           )}
         </div>
       ) : m.plans ? (
-        <PlanCards plans={m.plans} onChoose={onChoose} onToggle={onToggle} />
+        <div className="flex w-full flex-col gap-3">
+          {/* A revised plan says what changed first */}
+          {m.text && (
+            <div className="flex max-w-[88%] items-end gap-1">
+              <Mascot mood="approved" size={48} className="-mb-1 shrink-0" />
+              <p className="paper-glass rounded-[22px] px-4 py-2.5 text-[17px] leading-[22px] text-label">{m.text}</p>
+            </div>
+          )}
+          <PlanCards plans={m.plans} onChoose={onChoose} onToggle={onToggle} />
+        </div>
+      ) : m.retry ? (
+        <div className="flex w-full flex-col items-start gap-2">
+          <div className="flex max-w-[88%] items-end gap-1">
+            <Mascot mood="thinking" size={48} className="-mb-1 shrink-0" />
+            <p className="paper-glass rounded-[22px] px-4 py-2.5 text-[17px] leading-[22px] text-label">{m.text}</p>
+          </div>
+          {showReplies && (
+            <button type="button" onClick={onRetry} className="pressable ml-[52px] h-10 rounded-full bg-cta px-5 text-[15px] font-semibold text-on-cta">
+              Try again
+            </button>
+          )}
+        </div>
       ) : m.card ? (
         <div className="flex w-full justify-center">
           <ResultCard card={m.card} reply={m.text} disabled={busy} onAction={onAction} />
@@ -709,6 +668,18 @@ function Message({
 }
 
 const GREETED_KEY = "ciat:penny-greeted";
+
+/** Quick answers under each kind of question. Any answer in your own words works too. */
+const CHIPS: Partial<Record<AskStep, string[]>> = {
+  when: WHEN_CHIPS.map((c) => c.label),
+  "fix-when": WHEN_CHIPS.map((c) => c.label),
+  use: USE_CHIPS.map((c) => c.label),
+  "confirm-price": ["Yes", "No"],
+  finance: ["Use my budget", "Just a timeline"],
+  decide: ["Start saving", "Save to Wishlist"],
+  dup: ["Update it", "Keep current"],
+  "wishlist-offer": ["Save to Wishlist", "No thanks"],
+};
 
 /** The goal Penny just made: progress, the savings timeline, and where to find it or get a reminder. */
 function TrackingCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
