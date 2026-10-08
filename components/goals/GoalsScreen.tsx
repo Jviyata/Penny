@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { nextLine } from "@/lib/savings";
 import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
@@ -124,7 +125,7 @@ export function GoalsScreen({ goTo, openGoal }: { goTo: (t: Tab) => void; openGo
                         <span className="tabular shrink-0 text-[15px] font-semibold">{Math.round(p * 100)}%</span>
                       </span>
                       <span className={`tabular block truncate text-label-2 ${denser ? "text-[12px] leading-[15px]" : "text-[13px]"}`}>
-                        {money(g.saved)} of {money(g.target)} · {done ? "Reached" : g.by}
+                        {money(g.saved)} of {money(g.target)} · {done ? "Reached" : (nextLine(g) ?? g.by)}
                       </span>
                       <span className={`block overflow-hidden rounded-full bg-fill ${denser ? "mt-1 h-1.5" : "mt-1.5 h-2"}`} aria-label={`${Math.round(p * 100)}% of the way`}>
                         <span className="block h-full rounded-full bg-[#8fa66b] transition-[width] duration-500" style={{ width: `${p * 100}%` }} />

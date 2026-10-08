@@ -20,7 +20,12 @@ export type Goal = {
   thisMonth: number; // part of October's $1,000
   by: string; // "Next spring"
   image?: string; // picture for goals started from Penny (the item's photo)
+  schedule?: SaveStep[]; // goals started from Penny: what to set aside each month
+  getIt?: string; // the month it's paid for ("December")
 };
+
+/** One month's set-aside for a goal Penny started. `month` counts from now: 0 is October, 1 is November. */
+export type SaveStep = { month: number; amount: number; done: boolean };
 
 export const SPENDING: Record<Exclude<JobId, "savings">, Spend[]> = {
   rent: [{ id: "r1", name: "Maple Court Apartments", what: "October rent", date: "Oct 1", amount: 1900 }],

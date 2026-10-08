@@ -31,6 +31,7 @@ export type ChatMessage = {
   plans?: PlansCard; // the Buy Now / Wait 2 / Wait 3 cards for a demo gallery item
   ask?: { step: "when" | "use"; item: PlansCard }; // one of Penny's questions before her answer
   checks?: { item: PlansCard }; // "Checking your month…": what Penny looks at before answering
+  tracking?: { goalId: string }; // after "Start saving": the goal Penny made and her reminders
 };
 
 /** What you told Penny before her answer. */

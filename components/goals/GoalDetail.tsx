@@ -5,6 +5,7 @@ import { money } from "@/lib/format";
 import { goalExtras, pace } from "@/lib/goalPlan";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
+import { calendarLink, dueStep, isPaidOff, nextStep, pronounFor, stepDate, stepMonth } from "@/lib/savings";
 import { LineEditorSheet, type EditorConfig } from "../free/LineEditorSheet";
 import { CalendarIcon, ChevronIcon, PencilIcon, PlusIcon, TargetIcon, goalLook } from "../ui/Icons";
 import { Mascot } from "../ui/Mascot";
@@ -34,6 +35,11 @@ export function GoalDetail({
   const { left, months, extra, atPace } = pace(goal);
   const { tip, action } = goalExtras(goal);
   const Icon = look.Icon;
+  // Goals Penny started have a month-by-month savings plan.
+  const plan = goal.schedule;
+  const due = dueStep(goal, state.nov);
+  const next = nextStep(goal);
+  const paidOff = isPaidOff(goal);
 
   const edit = (g: Goal) =>
     setEditor({
@@ -155,7 +161,18 @@ export function GoalDetail({
       </section>
 
       {/* 2. The next step */}
-      {action.href ? (
+      {paidOff ? (
+        <button
+          type="button"
+          onClick={() => {
+            dispatch({ type: "removeGoal", id: goal.id });
+            onBack();
+          }}
+          className="pressable mt-3 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-cta text-[17px] font-semibold text-on-cta"
+        >
+          Mark as bought
+        </button>
+      ) : plan ? null /* still saving: the savings plan below is the next step */ : action.href ? (
         <a
           href={action.href}
           target="_blank"
@@ -178,6 +195,46 @@ export function GoalDetail({
 
       {/* 3. Supporting details, quieter and grouped */}
       <section className="mt-3 overflow-hidden rounded-[22px] bg-card">
+        {plan ? (
+          // Savings plan: each month's set-aside, ticked off as it's done
+          <div className="px-4 py-3 [@media(max-height:720px)]:pr-[68px]">
+            <p className="text-[15px] font-semibold text-label">Savings plan</p>
+            <ul className="mt-1.5 flex flex-col">
+              {plan.map((st) => (
+                <li key={st.month} className="flex min-h-10 items-center gap-3">
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${
+                      st.done ? "bg-[#4f8a4f] text-white" : "border-2 border-[#4f8a4f]/40 text-transparent"
+                    }`}
+                    aria-hidden
+                  >
+                    ✓
+                  </span>
+                  <span className="flex-1 text-[14px] text-label">
+                    {st.done ? `${stepMonth(st.month)} · set aside` : stepDate(st.month)}
+                  </span>
+                  {st === due ? (
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: "saveStep", id: goal.id })}
+                      className="pressable h-8 rounded-full bg-cta px-3.5 text-[13px] font-semibold text-on-cta"
+                    >
+                      Set aside {money(st.amount)}
+                    </button>
+                  ) : (
+                    <span className={`tabular text-[15px] font-semibold ${st.done ? "text-label-2" : "text-label"}`}>{money(st.amount)}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {next && next !== due && (
+              <a href={calendarLink(goal, next)} className="mt-1 inline-flex h-8 items-center gap-1.5 text-[14px] font-semibold text-[#3f6b2c]">
+                <CalendarIcon size={15} />
+                Remind me on {stepDate(next.month)}
+              </a>
+            )}
+          </div>
+        ) : (
         <button
           type="button"
           onClick={() => addMoney(goal)}
@@ -192,21 +249,36 @@ export function GoalDetail({
           </span>
           <ChevronIcon size={15} className="shrink-0 text-label-3 [@media(max-height:720px)]:hidden" />
         </button>
+        )}
+        {/* While saving, the plan above says it all; Penny speaks up again when it's fully saved */}
+        {(!plan || paidOff) && (
         <div className="flex items-start gap-3 border-t border-[var(--sep)] px-4 py-3 [@media(max-height:720px)]:pr-[68px]">
           <Mascot mood="approved" size={40} className="-mt-0.5 shrink-0" />
           <p className="min-w-0 flex-1 text-[14px] leading-[19px] text-label">
-            <span className="block text-[13px] font-medium text-[#4f6b2c]">Penny’s tip</span>
-            {tipLead}
-            {tipAmount && <span className="font-semibold text-[#3f7f3f]">{tipAmount}</span>}
-            {tipRest}
+            <span className="block text-[13px] font-medium text-[#4f6b2c]">{paidOff ? "Penny" : "Penny’s tip"}</span>
+            {paidOff ? (
+              `You did it! Your ${goal.name} ${pronounFor(goal.name) === "them" ? "are" : "is"} fully saved. Go get ${pronounFor(goal.name)}!`
+            ) : plan && next && next === due && next.month > 0 ? (
+              `It’s ${stepDate(next.month)}: time to set aside ${money(next.amount)}. ${pronounFor(goal.name) === "them" ? "They’re" : "It’s"} yours in ${goal.getIt}.`
+            ) : plan && next ? (
+              `I’ll remind you on ${stepDate(next.month)} to set aside ${money(next.amount)}. ${pronounFor(goal.name) === "them" ? "They’re" : "It’s"} yours in ${goal.getIt}.`
+            ) : (
+              <>
+                {tipLead}
+                {tipAmount && <span className="font-semibold text-[#3f7f3f]">{tipAmount}</span>}
+                {tipRest}
+              </>
+            )}
           </p>
         </div>
+        )}
       </section>
 
       </div>
     </div>
 
       {/* Penny in the corner, offering to help with the goals */}
+      {!paidOff && (
       <button
         type="button"
         onClick={() => onAskPenny(`Can you help me with my goals? I'm looking at ${goal.name}.`)}
@@ -220,6 +292,7 @@ export function GoalDetail({
           <Mascot mood="listening" size={52} className="[@media(max-height:720px)]:!h-[42px] [@media(max-height:720px)]:!w-[42px]" />
         </span>
       </button>
+      )}
 
       <LineEditorSheet config={editor} onClose={() => setEditor(null)} />
     </div>

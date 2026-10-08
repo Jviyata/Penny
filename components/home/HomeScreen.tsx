@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { dueReminder, pronounFor } from "@/lib/savings";
 import { money } from "@/lib/format";
 import type { Goal } from "@/lib/monthDetails";
 import { useStore } from "@/lib/store";
@@ -25,7 +26,19 @@ export function HomeScreen({
   openLeftToSpend: () => void;
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { state, open } = useStore();
+  const { state, dispatch, open } = useStore();
+  // When a savings step is due, Penny's card on top becomes her reminder.
+  const reminder = dueReminder(state.goals, state.nov, state.snoozed);
+  const [cheer, setCheer] = useState<string | null>(null);
+  const setAside = () => {
+    if (!reminder) return;
+    const { goal, step } = reminder;
+    dispatch({ type: "saveStep", id: goal.id });
+    const paid = goal.saved + step.amount >= goal.target;
+    const be = pronounFor(goal.name) === "them" ? "are" : "is";
+    setCheer(paid ? `You did it! Your ${goal.name} ${be} fully saved.` : `Nice! ${money(goal.saved + step.amount)} saved for your ${goal.name}.`);
+    window.setTimeout(() => setCheer(null), 4000);
+  };
   const { goals, freeTotal } = state;
   // How much of this month's spending money is already planned or spent.
   const usedShare = freeTotal > 0 ? Math.min(1, Math.max(0, (freeTotal - open) / freeTotal)) : 0;
@@ -52,7 +65,43 @@ export function HomeScreen({
           </button>
         </header>
 
-        {/* Talk to Penny */}
+        {/* Penny's reminder (when a savings step is due), or Talk to Penny */}
+        {reminder || cheer ? (
+          <section className="relative mt-4 overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-4 pt-4 [@media(max-height:720px)]:mt-3">
+            <p className="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.04em] text-[#4f6b2c]">
+              <BellIcon /> Penny reminder
+            </p>
+            {cheer ? (
+              <h2 className="mt-2 w-[62%] text-[22px] font-bold leading-[27px] tracking-[-0.02em] text-[#151210]">{cheer}</h2>
+            ) : (
+              <>
+                <h2 className="mt-2 w-[62%] text-[22px] font-bold leading-[27px] tracking-[-0.02em] text-[#151210]">
+                  Set aside {money(reminder!.step.amount)} for your {reminder!.goal.name}
+                </h2>
+                <p className="mt-1 w-[58%] text-[14px] leading-[19px] text-[#151210]/65 [@media(max-height:720px)]:hidden">
+                  Then {reminder!.goal.schedule!.filter((x) => !x.done).length > 1 ? "you’re one step closer" : "it’s fully saved"}.
+                </p>
+                <div className="relative z-10 mt-3 flex gap-2">
+                  <button type="button" onClick={setAside} className="pressable h-11 rounded-full bg-[#3c4230] px-5 text-[15px] font-medium text-white">
+                    Set aside
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "snooze", id: reminder!.goal.id })}
+                    className="pressable h-11 rounded-full bg-white/70 px-4 text-[15px] font-medium text-[#151210]"
+                  >
+                    Later
+                  </button>
+                </div>
+              </>
+            )}
+            <Mascot
+              mood={cheer ? "celebrating" : "listening"}
+              size={130}
+              className="absolute -right-2 bottom-1 drop-shadow-none [@media(max-height:720px)]:!h-[104px] [@media(max-height:720px)]:!w-[104px]"
+            />
+          </section>
+        ) : (
         <section className="relative mt-4 glass-tint overflow-hidden rounded-[26px] bg-[rgba(214,226,190,0.62)] px-5 pb-4 pt-4 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:py-4">
           <WaveIcon size={22} className="text-[#2f3424]" />
           <h2 className="mt-2 w-[58%] text-[28px] font-bold leading-[31px] tracking-[-0.02em] text-[#151210]">Talk to Penny</h2>
@@ -67,6 +116,7 @@ export function HomeScreen({
           </button>
           <Mascot mood="listening" size={150} className="absolute -right-2 bottom-1 drop-shadow-none [@media(max-height:720px)]:!h-[120px] [@media(max-height:720px)]:!w-[120px]" />
         </section>
+        )}
 
         {/* Your goals */}
         <div className="mt-4 flex items-center justify-between px-1 [@media(max-height:720px)]:mt-2.5">
@@ -145,4 +195,13 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
 /** Short tile label: "Emergency fund" → "Emergency". */
 function shortName(name: string) {
   return name.replace(/\s+fund$/i, "");
+}
+
+function BellIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </svg>
+  );
 }

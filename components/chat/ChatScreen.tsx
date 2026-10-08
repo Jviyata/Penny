@@ -35,10 +35,19 @@ import {
   useQuestion,
 } from "@/lib/interview";
 import type { Goal } from "@/lib/monthDetails";
+import { calendarLink, dueReminder, isAre, needs, nextStep, scheduleFor, stepDate, stepMonth } from "@/lib/savings";
 
 type Mode = "talk" | "text";
 
-export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => void }) {
+export function ChatScreen({
+  active,
+  onBack,
+  onOpenGoal,
+}: {
+  active: boolean;
+  onBack: () => void;
+  onOpenGoal: (id: string) => void;
+}) {
   const { state, dispatch } = useStore();
   const send = useSend();
   const { messages, thinking } = state;
@@ -106,18 +115,35 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     if (!m.plans || m.plans.chosen) return;
     const { name, price, image } = m.plans;
     dispatch({ type: "setTotal", amount: state.freeTotal - o.amount });
-    if (o.id !== "now") {
+    if (o.id === "now") {
+      dispatch({
+        type: "addMessage",
+        message: {
+          id: newId(),
+          role: "assistant",
+          text: `Done! ${isAre(name)} yours. You still have ${money(o.left)} left for ${MONTH.name}.`,
+          mood: "celebrating",
+        },
+      });
+    } else {
+      // Waiting makes a goal with a savings plan: this month's share now, the rest on the 1st of each month.
       const months = o.id === "wait2" ? 2 : 3;
+      const schedule = scheduleFor(price, months);
+      const goalId = newId();
+      const getIt = monthAfter(months);
       dispatch({
         type: "startSavingGoal",
-        goal: {
+        goal: { id: goalId, name, target: price, saved: o.amount, thisMonth: o.amount, by: `By ${getIt}`, image, schedule, getIt },
+      });
+      const next = schedule[1];
+      dispatch({
+        type: "addMessage",
+        message: {
           id: newId(),
-          name,
-          target: price,
-          saved: o.amount,
-          thisMonth: o.amount,
-          by: `By ${monthAfter(months)}`,
-          image,
+          role: "assistant",
+          text: `Done! I made a goal for your ${name}. I set aside ${money(o.amount)} today, and I'll remind you on ${stepDate(next.month)} for the next ${money(next.amount)}. ${isAre(name)} yours in ${getIt}.`,
+          mood: "celebrating",
+          tracking: { goalId },
         },
       });
     }
@@ -169,7 +195,13 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       sessionStorage.setItem(GREETED_KEY, "1");
     } catch {}
     const name = state.userName ? ` ${state.userName}` : "";
-    speak(first ? `Hi${name}! I'm Penny. What are you thinking of buying?` : "What's next? Tell me what you're thinking of buying.");
+    const due = dueReminder(state.goals, state.nov, state.snoozed);
+    const reminder = due ? ` Quick reminder: your ${due.goal.name} ${needs(due.goal.name)} ${money(due.step.amount)} this month.` : "";
+    speak(
+      first
+        ? `Hi${name}! I'm Penny.${reminder} What are you thinking of buying?`
+        : `${reminder ? `Hi again!${reminder}` : "What's next?"} Tell me what you're thinking of buying.`,
+    );
     if (!first) setGreeted(true);
   }, [active, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -223,19 +255,14 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
               : null;
       if (remind || id) {
         dispatch({ type: "addMessage", message: { id: newId(), role: "user", text } });
-        let reply: string;
         if (id) {
-          const o = planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left).options.find((x) => x.id === id)!;
-          choosePlan(lastMsg, o);
-          reply =
-            id === "now"
-              ? `Done. It's yours, and you still have ${money(o.left)} left for ${MONTH.name}.`
-              : `Done. I started a goal for it at ${money(o.amount)} a month. It's ${o.getIt}.`;
+          // Penny's confirmation comes from choosePlan, same as tapping.
+          choosePlan(lastMsg, planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left).options.find((x) => x.id === id)!);
         } else {
           if (!lastMsg.plans.remind) togglePlans(lastMsg, "remind");
-          reply = "Got it. I saved it to your Wishlist, and I'll remind you when it fits.";
+          const reply = "Got it. I saved it to your Wishlist, and I'll remind you when it fits.";
+          dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: reply, mood: "celebrating" } });
         }
-        dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: reply, mood: "celebrating" } });
         return;
       }
     }
@@ -433,6 +460,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 showReplies={m === last && !thinking && !holdId}
                 busy={thinking}
                 goals={state.goals}
+                onOpenGoal={onOpenGoal}
                 onAnswer={answerAsk}
                 onChecksDone={() => finishChecks(m)}
                 onAction={(a) => onAction(m, a)}
@@ -533,6 +561,7 @@ function Message({
   showReplies,
   busy,
   goals,
+  onOpenGoal,
   onAnswer,
   onChecksDone,
   onAction,
@@ -545,6 +574,7 @@ function Message({
   showReplies: boolean;
   busy: boolean;
   goals: Goal[];
+  onOpenGoal: (id: string) => void;
   onAnswer: (text: string) => void;
   onChecksDone: () => void;
   onAction: (a: CardAction) => void;
@@ -588,7 +618,18 @@ function Message({
         />
       )}
 
-      {m.checks ? (
+      {m.tracking ? (
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex max-w-[92%] items-end gap-1">
+            <Mascot mood={m.mood ?? "celebrating"} size={48} className="-mb-1 shrink-0" />
+            <p className="paper-glass rounded-[22px] px-4 py-2.5 text-[17px] leading-[22px] text-label">{m.text}</p>
+          </div>
+          {(() => {
+            const g = goals.find((x) => x.id === m.tracking!.goalId);
+            return g ? <TrackingCard goal={g} onOpen={() => onOpenGoal(g.id)} /> : null;
+          })()}
+        </div>
+      ) : m.checks ? (
         <Checks item={m.checks.item} goals={goals} live={showReplies} onDone={onChecksDone} />
       ) : m.ask ? (
         <div className="flex w-full flex-col items-start gap-2">
@@ -656,6 +697,73 @@ function Message({
 }
 
 const GREETED_KEY = "ciat:penny-greeted";
+
+/** The goal Penny just made: progress, the savings timeline, and where to find it or get a reminder. */
+function TrackingCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
+  const pct = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
+  const next = nextStep(goal);
+  return (
+    <div className="ml-[52px] rounded-[22px] bg-card p-3.5">
+      <div className="flex items-center gap-3">
+        {goal.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={goal.image} alt="" className="h-12 w-12 shrink-0 rounded-[12px] object-cover" draggable={false} />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold text-label">{goal.name}</p>
+          <p className="tabular text-[13px] text-label-2">
+            {money(goal.saved)} of {money(goal.target)} saved
+          </p>
+        </div>
+        <span className="tabular rounded-full bg-[#e1ead0] px-2 py-0.5 text-[13px] font-bold text-[#3f6b2c]">{Math.round(pct * 100)}%</span>
+      </div>
+      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-fill">
+        <div className="h-full rounded-full bg-[#4f8a4f] transition-[width] duration-500" style={{ width: `${pct * 100}%` }} />
+      </div>
+
+      {/* Timeline: each month's set-aside, then the month it's yours */}
+      <ol className="mt-3 flex items-start">
+        {goal.schedule?.map((s) => (
+          <li key={s.month} className="flex flex-1 flex-col items-center text-center">
+            <span
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-bold ${
+                s.done ? "bg-[#4f8a4f] text-white" : "border-2 border-[#4f8a4f]/40 text-transparent"
+              }`}
+              aria-hidden
+            >
+              ✓
+            </span>
+            <span className="mt-1 text-[12px] text-label-2">{s.done ? stepMonth(s.month) : stepDate(s.month)}</span>
+            <span className="tabular text-[13px] font-semibold text-label">{money(s.amount)}</span>
+          </li>
+        ))}
+        <li className="flex flex-1 flex-col items-center text-center">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fbe6dc] text-[12px]" aria-hidden>
+            ★
+          </span>
+          <span className="mt-1 text-[12px] text-label-2">{goal.getIt?.slice(0, 3)}</span>
+          <span className="text-[13px] font-semibold text-label">Yours</span>
+        </li>
+      </ol>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button type="button" onClick={onOpen} className="pressable h-10 rounded-full bg-cta text-[14px] font-semibold text-on-cta">
+          See goal
+        </button>
+        {next ? (
+          <a
+            href={calendarLink(goal, next)}
+            className="pressable flex h-10 items-center justify-center rounded-full bg-fill text-[14px] font-semibold text-label"
+          >
+            Add to Calendar
+          </a>
+        ) : (
+          <span className="flex h-10 items-center justify-center text-[14px] font-semibold text-[#3f6b2c]">Fully saved</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * "Checking your month…": the numbers Penny looks at, ticked off one by one, then her answer follows.

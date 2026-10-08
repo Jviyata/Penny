@@ -6,6 +6,7 @@ import { GOALS, type Goal } from "./monthDetails";
 import { openMoney } from "./budget";
 import { newId } from "./format";
 import { applyUpdates } from "./updates";
+import { dueStep } from "./savings";
 import type { ChatMessage, Item, Line, PlansCard, ShelfItem, Update } from "./types";
 
 export type State = {
@@ -21,6 +22,10 @@ export type State = {
   thinking: boolean;
   /** The item the conversation is about (last card, or a photo still waiting for its price). */
   currentItem: Item | null;
+  /** Demo clock: on = it's November 1, so Penny's savings reminders come due. */
+  nov: boolean;
+  /** Goals whose reminder was put off with "Later". */
+  snoozed: string[];
 };
 
 export type Action =
@@ -46,7 +51,10 @@ export type Action =
   | { type: "clearChat" }
   | { type: "resetDemo" }
   | { type: "finishOnboarding"; name: string; goals: Goal[] }
-  | { type: "startSavingGoal"; goal: Goal };
+  | { type: "startSavingGoal"; goal: Goal }
+  | { type: "saveStep"; id: string }
+  | { type: "snooze"; id: string }
+  | { type: "setNov"; on: boolean };
 
 const startingBudget = () => ({
   freeTotal: BASE_FREE_TOTAL,
@@ -56,6 +64,8 @@ const startingBudget = () => ({
   messages: [] as ChatMessage[],
   shelf: [] as ShelfItem[],
   currentItem: null as Item | null,
+  nov: false,
+  snoozed: [] as string[],
 });
 
 const initialState: State = { ...startingBudget(), userName: USER_NAME, demoMode: false, hydrated: false, thinking: false };
@@ -128,6 +138,31 @@ function reducer(state: State, action: Action): State {
       return { ...state, messages: [], currentItem: null };
     case "resetDemo":
       return { ...state, ...startingBudget() };
+    case "saveStep": {
+      // Set aside the next amount that's due: it leaves Left to spend and goes into the goal.
+      const goal = state.goals.find((g) => g.id === action.id);
+      const step = goal && dueStep(goal, state.nov);
+      if (!goal || !step) return state;
+      return {
+        ...state,
+        freeTotal: state.freeTotal - step.amount,
+        snoozed: state.snoozed.filter((id) => id !== goal.id),
+        goals: state.goals.map((g) =>
+          g.id === goal.id
+            ? {
+                ...g,
+                saved: g.saved + step.amount,
+                thisMonth: g.thisMonth + step.amount,
+                schedule: g.schedule!.map((x) => (x === step ? { ...x, done: true } : x)),
+              }
+            : g,
+        ),
+      };
+    }
+    case "snooze":
+      return { ...state, snoozed: [...state.snoozed.filter((id) => id !== action.id), action.id] };
+    case "setNov":
+      return { ...state, nov: action.on, snoozed: [] };
     case "startSavingGoal":
       // Newest first, so it shows on Overview right away.
       return { ...state, goals: [action.goal, ...state.goals.filter((g) => g.name !== action.goal.name)] };
@@ -188,9 +223,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state.hydrated) return;
-    const { userName, freeTotal, goals, plans, bought, messages, shelf, currentItem } = state;
+    const { userName, freeTotal, goals, plans, bought, messages, shelf, currentItem, nov, snoozed } = state;
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ userName, freeTotal, goals, plans, bought, messages, shelf, currentItem }));
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ userName, freeTotal, goals, plans, bought, messages, shelf, currentItem, nov, snoozed }),
+      );
     } catch {
       // Storage full (images) or blocked: the app keeps working in memory.
     }

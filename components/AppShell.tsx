@@ -67,7 +67,7 @@ export function AppShell() {
       />
     ),
     free: <SpendingScreen goTo={setTab} openLeftSignal={openLeft} />,
-    chat: <ChatScreen active={tab === "chat"} onBack={() => setTab("home")} />,
+    chat: <ChatScreen active={tab === "chat"} onBack={() => setTab("home")} onOpenGoal={setGoalId} />,
     goals: <GoalsScreen goTo={setTab} openGoal={setGoalId} />,
     shelf: <ShelfScreen goTo={setTab} />,
   };
