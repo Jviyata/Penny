@@ -7,7 +7,8 @@ import { MONTH } from "@/lib/demoData";
 import { money } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { useSend } from "@/lib/useSend";
-import { prepareImage } from "@/lib/image";
+import { prepareImage, type PreparedImage } from "@/lib/image";
+import { isMuted, setMuted, speak, stopSpeaking, unlockVoice, voiceAvailable } from "@/lib/pennyVoice";
 import type { CardAction, ChatMessage, PlansCard } from "@/lib/types";
 import { Mascot } from "../ui/Mascot";
 import { ChevronIcon, KeyboardIcon, MicIcon, PlusIcon, ResetIcon } from "../ui/Icons";
@@ -20,7 +21,7 @@ import { DemoGallery } from "./DemoGallery";
 import { PlanCards } from "./PlanCards";
 import { newId } from "@/lib/format";
 import type { DemoItem } from "@/lib/demoItems";
-import { monthAfter, type PlanOption } from "@/lib/planOptions";
+import { monthAfter, planFor, spokenAnswer, type PlanId, type PlanOption } from "@/lib/planOptions";
 
 type Mode = "talk" | "text";
 
@@ -128,6 +129,63 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     dispatch({ type: "updatePlans", messageId: m.id, patch: { [key]: on } as Partial<PlansCard> });
   };
 
+  // Penny talks: each new reply is read aloud (her answer card gets a short spoken version).
+  const [muted, setMutedState] = useState(false);
+  const [canSpeak, setCanSpeak] = useState(false);
+  useEffect(() => {
+    setMutedState(isMuted());
+    setCanSpeak(voiceAvailable());
+  }, []);
+  const spokenUpTo = useRef<number | null>(null);
+  useEffect(() => {
+    if (!state.hydrated) return;
+    if (spokenUpTo.current === null || messages.length < spokenUpTo.current) {
+      spokenUpTo.current = messages.length; // don't read out old messages
+      return;
+    }
+    if (messages.length === spokenUpTo.current) return;
+    spokenUpTo.current = messages.length;
+    const m = messages[messages.length - 1];
+    if (m.role !== "assistant") return;
+    speak(m.plans ? spokenAnswer(m.plans.name, m.plans.price, m.plans.left) : m.text);
+  }, [messages.length, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Answering Penny's answer by voice (or typing): "let's wait", "buy it", "remind me later".
+  const handleSend = (text: string, image?: PreparedImage) => {
+    const lastMsg = messages[messages.length - 1];
+    const t = text.toLowerCase();
+    if (!image && t.trim() && lastMsg?.plans && !lastMsg.plans.chosen) {
+      const remind = /remind|wishlist|later|not now/.test(t);
+      const id: PlanId | null = remind
+        ? null
+        : /three|3 month/.test(t)
+          ? "wait3"
+          : /wait|two|2 month|save up|saving/.test(t)
+            ? "wait2"
+            : /\bbuy\b|get (it|them)|go (for it|ahead)|purchase/.test(t)
+              ? "now"
+              : null;
+      if (remind || id) {
+        dispatch({ type: "addMessage", message: { id: newId(), role: "user", text } });
+        let reply: string;
+        if (id) {
+          const o = planFor(lastMsg.plans.name, lastMsg.plans.price, lastMsg.plans.left).options.find((x) => x.id === id)!;
+          choosePlan(lastMsg, o);
+          reply =
+            id === "now"
+              ? `Done. It's yours, and you still have ${money(o.left)} left for ${MONTH.name}.`
+              : `Done. I started a goal for it at ${money(o.amount)} a month. It's ${o.getIt}.`;
+        } else {
+          if (!lastMsg.plans.remind) togglePlans(lastMsg, "remind");
+          reply = "Got it. I saved it to your Wishlist, and I'll remind you when it fits.";
+        }
+        dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: reply, mood: "celebrating" } });
+        return;
+      }
+    }
+    send({ text, image });
+  };
+
   const empty = messages.length === 0 && !thinking;
   const showChoices = empty && !started && !listening;
 
@@ -194,7 +252,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
   const fadeTop = "calc(var(--sat) + 62px)";
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden" onPointerDown={unlockVoice}>
       <Scene name="chat" />
       {/* Photo and screenshot choices. No `capture`: iOS offers Take Photo, Photo Library or Choose File. */}
       <input
@@ -222,10 +280,25 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             <span className="font-semibold text-label">{money(Math.max(state.freeTotal, 0))}</span> left to spend
             {messages.length === 0 && <span className="[@media(max-width:380px)]:hidden">· {MONTH.daysLeft} days</span>}
           </p>
+          {canSpeak && (
+            <button
+              type="button"
+              onClick={() => {
+                setMuted(!muted);
+                setMutedState(!muted);
+              }}
+              aria-label={muted ? "Let Penny talk" : "Mute Penny"}
+              aria-pressed={!muted}
+              className="pressable paper-glass ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label"
+            >
+              <SpeakerIcon off={muted} />
+            </button>
+          )}
           {messages.length > 0 && (
             <button
               type="button"
               onClick={() => {
+                stopSpeaking();
                 dispatch({ type: "clearChat" });
                 setStarted(false);
                 scrollRef.current?.scrollTo({ top: 0 });
@@ -325,7 +398,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             handle={voice}
             busy={thinking}
             onListening={onListening}
-            onSend={(text, image) => send({ text, image })}
+            onSend={handleSend}
             onTextInstead={textInstead}
             onAdd={() => setGalleryOpen(true)}
             compact={messages.length > 0 || thinking}
@@ -348,7 +421,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
             <Composer
               busy={thinking}
               onListening={onListening}
-              onSend={(text, image) => send({ text, image })}
+              onSend={handleSend}
               onAdd={() => setGalleryOpen(true)}
             />
           </>
@@ -551,5 +624,14 @@ function EmptyState() {
         Say or type the item and its price, or add a photo.
       </p>
     </div>
+  );
+}
+
+function SpeakerIcon({ off }: { off: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" />
+      {off ? <path d="M16 9.5l5 5M21 9.5l-5 5" /> : <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />}
+    </svg>
   );
 }

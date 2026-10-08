@@ -33,7 +33,14 @@ export function AppShell() {
   const [onboarding, setOnboarding] = useState(true);
   // For recording a demo: ?skip=onboarding opens straight to Overview.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("skip") === "onboarding") setOnboarding(false);
+    if (new URLSearchParams(window.location.search).get("skip") === "onboarding") {
+      setOnboarding(false);
+      // Every recording starts at the demo's starting numbers: drop the saved session before it loads.
+      try {
+        sessionStorage.removeItem("ciat:session:v1");
+      } catch {}
+      dispatch({ type: "resetDemo" });
+    }
   }, []);
   const finishOnboarding = () => {
     setTab("home");

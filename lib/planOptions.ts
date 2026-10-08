@@ -135,3 +135,12 @@ export function planFor(name: string, price: number, left: number): PlanSummary 
 
   return { headline, detail, pick, options };
 }
+
+/** What Penny says out loud with her answer: the verdict, then what she'd do and what it means. */
+export function spokenAnswer(name: string, price: number, left: number): string {
+  const { headline, pick, options } = planFor(name, price, left);
+  const o = options.find((x) => x.id === pick)!;
+  if (pick === "now") return `${headline} You'd still have ${money(o.left)} left this month.`;
+  if (pick === "wait2") return `${headline} If you wait two months, it's ${money(o.amount)} a month, and it's ${o.getIt}.`;
+  return `${headline} I'd spread it over three months. ${money(o.amount)} a month, and it's ${o.getIt}.`;
+}

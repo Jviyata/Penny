@@ -9,6 +9,21 @@ import { useStore } from "./store";
 import { moodFor } from "./mood";
 import { applyUpdates, sameName } from "./updates";
 import type { CheckResult, Item, Outgoing, PlansCard } from "./types";
+import { DEMO_ITEMS } from "./demoItems";
+
+/** A demo gallery item mentioned by name ("can I afford the Zara boots?"), so voice works without a photo. */
+function demoItemIn(text: string) {
+  const t = text.toLowerCase();
+  const keys: Record<string, RegExp> = {
+    ticket: /taylor swift|concert ticket|eras/,
+    boots: /zara|boots/,
+    bag: /suede|shoulder bag|\bbag\b/,
+    sunglasses: /sunglasses|shades/,
+    dinner: /musaafer|dinner/,
+    airpods: /airpods|air pods/,
+  };
+  return DEMO_ITEMS.find((i) => keys[i.id]?.test(t));
+}
 
 const MIN_THINKING_MS = 700; // long enough to read "Reading it…", short enough to feel quick
 
@@ -65,7 +80,11 @@ export function useSend() {
       // An item with a price gets Penny's full answer (the same one the demo gallery shows):
       // worked out from Left to spend, so every screen agrees on the number.
       let plans: PlansCard | undefined;
-      if (result.card) {
+      const demo = !msg.image && !msg.action ? demoItemIn(msg.text) : undefined;
+      if (demo && (result.card || result.needsPrice || /afford|buy|get/i.test(msg.text))) {
+        // A gallery item, named out loud: use its real name, photo and price.
+        plans = { name: demo.name, price: result.card?.price ?? demo.price, left: next.freeTotal, image: demo.art };
+      } else if (result.card) {
         const image =
           msg.image?.thumb ??
           (currentItem && (sameName(currentItem.name, result.card.name) || currentItem.name === "This item")
