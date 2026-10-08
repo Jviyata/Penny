@@ -108,11 +108,9 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   return (
     <div className="absolute inset-0 z-[60] flex flex-col overflow-hidden bg-[#fbfaf7] pb-[calc(var(--sab)+16px)] pt-[calc(var(--sat)+12px)]">
       <div className="flex h-8 justify-end px-5">
-        {!intro && (
-          <span className="flex items-center rounded-full bg-[#e6ecdf] px-3 text-[12px] font-semibold tracking-[0.04em] text-[#3d5a44]">
-            DEMO SETUP
-          </span>
-        )}
+        <span className="flex items-center rounded-full bg-[#e6ecdf] px-3 text-[12px] font-semibold tracking-[0.04em] text-[#3d5a44]">
+          {intro ? "DEMO" : "DEMO SETUP"}
+        </span>
       </div>
 
       <div className="relative min-h-0 flex-1">
@@ -155,7 +153,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             {dots(SLIDES, slide, goSlide)}
             <SlideArrow dir={1} disabled={slide === SLIDES - 1} onClick={() => goSlide(slide + 1)} />
           </div>
-          <span className="rounded-full bg-[#e6ecdf] px-3 py-1 text-[12px] font-semibold tracking-[0.06em] text-[#3d5a44]">DEMO</span>
           <button type="button" onClick={logIn} className="pressable h-[56px] w-full rounded-full text-[17px] font-semibold text-white" style={{ background: GREEN }}>
             Log in
           </button>
@@ -415,13 +412,13 @@ function GoalsInView() {
         }
         sub="Save for what matters."
       />
-      <div className="mt-6 flex flex-col gap-3 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:gap-2">
+      <div className="mt-5 flex flex-col gap-2.5 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:gap-2">
         {goals.map((g) => {
           const { Icon, bg, photo } = goalLook(g.name);
           return (
             <div key={g.id} className="overflow-hidden rounded-[20px] bg-white shadow-[0_10px_30px_-20px_rgba(30,40,30,0.4)]">
               <div
-                className="h-[96px] w-full [@media(max-height:720px)]:h-[64px]"
+                className="h-[80px] w-full [@media(max-height:720px)]:h-[52px]"
                 style={{ background: photo ? `${bg} center / cover no-repeat url(${photo})` : bg }}
               />
               <div className="flex items-center gap-3 px-4 py-3 [@media(max-height:720px)]:py-2">
