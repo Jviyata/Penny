@@ -29,7 +29,14 @@ export type ChatMessage = {
   failed?: boolean; // reply came from the offline fallback
   mood?: Mood; // the mascot's expression for this reply
   plans?: PlansCard; // the Buy Now / Wait 2 / Wait 3 cards for a demo gallery item
+  ask?: { step: "when" | "use"; item: PlansCard }; // one of Penny's questions before her answer
+  checks?: { item: PlansCard }; // "Checking your month…": what Penny looks at before answering
 };
+
+/** What you told Penny before her answer. */
+export type When = "now" | "wait" | "looking";
+export type Use = "daily" | "sometimes" | "once";
+export type Answers = { when?: When; use?: Use };
 
 /** Penny's pricing-plan style answer. The options are recomputed from these numbers when shown. */
 export type PlansCard = {
@@ -40,6 +47,7 @@ export type PlansCard = {
   chosen?: "now" | "wait2" | "wait3";
   remind?: boolean;
   priceWatch?: boolean;
+  answers?: Answers; // from Penny's questions; they shape her pick
 };
 
 export type ShelfItem = {

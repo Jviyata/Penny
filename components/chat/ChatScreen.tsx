@@ -22,6 +22,19 @@ import { PlanCards } from "./PlanCards";
 import { newId } from "@/lib/format";
 import type { DemoItem } from "@/lib/demoItems";
 import { monthAfter, planFor, spokenAnswer, type PlanId, type PlanOption } from "@/lib/planOptions";
+import {
+  USE_CHIPS,
+  WHEN_CHIPS,
+  checkLines,
+  checkingMessage,
+  firstQuestion,
+  isExperience,
+  isSkip,
+  parseUse,
+  parseWhen,
+  useQuestion,
+} from "@/lib/interview";
+import type { Goal } from "@/lib/monthDetails";
 
 type Mode = "talk" | "text";
 
@@ -83,10 +96,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     dispatch({ type: "setThinking", on: true });
     const left = state.freeTotal;
     window.setTimeout(() => {
-      dispatch({
-        type: "addMessage",
-        message: { id: newId(), role: "assistant", text: "", plans: { name: item.name, price: item.price, left, image: item.art } },
-      });
+      dispatch({ type: "addMessage", message: firstQuestion({ name: item.name, price: item.price, left, image: item.art }) });
       dispatch({ type: "setThinking", on: false });
     }, 1100);
   };
@@ -136,6 +146,33 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     setMutedState(isMuted());
     setCanSpeak(voiceAvailable());
   }, []);
+  // Penny says hello when Talk to Penny opens: the full hello once per visit, then a shorter one.
+  useEffect(() => {
+    document.addEventListener("pointerdown", unlockVoice, true); // any first tap lets iPhone play her voice
+    return () => document.removeEventListener("pointerdown", unlockVoice, true);
+  }, []);
+  const [greeted, setGreeted] = useState(false);
+  useEffect(() => {
+    try {
+      setGreeted(sessionStorage.getItem(GREETED_KEY) === "1");
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (!active) {
+      stopSpeaking();
+      return;
+    }
+    if (!state.hydrated || messages.length > 0) return;
+    let first = true;
+    try {
+      first = sessionStorage.getItem(GREETED_KEY) !== "1";
+      sessionStorage.setItem(GREETED_KEY, "1");
+    } catch {}
+    const name = state.userName ? ` ${state.userName}` : "";
+    speak(first ? `Hi${name}! I'm Penny. What are you thinking of buying?` : "What's next? Tell me what you're thinking of buying.");
+    if (!first) setGreeted(true);
+  }, [active, state.hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const spokenUpTo = useRef<number | null>(null);
   // Her newest reply stays hidden until her voice starts, so she's heard first and the text follows.
   const [holdId, setHoldId] = useState<string | null>(null);
@@ -162,7 +199,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       setHoldId((h) => (h === m.id ? null : h));
     };
     const cap = setTimeout(reveal, 5000); // never keep the answer waiting on a slow connection
-    speak(m.plans ? spokenAnswer(m.plans.name, m.plans.price, m.plans.left) : m.text).then(() => {
+    speak(m.plans ? spokenAnswer(m.plans) : m.text).then(() => {
       clearTimeout(cap);
       setTimeout(reveal, 650); // a beat of her talking, then the words appear
     });
@@ -170,6 +207,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
 
   // Answering Penny's answer by voice (or typing): "let's wait", "buy it", "remind me later".
   const handleSend = (text: string, image?: PreparedImage) => {
+    if (!image && text.trim() && answerAsk(text)) return;
     const lastMsg = messages[messages.length - 1];
     const t = text.toLowerCase();
     if (!image && t.trim() && lastMsg?.plans && !lastMsg.plans.chosen) {
@@ -204,6 +242,32 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
     send({ text, image });
   };
 
+  // Answering Penny's questions (a chip, or said out loud). Anything unclear gets a sensible default,
+  // so the conversation always moves forward.
+  const answerAsk = (text: string): boolean => {
+    const m = messages[messages.length - 1];
+    if (!m?.ask || thinking) return false;
+    const t = text.toLowerCase();
+    const skip = isSkip(t);
+    const answers = { ...m.ask.item.answers };
+    if (m.ask.step === "when" && !skip) answers.when = parseWhen(t) ?? "wait";
+    if (m.ask.step === "use" && !skip) answers.use = parseUse(t) ?? "sometimes";
+    if (m.ask.step === "when" && isExperience(m.ask.item.name)) answers.use = "once";
+    const item = { ...m.ask.item, answers };
+    dispatch({ type: "addMessage", message: { id: newId(), role: "user", text } });
+    dispatch({
+      type: "addMessage",
+      message: m.ask.step === "when" && !skip && !answers.use ? useQuestion(item) : checkingMessage(item),
+    });
+    return true;
+  };
+  // When the checklist finishes (or is tapped), Penny's answer follows.
+  const finishChecks = (m: ChatMessage) => {
+    const lastMsg = messages[messages.length - 1];
+    if (!m.checks || lastMsg?.id !== m.id) return;
+    dispatch({ type: "addMessage", message: { id: newId(), role: "assistant", text: "", plans: m.checks.item } });
+  };
+
   const empty = messages.length === 0 && !thinking;
   const showChoices = empty && !started && !listening;
 
@@ -232,7 +296,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
       return;
     }
     const lastMsg = messages[messages.length - 1];
-    if (el && lastMsg?.card && !thinking) {
+    if (el && (lastMsg?.card || lastMsg?.plans) && !thinking) {
       const node = el.querySelector<HTMLElement>(`[data-msg="${lastMsg.id}"]`);
       const top = parseFloat(getComputedStyle(el).paddingTop) || 0;
       if (node) {
@@ -348,6 +412,7 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
         {empty ? (
           showChoices ? (
             <AskChoices
+              hello={greeted ? "Hi again!" : `Hi${state.userName ? ` ${state.userName}` : ""}! I’m Penny.`}
               canTalk={canTalk}
               onTalk={talkNow}
               onType={textInstead}
@@ -367,6 +432,9 @@ export function ChatScreen({ active, onBack }: { active: boolean; onBack: () => 
                 animate={restored.current !== null && i >= restored.current}
                 showReplies={m === last && !thinking && !holdId}
                 busy={thinking}
+                goals={state.goals}
+                onAnswer={answerAsk}
+                onChecksDone={() => finishChecks(m)}
                 onAction={(a) => onAction(m, a)}
                 onChoose={(o) => choosePlan(m, o)}
                 onToggle={(k) => togglePlans(m, k)}
@@ -464,6 +532,9 @@ function Message({
   animate,
   showReplies,
   busy,
+  goals,
+  onAnswer,
+  onChecksDone,
   onAction,
   onReply,
   onChoose,
@@ -473,6 +544,9 @@ function Message({
   animate: boolean;
   showReplies: boolean;
   busy: boolean;
+  goals: Goal[];
+  onAnswer: (text: string) => void;
+  onChecksDone: () => void;
   onAction: (a: CardAction) => void;
   onReply: (t: string) => void;
   onChoose: (o: PlanOption) => void;
@@ -514,7 +588,48 @@ function Message({
         />
       )}
 
-      {m.plans ? (
+      {m.checks ? (
+        <Checks item={m.checks.item} goals={goals} live={showReplies} onDone={onChecksDone} />
+      ) : m.ask ? (
+        <div className="flex w-full flex-col items-start gap-2">
+          <div className="flex max-w-[92%] items-end gap-1">
+            <Mascot mood={m.mood ?? "listening"} size={48} className="-mb-1 shrink-0" />
+            <div className="paper-glass rounded-[22px] px-4 py-2.5">
+              {m.ask.step === "when" && (
+                <div className="mb-2 flex items-center gap-2.5">
+                  {m.ask.item.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.ask.item.image} alt="" className="h-12 w-12 shrink-0 rounded-[12px] object-cover" draggable={false} />
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] text-label-2">{m.ask.item.name}</span>
+                    <span className="tabular block text-[19px] font-bold leading-[22px] text-label">{money(m.ask.item.price)}</span>
+                  </span>
+                </div>
+              )}
+              {/* The item is shown above, so only the question is written out (Penny says the whole line) */}
+              <p className="text-[17px] leading-[22px] text-label">{m.ask.step === "when" ? m.text.replace(/^.*?\.\s+/, "") : m.text}</p>
+            </div>
+          </div>
+          {showReplies && (
+            <div className="flex flex-wrap gap-2 pl-[52px]">
+              {(m.ask.step === "when" ? WHEN_CHIPS : USE_CHIPS).map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => onAnswer(c.label)}
+                  className="pressable h-10 rounded-full bg-cta px-4 text-[15px] font-medium text-on-cta"
+                >
+                  {c.label}
+                </button>
+              ))}
+              <button type="button" onClick={() => onAnswer("Skip")} className="pressable h-10 px-2 text-[14px] font-medium text-label-2 underline-offset-2 hover:underline">
+                Skip
+              </button>
+            </div>
+          )}
+        </div>
+      ) : m.plans ? (
         <PlanCards plans={m.plans} onChoose={onChoose} onToggle={onToggle} />
       ) : m.card ? (
         <div className="flex w-full justify-center">
@@ -537,6 +652,72 @@ function Message({
 
       {/* Suggestion chips are turned off for now (showReplies / onReply kept for later). */}
     </motion.div>
+  );
+}
+
+const GREETED_KEY = "ciat:penny-greeted";
+
+/**
+ * "Checking your month…": the numbers Penny looks at, ticked off one by one, then her answer follows.
+ * Tap to skip ahead. Restored from an earlier visit, it just shows every line.
+ */
+function Checks({ item, goals, live, onDone }: { item: PlansCard; goals: Goal[]; live: boolean; onDone: () => void }) {
+  const lines = checkLines(item, goals);
+  const [shown, setShown] = useState(live ? 0 : lines.length);
+  const done = useRef(false);
+  const finish = useCallback(() => {
+    if (done.current) return;
+    done.current = true;
+    setShown(lines.length);
+    onDone();
+  }, [lines.length, onDone]);
+  useEffect(() => {
+    if (!live) return;
+    if (shown < lines.length) {
+      const t = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 350 : 650);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(finish, 800);
+    return () => clearTimeout(t);
+  }, [shown, live]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <button type="button" onClick={live ? finish : undefined} className="flex w-full items-end gap-1 text-left" aria-label="Checking your month">
+      <Mascot mood="thinking" size={48} className="-mb-1 shrink-0" />
+      <div className="paper-glass min-w-0 flex-1 rounded-[22px] px-4 py-3">
+        <p className="flex items-center gap-2 text-[15px] font-semibold text-label">
+          {shown < lines.length ? "Checking your month…" : "Here’s what I see"}
+          {shown < lines.length && (
+            <span className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-label-2" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </span>
+          )}
+        </p>
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {lines.map((l, i) => (
+            <motion.li
+              key={l.label}
+              initial={false}
+              animate={{ opacity: i < shown ? 1 : 0.25 }}
+              className="flex items-center gap-2 text-[14px] leading-[18px]"
+            >
+              <span
+                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
+                  i < shown ? "bg-[#4f8a4f] text-white" : "bg-fill text-transparent"
+                }`}
+                aria-hidden
+              >
+                ✓
+              </span>
+              <span className="min-w-0 flex-1 truncate text-label-2">{l.label}</span>
+              <span className="tabular shrink-0 font-semibold text-label">{l.value}</span>
+            </motion.li>
+          ))}
+        </ul>
+      </div>
+    </button>
   );
 }
 
@@ -567,11 +748,13 @@ function Thinking() {
  * Quieter ways in sit in the bottom corners: + (photo or demo item) on the left, keyboard on the right.
  */
 function AskChoices({
+  hello,
   canTalk,
   onTalk,
   onType,
   onPhoto,
 }: {
+  hello: string;
   canTalk: boolean;
   onTalk: () => void;
   onType: () => void;
@@ -580,6 +763,10 @@ function AskChoices({
   return (
     <div className="flex min-h-full flex-col items-center text-center">
       <div className="flex flex-1 flex-col items-center justify-center px-4">
+        {/* Penny's hello, in a speech bubble over her */}
+        <span className="paper-glass relative mb-2 rounded-[18px] px-4 py-2 text-[16px] font-semibold text-label after:absolute after:left-1/2 after:top-full after:-ml-[7px] after:border-[7px] after:border-transparent after:border-t-[var(--card,#fff)] after:content-['']">
+          {hello}
+        </span>
         <Mascot mood="listening" size={104} />
         <p className="mt-3 text-[32px] font-bold leading-[37px] tracking-[-0.02em] text-label">
           What are you

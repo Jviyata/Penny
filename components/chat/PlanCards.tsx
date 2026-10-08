@@ -23,7 +23,7 @@ export function PlanCards({
   onChoose: (o: PlanOption) => void;
   onToggle: (key: "remind" | "priceWatch") => void;
 }) {
-  const { headline, pick, options } = planFor(plans.name, plans.price, plans.left);
+  const { headline, pick, reason, options } = planFor(plans.name, plans.price, plans.left, plans.answers);
   const [selected, setSelected] = useState<PlanId>(plans.chosen ?? pick);
   const settled = !!plans.chosen;
   const current = options.find((o) => o.id === selected)!;
@@ -48,7 +48,11 @@ export function PlanCards({
       </div>
 
       {/* Penny's verdict, one line */}
-      <p className="text-[19px] font-semibold leading-[24px] tracking-[-0.01em] text-label">{headline}</p>
+      <div>
+        <p className="text-[19px] font-semibold leading-[24px] tracking-[-0.01em] text-label">{headline}</p>
+        {/* Why, from what you told Penny */}
+        {reason && <p className="mt-1 text-[15px] leading-[20px] text-label-2 [@media(max-height:720px)]:text-[13px] [@media(max-height:720px)]:leading-[17px]">{reason}</p>}
+      </div>
 
       {/* Money: now → after */}
       <div className="flex items-center justify-between rounded-[20px] bg-card px-5 py-3.5 [@media(max-height:720px)]:py-2">

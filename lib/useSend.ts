@@ -10,6 +10,7 @@ import { moodFor } from "./mood";
 import { applyUpdates, sameName } from "./updates";
 import type { CheckResult, Item, Outgoing, PlansCard } from "./types";
 import { DEMO_ITEMS } from "./demoItems";
+import { firstQuestion } from "./interview";
 
 /** A demo gallery item mentioned by name ("can I afford the Zara boots?"), so voice works without a photo. */
 function demoItemIn(text: string) {
@@ -96,8 +97,9 @@ export function useSend() {
       if (updates.length) dispatch({ type: "applyUpdates", updates });
       dispatch({
         type: "addMessage",
+        // Before her answer, Penny asks a couple of quick questions (see interview.ts).
         message: plans
-          ? { id: newId(), role: "assistant", text: "", plans, failed: offline }
+          ? { ...firstQuestion(plans), failed: offline }
           : { id: newId(), role: "assistant", text: result.reply, quickReplies: result.quickReplies, failed: offline, mood },
       });
 
