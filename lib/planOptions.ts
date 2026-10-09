@@ -189,11 +189,11 @@ export function spokenAnswer(plans: PlansCard): string {
   const { headline, pick, reason, options } = planFor(plans.name, plans.price, plans.left, plans.answers);
   const o = options.find((x) => x.id === pick)!;
   const why = reason ? ` ${reason}` : "";
-  const ask =
-    plans.price > plans.left ? " Want to see what saving for it could look like? Just say yes." : plans.answers ? " Does that sound good?" : "";
+  // She hands the choice back: nothing happens until a plan and the green button are tapped.
+  const ask = " Tap the plan you like, then the green button.";
   if (pick === "now") return `${headline}${why} You'd still have ${money(o.left)} left this month.${ask}`;
   const per = `${money(o.amount)} a month, and it's ${o.getIt}`;
   if (why) return `${headline}${why} That's ${per}.${ask}`;
-  if (pick === "wait2") return `${headline} If you wait two months, it's ${per}.`;
-  return `${headline} I'd spread it over three months. ${per}.`;
+  if (pick === "wait2") return `${headline} If you wait two months, it's ${per}.${ask}`;
+  return `${headline} I'd spread it over three months. ${per}.${ask}`;
 }

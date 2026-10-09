@@ -175,7 +175,8 @@ export function ChatScreen({
     const cap = setTimeout(reveal, 5000); // never keep the answer waiting on a slow connection
     // After a question (hers, or "Does that sound good?"), the mic opens on its own in talk mode,
     // so you can just answer out loud like a conversation.
-    const asks = !!m.ask || (!!m.plans && !!m.plans.answers && !m.plans.chosen);
+    // Not on her answer card: there you choose by tapping a plan and the green button.
+    const asks = !!m.ask;
     const listen = () => {
       if (asks && modeRef.current === "talk") voice.current?.listen();
     };

@@ -416,31 +416,11 @@ export function useConversation(send: (msg: Outgoing) => void) {
       setWishlist(m, true, true);
       return true;
     }
-    const pick = planFor(p.name, p.price, p.left, p.answers).pick;
-    // "Maybe I'll do that" isn't a yes: ask one short question instead of saving anything.
-    if (/\b(maybe|might|not sure|i don'?t know|idk|hmm+|probably)\b/.test(t)) {
+    // Choosing happens on the card: talking or typing never picks a plan for you (her own voice
+    // saying "2 months" could otherwise be heard as a choice). Point to the card instead.
+    if (/\b(yes|yeah|yep|sure|ok|okay|sounds|let'?s|go with|do it|deal|works|maybe|might|buy|wait|two|three|plan|[23])\b|get (it|them)|month|sav|purchas/.test(t)) {
       user(text);
-      say(`Sounds good! Did you want to ${pick === "now" ? "buy it now" : "start saving for it"} or keep it on your Wishlist?`, {
-        mood: "thinking",
-        ask: { step: "decide", item: p, ref: m.id },
-      });
-      return true;
-    }
-    // A yes to her one suggestion ("Does that sound good?") goes with her pick.
-    const agree =
-      /^(yes|yeah|yep|yup|sure|ok|okay|sounds (good|great|perfect)|let'?s (do|go with) (it|that)|let'?s go|go with (it|that)|do it|perfect|deal|that works|works for me|i guess that works|alright|all right)\b/.test(t);
-    const id: PlanId | null = agree
-      ? pick
-      : /three|3 month/.test(t)
-        ? "wait3"
-        : /wait|two|2 month|save up|saving|start saving/.test(t)
-          ? "wait2"
-          : /\bbuy\b|get (it|them)|go (for it|ahead)|purchase/.test(t)
-            ? "now"
-            : null;
-    if (id) {
-      user(text);
-      choosePlan(m, id);
+      say("Tap the plan you like, then the green button to confirm.", { mood: "listening" });
       return true;
     }
     if (wantsNewItem(t, p.name)) {
@@ -463,7 +443,9 @@ export function useConversation(send: (msg: Outgoing) => void) {
       dispatch({ type: "addMessage", message: card });
       if (replyToPlans(card, t)) return;
     }
-    if (last?.plans && !last.plans.chosen && replyToPlans(last, t)) return;
+    // Her answer card stays open until a plan is tapped, even with messages after it.
+    const openCard = [...s.messages].reverse().find((x) => x.plans);
+    if (openCard?.plans && !openCard.plans.chosen && !last?.ask && replyToPlans(openCard, t)) return;
     if (last?.retry && /try again|retry|again|yes|yeah|ok/.test(t.toLowerCase())) {
       user(t);
       retry(last);
